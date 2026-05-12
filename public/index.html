@@ -755,7 +755,7 @@
     return new Blob([JSON.stringify(photoStore)]).size;
   }
 
-  const PHOTO_LIMIT = 8 * 1024 * 1024; // 8MB safety threshold (Gist limit is 10MB)
+  const PHOTO_LIMIT = 8 * 1024 * 1024; // 8MB safety threshold (upstream gist limit is 10MB, proxied via /api/data)
   const PHOTO_WARN  = 6 * 1024 * 1024; // warn at 6MB
 
   // Compress image to max ~200KB base64 before storing
@@ -1225,7 +1225,11 @@
 
   async function handleLockClick() {
     if (isOwner) {
-      try { await fetch('/auth/logout', { method: 'POST', credentials: 'same-origin' }); } catch {}
+      try {
+        await fetch('/auth/logout', { method: 'POST', credentials: 'same-origin' });
+      } catch (e) {
+        console.warn('logout failed', e);
+      }
       isOwner = false;
       applyOwnerState();
     } else {
@@ -1255,7 +1259,6 @@
   }
 
   // apply on load
-  applyOwnerState();
   initData();
   window.addEventListener('resize', capFeedingLogHeight);
 </script>
