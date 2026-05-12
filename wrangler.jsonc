@@ -15,6 +15,7 @@
   ],
   "vars": {
     "OWNER_GITHUB_LOGINS": "elwang1128,nicolaschan",
-    "GIST_ID": "1793476b9117a2b123ff35c0170c5705"
+    "GIST_ID": "1793476b9117a2b123ff35c0170c5705",
+    "GITHUB_OAUTH_CLIENT_ID": "Ov23lipcmHei1222irlt"
   }
 }
