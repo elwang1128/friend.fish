@@ -74,16 +74,15 @@ app.post('/api/data', async c => {
   return c.body(null, 204, NO_CACHE);
 });
 
-app.use('/auth/github', (c, next) =>
+const githubAuthMiddleware = (c, next) =>
   githubAuth({
     client_id: c.env.GITHUB_OAUTH_CLIENT_ID,
     client_secret: c.env.GITHUB_OAUTH_CLIENT_SECRET,
     scope: ['read:user'],
     oauthApp: true,
-  })(c, next)
-);
+  })(c, next);
 
-app.get('/auth/github', async c => {
+async function handleOAuthReturn(c) {
   const user = c.get('user-github');
   if (!user || !isAllowed(user.login, c.env)) {
     return c.html(notAuthorizedHtml(user?.login, c.env), 403);
@@ -104,7 +103,12 @@ app.get('/auth/github', async c => {
     maxAge: SESSION_TTL,
   });
   return c.redirect('/');
-});
+}
+
+app.use('/auth/github', githubAuthMiddleware);
+app.use('/auth/callback', githubAuthMiddleware);
+app.get('/auth/github', handleOAuthReturn);
+app.get('/auth/callback', handleOAuthReturn);
 
 app.post('/auth/logout', c => {
   deleteCookie(c, COOKIE_NAME, { path: '/', secure: true });
