@@ -836,9 +836,9 @@
           <select id="edit-food-${e.ts}">${foodOpts}</select>
         </div>
         <div class="feed-entry-edit-btns">
-          <button class="feed-action-btn save" onclick="saveEdit(event,${e.ts})">save</button>
+          <button class="feed-action-btn delete" onclick="deleteEntry(event,${e.ts})">delete</button>
+          <button class="feed-action-btn save" onclick="saveEdit(event,${e.ts})" style="margin-left:auto">save</button>
           <button class="feed-cancel-btn" onclick="cancelEdit(event,${e.ts})">cancel</button>
-          <button class="feed-action-btn delete" onclick="deleteEntry(event,${e.ts})" style="margin-left:auto">delete</button>
         </div>
       </div>` : ''}`;
     }).join('');
