@@ -464,55 +464,6 @@
   }
   .lock-btn:hover { color: var(--gray-dark); }
 
-  .auth-backdrop {
-    display: none; position: fixed; inset: 0; background: rgba(15,15,15,0.55);
-    z-index: 500; align-items: center; justify-content: center; padding: 2rem;
-  }
-  .auth-backdrop.open { display: flex; }
-
-  .auth-modal {
-    background: var(--white); border: 1.5px solid var(--black); border-radius: 20px;
-    padding: 2rem; width: 100%; max-width: 360px; animation: modal-in 0.2s ease;
-  }
-
-  .auth-title {
-    font-family: 'DM Serif Display', serif; font-size: 1.4rem; letter-spacing: -0.02em; margin-bottom: 0.3rem;
-  }
-
-  .auth-hint { font-size: 0.78rem; color: var(--gray-dark); margin-bottom: 1.25rem; }
-
-  .auth-input {
-    width: 100%; font-family: 'Nunito', sans-serif; font-size: 0.9rem;
-    border: 1.5px solid var(--gray-light); border-radius: 10px; padding: 0.55rem 0.75rem;
-    outline: none; margin-bottom: 0.5rem; color: var(--black); background: var(--white);
-  }
-  .auth-input:focus { border-color: var(--blue); }
-  .auth-input.error { border-color: #f09595; animation: shake 0.3s ease; }
-
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-6px); }
-    75% { transform: translateX(6px); }
-  }
-
-  .auth-error { font-size: 0.75rem; color: #a32d2d; margin-bottom: 0.75rem; min-height: 1rem; }
-
-  .auth-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 0.25rem; }
-
-  .auth-cancel {
-    background: none; border: 1.5px solid var(--gray-light); border-radius: 100px;
-    font-family: 'Nunito', sans-serif; font-size: 0.8rem; font-weight: 700;
-    padding: 0.4rem 1rem; cursor: pointer; color: var(--gray-dark); transition: background 0.15s;
-  }
-  .auth-cancel:hover { background: var(--off-white); }
-
-  .auth-submit {
-    background: var(--black); color: var(--white); border: none; border-radius: 100px;
-    font-family: 'Nunito', sans-serif; font-size: 0.8rem; font-weight: 700;
-    padding: 0.4rem 1.1rem; cursor: pointer; transition: background 0.15s;
-  }
-  .auth-submit:hover { background: var(--blue); }
-
   @media (max-width: 900px) {
     nav { padding: 1rem 1.5rem; }
     .hero { grid-template-columns: 1fr; padding: 1.5rem; }
@@ -783,9 +734,7 @@
   updateClock();
   setInterval(updateClock, 1000);
 
-  // ---- GITHUB GIST DATA LAYER ----
-  const GIST_ID = '1793476b9117a2b123ff35c0170c5705';
-  const GITHUB_TOKEN = 'ghp_hw9CyBZPPnCjBB' + '3rn55rZtaDhwidac3Z2HrA';
+  // ---- DATA LAYER (via Cloudflare Worker /api/data) ----
 
   let feedEntries = [];
   let photoStore = {};
@@ -793,22 +742,20 @@
 
   async function gistGet() {
     try {
-      const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-        headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
-      });
+      const res = await fetch('/api/data');
+      if (!res.ok) { console.error('data load failed', res.status); return; }
       const data = await res.json();
-      const files = data.files || {};
-      try { feedEntries = JSON.parse(files['tankdata.json']?.content || '{"feeds":[]}').feeds || []; } catch(e) { feedEntries = []; console.warn('tankdata.json corrupted, resetting'); }
-      try { photoStore = JSON.parse(files['photos.json']?.content || '{}'); } catch(e) { photoStore = {}; console.warn('photos.json corrupted, resetting'); }
-      try { coverStore = JSON.parse(files['covers.json']?.content || '{}'); } catch(e) { coverStore = {}; console.warn('covers.json corrupted, resetting'); }
-    } catch(e) { console.error('gist load error', e); }
+      feedEntries = Array.isArray(data.feeds) ? data.feeds : [];
+      photoStore  = (data.photos && typeof data.photos === 'object') ? data.photos : {};
+      coverStore  = (data.covers && typeof data.covers === 'object') ? data.covers : {};
+    } catch (e) { console.error('data load error', e); }
   }
 
   function photosSize() {
     return new Blob([JSON.stringify(photoStore)]).size;
   }
 
-  const PHOTO_LIMIT = 8 * 1024 * 1024; // 8MB safety threshold (Gist limit is 10MB)
+  const PHOTO_LIMIT = 8 * 1024 * 1024; // 8MB safety threshold (upstream gist limit is 10MB, proxied via /api/data)
   const PHOTO_WARN  = 6 * 1024 * 1024; // warn at 6MB
 
   // Compress image to max ~200KB base64 before storing
@@ -830,26 +777,29 @@
 
   async function gistSave() {
     try {
-      await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `token ${GITHUB_TOKEN}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          files: {
-            'tankdata.json': { content: JSON.stringify({ feeds: feedEntries }) },
-            'photos.json': { content: JSON.stringify(photoStore) },
-            'covers.json': { content: JSON.stringify(coverStore) }
-          }
-        })
+      const res = await fetch('/api/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ feeds: feedEntries, photos: photoStore, covers: coverStore }),
       });
-    } catch(e) { console.error('gist save error', e); }
+      if (res.status === 401 || res.status === 403) {
+        isOwner = false;
+        applyOwnerState();
+        alert('session expired — please sign in again');
+      } else if (!res.ok) {
+        alert("couldn't save");
+      }
+    } catch (e) {
+      console.error('data save error', e);
+      alert("couldn't save");
+    }
   }
 
   async function initData() {
+    await checkSession();
     await gistGet();
+    applyOwnerState();
     renderEntries();
     ['puffer1','puffer2','otos','amanos'].forEach(id => restoreCover(id));
     capFeedingLogHeight();
@@ -1236,15 +1186,14 @@
   }
 
   // ---- AUTH ----
-  // password is hashed — the plaintext is not stored anywhere in this file
-  const OWNER_HASH = '5b1b5d4213c205a524cbace296ba51efdbf23dd78591296c1aea7a0143e884cd';
+  let isOwner = false;
 
-  async function checkPassword(input) {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('') === OWNER_HASH;
+  async function checkSession() {
+    try {
+      const res = await fetch('/api/me', { credentials: 'same-origin' });
+      isOwner = res.ok;
+    } catch { isOwner = false; }
   }
-
-  let isOwner = sessionStorage.getItem('tankOwner') === '1';
 
   function applyOwnerState() {
     const body = document.body;
@@ -1274,45 +1223,17 @@
     });
   }
 
-  function handleLockClick() {
+  async function handleLockClick() {
     if (isOwner) {
+      try {
+        await fetch('/auth/logout', { method: 'POST', credentials: 'same-origin' });
+      } catch (e) {
+        console.warn('logout failed', e);
+      }
       isOwner = false;
-      sessionStorage.removeItem('tankOwner');
       applyOwnerState();
     } else {
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-      document.body.style.overflow = 'hidden';
-      document.body.style.paddingRight = scrollbarWidth + 'px';
-      document.querySelector('nav').style.paddingRight = (48 + scrollbarWidth) + 'px';
-      document.getElementById('auth-backdrop').classList.add('open');
-      setTimeout(() => document.getElementById('auth-input').focus(), 50);
-    }
-  }
-
-  function closeAuth() {
-    document.getElementById('auth-backdrop').classList.remove('open');
-    document.getElementById('auth-input').value = '';
-    document.getElementById('auth-error').textContent = '';
-    document.body.style.overflow = '';
-    document.body.style.paddingRight = '';
-    document.querySelector('nav').style.paddingRight = '';
-  }
-
-  async function submitAuth() {
-    const val = document.getElementById('auth-input').value;
-    const correct = await checkPassword(val);
-    if (correct) {
-      isOwner = true;
-      sessionStorage.setItem('tankOwner', '1');
-      closeAuth();
-      applyOwnerState();
-    } else {
-      const input = document.getElementById('auth-input');
-      const err = document.getElementById('auth-error');
-      err.textContent = 'incorrect password';
-      input.value = '';
-      input.classList.add('error');
-      setTimeout(() => input.classList.remove('error'), 400);
+      window.location.href = '/auth/login';
     }
   }
 
@@ -1338,25 +1259,9 @@
   }
 
   // apply on load
-  applyOwnerState();
   initData();
   window.addEventListener('resize', capFeedingLogHeight);
 </script>
-<!-- AUTH MODAL -->
-<div class="auth-backdrop" id="auth-backdrop">
-  <div class="auth-modal">
-    <div class="auth-title">owner access</div>
-    <div class="auth-hint">enter your password to enable editing</div>
-    <input type="password" class="auth-input" id="auth-input" placeholder="password"
-      onkeydown="if(event.key==='Enter')submitAuth(); if(event.key==='Escape')closeAuth();">
-    <div class="auth-error" id="auth-error"></div>
-    <div class="auth-actions">
-      <button class="auth-cancel" onclick="closeAuth()">cancel</button>
-      <button class="auth-submit" onclick="submitAuth()">unlock</button>
-    </div>
-  </div>
-</div>
-
 <!-- CROP EDITOR -->
 <div class="crop-backdrop" id="crop-backdrop">
   <div class="crop-modal">
