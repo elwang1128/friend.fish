@@ -1,14 +1,20 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "friend-fish",
+  "main": "src/worker.js",
   "compatibility_date": "2026-05-12",
   "observability": {
     "enabled": true
   },
   "assets": {
-    "directory": "."
+    "directory": "./public",
+    "binding": "ASSETS"
   },
   "compatibility_flags": [
     "nodejs_compat"
-  ]
+  ],
+  "vars": {
+    "OWNER_GITHUB_LOGINS": "elwang1128,nicolaschan",
+    "GIST_ID": "1793476b9117a2b123ff35c0170c5705"
+  }
 }
