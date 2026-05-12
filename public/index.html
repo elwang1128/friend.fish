@@ -88,9 +88,6 @@
 
   .stats-sidebar { display: flex; flex-direction: column; gap: 1rem; min-height: 0; }
 
-  .sidebar-title { font-family: 'DM Serif Display', serif; font-size: 1.5rem; letter-spacing: -0.02em; margin-bottom: 0.25rem; line-height: 1.2; }
-  .sidebar-subtitle { font-size: 0.8rem; color: var(--gray-dark); }
-
   .stat-card { background: var(--off-white); border-radius: 12px; padding: 1rem 1.25rem; border: 1.5px solid var(--gray-light); }
   .stat-card.blue-accent { background: var(--blue-pale); border-color: var(--blue-light); }
 
@@ -484,7 +481,7 @@
 <body>
 
 <nav>
-  <div class="nav-logo">friend<span>.fish</span> ✦</div>
+  <div class="nav-logo">friend.fish <span>✦</span></div>
   <div class="nav-time" id="nav-clock">—</div>
 </nav>
 
@@ -501,10 +498,6 @@
   </div>
 
   <div class="stats-sidebar">
-    <div>
-      <div class="sidebar-title">tank stats</div>
-    </div>
-
     <div class="stat-card blue-accent">
       <div class="stat-card-label">tank time</div>
       <div class="stat-card-value clock" id="live-clock">—</div>
