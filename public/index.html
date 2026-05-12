@@ -115,7 +115,9 @@
     background: var(--black); color: var(--white); border: none; border-radius: 100px;
     padding: 0.3rem 0.75rem; font-size: 0.72rem; font-weight: 700; font-family: 'Nunito', sans-serif;
     cursor: pointer; letter-spacing: 0.04em; transition: background 0.2s;
+    display: none;
   }
+  body.is-owner .add-feed-btn { display: inline-block; }
   .add-feed-btn:hover { background: var(--blue); }
 
   .feed-entry {
@@ -1206,9 +1208,6 @@
       document.getElementById('lock-btn').textContent = '🔒';
       document.getElementById('lock-btn').title = 'owner login';
     }
-    // feeding log button
-    const feedBtn = document.querySelector('.add-feed-btn');
-    if (feedBtn) feedBtn.style.display = isOwner ? '' : 'none';
     // re-render galleries and feed entries to show/hide edit controls
     ['puffer1','puffer2','otos','amanos'].forEach(id => {
       if (document.getElementById('gallery-' + id)) renderGallery(id);
