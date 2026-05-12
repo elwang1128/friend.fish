@@ -85,11 +85,6 @@
   .feed-placeholder-text h3 { font-family: 'DM Serif Display', serif; font-size: 1.2rem; margin-bottom: 0.3rem; }
   .feed-placeholder-text p { font-size: 0.8rem; color: var(--gray-dark); }
 
-  .feed-placeholder-badge {
-    background: var(--blue-pale); border: 1px solid var(--blue-light); color: var(--blue);
-    font-size: 0.75rem; font-weight: 600; padding: 0.3rem 0.8rem; border-radius: 100px; z-index: 1;
-  }
-
   .stats-sidebar { display: flex; flex-direction: column; gap: 1rem; min-height: 0; }
 
   .sidebar-title { font-family: 'DM Serif Display', serif; font-size: 1.5rem; letter-spacing: -0.02em; margin-bottom: 0.25rem; line-height: 1.2; }
@@ -240,11 +235,15 @@
   .profile-stat-val { font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: 500; display: block; }
   .profile-stat-label { font-size: 0.65rem; color: var(--gray-dark); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; display: block; margin-top: 0.1rem; }
 
-  .bubbles { position: absolute; bottom: 10px; right: 20px; display: flex; gap: 4px; align-items: flex-end; opacity: 0.4; }
+  .bubbles { display: flex; gap: 4px; align-items: flex-end; opacity: 0.4; z-index: 1; }
   .bubble { border: 1.5px solid var(--blue); border-radius: 50%; animation: float 3s ease-in-out infinite; }
   .bubble:nth-child(1) { width: 8px; height: 8px; animation-delay: 0s; }
   .bubble:nth-child(2) { width: 12px; height: 12px; animation-delay: 0.5s; }
   .bubble:nth-child(3) { width: 6px; height: 6px; animation-delay: 1s; }
+  .bubble:nth-child(4) { width: 10px; height: 10px; animation-delay: 1.5s; }
+  .bubble:nth-child(5) { width: 7px; height: 7px; animation-delay: 0.8s; }
+  .bubble:nth-child(6) { width: 9px; height: 9px; animation-delay: 0.3s; }
+  .bubble:nth-child(7) { width: 5px; height: 5px; animation-delay: 1.2s; }
   @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 
   /* ---- MODALS ---- */
@@ -491,13 +490,12 @@
 <section class="hero" id="feed">
   <div class="feed-wrapper">
     <div class="feed-placeholder">
-      <div class="bubbles"><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div></div>
       <div class="feed-fish-icon">🐡</div>
       <div class="feed-placeholder-text">
         <h3>camera coming soon</h3>
         <p>the tank is being watched over ✦</p>
       </div>
-      <div class="feed-placeholder-badge">stream placeholder</div>
+      <div class="bubbles"><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div></div>
     </div>
   </div>
 
