@@ -46,13 +46,15 @@ export async function handleCallback(request, env) {
   try {
     accessToken = await exchangeOAuthCode(env, code);
   } catch (e) {
-    return errorHtml(`Couldn't exchange OAuth code with GitHub: ${escapeHtml(e.message)}`, 502);
+    console.error('oauth code exchange failed', e);
+    return errorHtml("Couldn't exchange OAuth code with GitHub.", 502);
   }
 
   let user;
   try {
     user = await fetchGitHubUser(accessToken);
-  } catch {
+  } catch (e) {
+    console.error('github user fetch failed', e);
     return errorHtml("Couldn't fetch your GitHub profile.", 502);
   }
 
