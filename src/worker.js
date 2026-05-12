@@ -1,6 +1,7 @@
 import { handleLogin } from './handlers/auth/login.js';
 import { handleCallback } from './handlers/auth/callback.js';
 import { handleLogout } from './handlers/auth/logout.js';
+import { handleMe } from './handlers/api/me.js';
 
 export default {
   async fetch(request, env, _ctx) {
@@ -11,6 +12,10 @@ export default {
       return new Response('ok', {
         headers: { 'Content-Type': 'text/plain' },
       });
+    }
+
+    if (url.pathname === '/api/me' && method === 'GET') {
+      return handleMe(request, env);
     }
 
     if (url.pathname === '/auth/login' && method === 'GET') {
