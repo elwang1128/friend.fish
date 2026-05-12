@@ -17,6 +17,9 @@ function base64urlDecode(str) {
 }
 
 async function importKey(secret) {
+  if (typeof secret !== 'string' || secret.length < 16) {
+    throw new Error('SESSION_SECRET is missing or too short');
+  }
   return crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(secret),
