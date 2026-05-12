@@ -21,7 +21,7 @@ async function getSession(c) {
   if (typeof secret !== 'string' || secret.length < 16) return null;
   const token = getCookie(c, COOKIE_NAME);
   if (!token) return null;
-  try { return await verify(token, secret); }
+  try { return await verify(token, secret, 'HS256'); }
   catch { return null; }
 }
 
