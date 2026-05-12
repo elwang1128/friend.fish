@@ -785,7 +785,7 @@
 
   // ---- GITHUB GIST DATA LAYER ----
   const GIST_ID = '1793476b9117a2b123ff35c0170c5705';
-  const GITHUB_TOKEN = 'ghp_hw9CyBZPPnCjBB' + '3rn55rZtaDhwidac3Z2HrA'; // paste your token here in a text editor
+  const GITHUB_TOKEN = 'ghp_hw9CyBZPPnCjBB' + '3rn55rZtaDhwidac3Z2HrA';
 
   let feedEntries = [];
   let photoStore = {};
@@ -865,13 +865,13 @@
       const dateStr = t.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' });
       const whoOpts = residents.map(r => `<option value="${r}" ${r === e.who ? 'selected' : ''}>${r}</option>`).join('');
       const foodOpts = foods.map(f => `<option value="${f}" ${f === e.food ? 'selected' : ''}>${f}</option>`).join('');
-      return `<div class="feed-entry" id="entry-${e.ts}" onclick="toggleEdit(${e.ts})">
+      return `<div class="feed-entry" id="entry-${e.ts}" ${isOwner ? `onclick="toggleEdit(${e.ts})"` : ''} style="cursor:${isOwner ? 'pointer' : 'default'}">
         <span class="feed-entry-time">${dateStr}</span>
         <span class="feed-entry-who">${e.who}</span>
         <span class="feed-entry-food">${e.food}</span>
-        <span class="feed-entry-chevron">▾</span>
+        ${isOwner ? `<span class="feed-entry-chevron">▾</span>` : ''}
       </div>
-      <div class="feed-entry-edit-row" id="edit-row-${e.ts}">
+      ${isOwner ? `<div class="feed-entry-edit-row" id="edit-row-${e.ts}">
         <div class="feed-entry-edit-selects">
           <select id="edit-who-${e.ts}">${whoOpts}</select>
           <select id="edit-food-${e.ts}">${foodOpts}</select>
@@ -881,7 +881,7 @@
           <button class="feed-cancel-btn" onclick="cancelEdit(event,${e.ts})">cancel</button>
           <button class="feed-action-btn delete" onclick="deleteEntry(event,${e.ts})" style="margin-left:auto">delete</button>
         </div>
-      </div>`;
+      </div>` : ''}`;
     }).join('');
   }
 
@@ -1244,10 +1244,11 @@
     // feeding log button
     const feedBtn = document.querySelector('.add-feed-btn');
     if (feedBtn) feedBtn.style.display = isOwner ? '' : 'none';
-    // re-render galleries to show/hide add+delete buttons
+    // re-render galleries and feed entries to show/hide edit controls
     ['puffer1','puffer2','otos','amanos'].forEach(id => {
       if (document.getElementById('gallery-' + id)) renderGallery(id);
     });
+    renderEntries();
     // wire up modal hero clicks
     ['puffer1','puffer2','otos','amanos'].forEach(id => {
       const hero = document.getElementById('hero-' + id);
