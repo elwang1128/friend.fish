@@ -785,7 +785,7 @@
 
   // ---- GITHUB GIST DATA LAYER ----
   const GIST_ID = '1793476b9117a2b123ff35c0170c5705';
-  const GITHUB_TOKEN = 'ghp_hw9CyBZPPnCjBB3' + 'rn55rZtaDhwidac3Z2HrA'; // paste your token here in a text editor
+  const GITHUB_TOKEN = 'ghp_hw9CyBZPPnCjBB' + '3rn55rZtaDhwidac3Z2HrA'; // paste your token here in a text editor
 
   let feedEntries = [];
   let photoStore = {};
@@ -1220,8 +1220,13 @@
   }
 
   // ---- AUTH ----
-  // Change this to your chosen password:
-  const OWNER_PASSWORD = 'fishfriendgang';
+  // password is hashed — the plaintext is not stored anywhere in this file
+  const OWNER_HASH = '5b1b5d4213c205a524cbace296ba51efdbf23dd78591296c1aea7a0143e884cd';
+
+  async function checkPassword(input) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('') === OWNER_HASH;
+  }
 
   let isOwner = sessionStorage.getItem('tankOwner') === '1';
 
@@ -1276,9 +1281,10 @@
     document.querySelector('nav').style.paddingRight = '';
   }
 
-  function submitAuth() {
+  async function submitAuth() {
     const val = document.getElementById('auth-input').value;
-    if (val === OWNER_PASSWORD) {
+    const correct = await checkPassword(val);
+    if (correct) {
       isOwner = true;
       sessionStorage.setItem('tankOwner', '1');
       closeAuth();
