@@ -1,5 +1,11 @@
 const UA = 'friend.fish';
 
+function githubError(label, status) {
+  const e = new Error(`${label}: ${status}`);
+  e.status = status;
+  return e;
+}
+
 export async function readGist(env) {
   const res = await fetch(`https://api.github.com/gists/${env.GIST_ID}`, {
     headers: {
@@ -8,7 +14,7 @@ export async function readGist(env) {
       'User-Agent': UA,
     },
   });
-  if (!res.ok) throw new Error(`gist read failed: ${res.status}`);
+  if (!res.ok) throw githubError('gist read failed', res.status);
   const data = await res.json();
   const files = data.files || {};
   const parse = (name, fallback) => {
@@ -39,37 +45,5 @@ export async function writeGist(env, { feeds, photos, covers }) {
       },
     }),
   });
-  if (!res.ok) throw new Error(`gist write failed: ${res.status}`);
-}
-
-export async function exchangeOAuthCode(env, code) {
-  const res = await fetch('https://github.com/login/oauth/access_token', {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      'User-Agent': UA,
-    },
-    body: JSON.stringify({
-      client_id: env.GITHUB_OAUTH_CLIENT_ID,
-      client_secret: env.GITHUB_OAUTH_CLIENT_SECRET,
-      code,
-    }),
-  });
-  if (!res.ok) throw new Error(`token exchange failed: ${res.status}`);
-  const data = await res.json();
-  if (!data.access_token) throw new Error(`token exchange returned no access_token`);
-  return data.access_token;
-}
-
-export async function fetchGitHubUser(accessToken) {
-  const res = await fetch('https://api.github.com/user', {
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Accept': 'application/vnd.github+json',
-      'User-Agent': UA,
-    },
-  });
-  if (!res.ok) throw new Error(`user fetch failed: ${res.status}`);
-  return res.json();
+  if (!res.ok) throw githubError('gist write failed', res.status);
 }
