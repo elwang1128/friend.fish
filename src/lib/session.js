@@ -35,8 +35,10 @@ export async function signSession(payload, secret) {
 }
 
 export async function verifySession(token, secret) {
-  if (typeof token !== 'string' || !token.includes('.')) return null;
-  const [payloadB64, sigB64] = token.split('.');
+  if (typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+  const [payloadB64, sigB64] = parts;
   if (!payloadB64 || !sigB64) return null;
   let sigBytes;
   try { sigBytes = base64urlDecode(sigB64); } catch { return null; }
@@ -64,7 +66,9 @@ export function parseCookies(header) {
     if (i < 0) continue;
     const k = part.slice(0, i).trim();
     const v = part.slice(i + 1).trim();
-    if (k) out[k] = decodeURIComponent(v);
+    if (k) {
+      try { out[k] = decodeURIComponent(v); } catch { out[k] = v; }
+    }
   }
   return out;
 }
@@ -81,6 +85,10 @@ export function clearCookie(name, { path = '/' } = {}) {
 
 export function isAllowedLogin(login, env) {
   if (typeof login !== 'string' || !login) return false;
-  const allowed = (env.OWNER_GITHUB_LOGINS || '').split(',').map(s => s.trim()).filter(Boolean);
-  return allowed.includes(login);
+  const needle = login.toLowerCase();
+  const allowed = (env.OWNER_GITHUB_LOGINS || '')
+    .split(',')
+    .map(s => s.trim().toLowerCase())
+    .filter(Boolean);
+  return allowed.includes(needle);
 }
