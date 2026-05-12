@@ -1,4 +1,5 @@
 import { handleLogin } from './handlers/auth/login.js';
+import { handleCallback } from './handlers/auth/callback.js';
 
 export default {
   async fetch(request, env, _ctx) {
@@ -13,6 +14,10 @@ export default {
 
     if (url.pathname === '/auth/login' && method === 'GET') {
       return handleLogin(request, env);
+    }
+
+    if (url.pathname === '/auth/callback' && method === 'GET') {
+      return handleCallback(request, env);
     }
 
     return env.ASSETS.fetch(request);
