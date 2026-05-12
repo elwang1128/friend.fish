@@ -1,7 +1,7 @@
 import { verifySession, parseCookies, isAllowedLogin } from '../../lib/session.js';
 import { readGist, writeGist } from '../../lib/github.js';
 
-const NO_STORE = { 'Cache-Control': 'no-store' };
+const NO_STORE = { 'Cache-Control': 'no-store', 'Vary': 'Cookie' };
 
 export async function handleDataGet(_request, env) {
   try {
@@ -11,10 +11,7 @@ export async function handleDataGet(_request, env) {
     });
   } catch (e) {
     console.error('gist read failed', e);
-    return new Response(JSON.stringify({ error: 'gist unavailable' }), {
-      status: 502,
-      headers: { 'Content-Type': 'application/json', ...NO_STORE },
-    });
+    return jsonError(502, 'gist unavailable');
   }
 }
 
@@ -54,6 +51,6 @@ export async function handleDataPost(request, env) {
 function jsonError(status, message) {
   return new Response(JSON.stringify({ error: message }), {
     status,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    headers: { 'Content-Type': 'application/json', ...NO_STORE },
   });
 }
