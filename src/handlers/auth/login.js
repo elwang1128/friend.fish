@@ -17,6 +17,8 @@ export async function handleLogin(request, env) {
   });
 
   const headers = new Headers();
+  // __Host-oauth_state requires Secure: cookies are dropped on http://localhost.
+  // Test on the deployed *.workers.dev URL or use `wrangler dev --local-protocol=https`.
   headers.append('Set-Cookie', setCookie('__Host-oauth_state', signedState, { maxAge: STATE_TTL_SECONDS }));
   headers.set('Location', `https://github.com/login/oauth/authorize?${params}`);
   return new Response(null, { status: 302, headers });
