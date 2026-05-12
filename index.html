@@ -681,7 +681,7 @@
       <div class="modal-name">fish friend</div>
       <div class="modal-scientific">Colomesus asellus — South American Puffer</div>
       <div class="modal-section-label">about</div>
-      <div class="modal-bio">fish friend was a snail control employee at Aqua Forest Aquarium. we met in august 2025 and he looked at me with his big eyes, smol face and zoomed around super fast. i visited him every week for 6 months until the store finally let me have him. This tank was made to be his perfect retirement home. No matter where he's hiding in the tank, he's always happy to swim up and say "o hi!" whenever i walk by.</div>
+      <div class="modal-bio">fish friend was an snail control employee at Aqua Forest Aquarium. we met in august 2025 and he looked at me with his big eyes, smol face and zoomed around super fast. i visited him every week for 6 months until the store finally let me have him. This tank was made to be his perfect retirement home. No matter where he's hiding in the tank, he's always happy to swim up and say "o hi!" whenever i walk by.</div>
       <div class="modal-stats-row">
         <div class="modal-stat"><span class="modal-stat-val">2.5 cm</span><span class="modal-stat-label">size</span></div>
         <div class="modal-stat"><span class="modal-stat-val">snails</span><span class="modal-stat-label">fav food</span></div>
@@ -798,11 +798,18 @@
       });
       const data = await res.json();
       const files = data.files || {};
-      feedEntries = JSON.parse(files['tankdata.json']?.content || '{"feeds":[]}').feeds || [];
-      photoStore = JSON.parse(files['photos.json']?.content || '{}');
-      coverStore = JSON.parse(files['covers.json']?.content || '{}');
+      try { feedEntries = JSON.parse(files['tankdata.json']?.content || '{"feeds":[]}').feeds || []; } catch(e) { feedEntries = []; console.warn('tankdata.json corrupted, resetting'); }
+      try { photoStore = JSON.parse(files['photos.json']?.content || '{}'); } catch(e) { photoStore = {}; console.warn('photos.json corrupted, resetting'); }
+      try { coverStore = JSON.parse(files['covers.json']?.content || '{}'); } catch(e) { coverStore = {}; console.warn('covers.json corrupted, resetting'); }
     } catch(e) { console.error('gist load error', e); }
   }
+
+  function photosSize() {
+    return new Blob([JSON.stringify(photoStore)]).size;
+  }
+
+  const PHOTO_LIMIT = 8 * 1024 * 1024; // 8MB safety threshold (Gist limit is 10MB)
+  const PHOTO_WARN  = 6 * 1024 * 1024; // warn at 6MB
 
   // Compress image to max ~200KB base64 before storing
   function compressImage(src, maxW, maxH, quality) {
@@ -858,7 +865,7 @@
     }
 
     const residents = ['amazon puffers','otocinclus'];
-    const foods = ['Grub Pie','Soilent Green','Bloodworms','Zucchini','Scuds','Snails'];
+    const foods = ['grub pie','soilent green','bloodworms','zucchini','scuds','snails'];
 
     container.innerHTML = [...feedEntries].reverse().map(e => {
       const t = new Date(e.ts);
@@ -989,6 +996,15 @@
       const reader = new FileReader();
       reader.onload = async ev => {
         const compressed = await compressImage(ev.target.result, 1200, 1200, 0.72);
+        const testSize = new Blob([JSON.stringify({...photoStore, [id]: [...(photoStore[id]||[]), compressed]})]).size;
+        if (testSize > PHOTO_LIMIT) {
+          alert('photo storage is full — delete some photos before adding more.');
+          loaded++;
+          return;
+        }
+        if (testSize > PHOTO_WARN) {
+          alert('heads up: you\'re getting close to the photo storage limit. consider deleting old photos soon.');
+        }
         photoStore[id].push(compressed);
         loaded++;
         if (loaded === files.length) {
