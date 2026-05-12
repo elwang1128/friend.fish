@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>friend.fish ✦</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0f0f0f;
+    --white: #fafaf8;
+    --off-white: #f2f0ec;
+    --blue: #1432ff;
+    --blue-light: #c8d0ff;
+    --blue-pale: #eaecff;
+    --gray-light: #e8e6e2;
+    --gray-mid: #a8a6a2;
+    --gray-dark: #5a5856;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--white);
+    color: var(--black);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 3rem;
+    border-bottom: 1.5px solid var(--black);
+    position: sticky;
+    top: 0;
+    background: var(--white);
+    z-index: 100;
+  }
+
+  .nav-logo { font-family: 'DM Serif Display', serif; font-size: 1.5rem; letter-spacing: -0.02em; }
+  .nav-logo span { color: var(--blue); }
+
+  nav ul { list-style: none; display: flex; gap: 2rem; }
+  nav ul a {
+    text-decoration: none; color: var(--black); font-size: 0.85rem;
+    font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; transition: color 0.2s;
+  }
+  nav ul a:hover { color: var(--blue); }
+
+  .nav-time { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--gray-dark); font-weight: 300; }
+
+  .hero { padding: 3rem 3rem 2rem; display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start; }
+
+  .feed-wrapper { position: relative; }
+
+  .feed-label {
+    display: inline-flex; align-items: center; gap: 0.4rem; background: var(--black);
+    color: var(--white); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 0.35rem 0.75rem; border-radius: 100px; margin-bottom: 0.75rem;
+  }
+
+  .live-dot { width: 6px; height: 6px; background: #ff4444; border-radius: 50%; animation: pulse 1.5s infinite; }
+
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .feed-placeholder {
+    width: 100%; aspect-ratio: 16/10; background: var(--off-white);
+    border: 2px dashed var(--gray-light); border-radius: 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1rem; position: relative; overflow: hidden;
+  }
+
+  .feed-placeholder::before {
+    content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(-45deg, transparent, transparent 20px, rgba(58,123,213,0.04) 20px, rgba(58,123,213,0.04) 40px);
+  }
+
+  .feed-fish-icon { font-size: 3.5rem; line-height: 1; filter: grayscale(0.3); }
+  .feed-placeholder-text { text-align: center; z-index: 1; }
+  .feed-placeholder-text h3 { font-family: 'DM Serif Display', serif; font-size: 1.2rem; margin-bottom: 0.3rem; }
+  .feed-placeholder-text p { font-size: 0.8rem; color: var(--gray-dark); }
+
+  .feed-placeholder-badge {
+    background: var(--blue-pale); border: 1px solid var(--blue-light); color: var(--blue);
+    font-size: 0.75rem; font-weight: 600; padding: 0.3rem 0.8rem; border-radius: 100px; z-index: 1;
+  }
+
+  .stats-sidebar { display: flex; flex-direction: column; gap: 1rem; min-height: 0; }
+
+  .sidebar-title { font-family: 'DM Serif Display', serif; font-size: 1.5rem; letter-spacing: -0.02em; margin-bottom: 0.25rem; line-height: 1.2; }
+  .sidebar-subtitle { font-size: 0.8rem; color: var(--gray-dark); }
+
+  .stat-card { background: var(--off-white); border-radius: 12px; padding: 1rem 1.25rem; border: 1.5px solid var(--gray-light); }
+  .stat-card.blue-accent { background: var(--blue-pale); border-color: var(--blue-light); }
+
+  .stat-card-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-dark); margin-bottom: 0.4rem; }
+  .stat-card.blue-accent .stat-card-label { color: var(--blue); }
+  .stat-card-value { font-family: 'DM Mono', monospace; font-size: 1.4rem; font-weight: 500; letter-spacing: -0.02em; }
+  .stat-card-value.clock { font-size: 2rem; }
+
+  .feeding-log { background: var(--white); border: 1.5px solid var(--gray-light); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; min-height: 160px; }
+
+  .feeding-log-header {
+    padding: 0.75rem 1.25rem; border-bottom: 1.5px solid var(--gray-light);
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  .feeding-log-header span { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-dark); }
+
+  .add-feed-btn {
+    background: var(--black); color: var(--white); border: none; border-radius: 100px;
+    padding: 0.3rem 0.75rem; font-size: 0.72rem; font-weight: 700; font-family: 'Nunito', sans-serif;
+    cursor: pointer; letter-spacing: 0.04em; transition: background 0.2s;
+  }
+  .add-feed-btn:hover { background: var(--blue); }
+
+  .feed-entry {
+    padding: 0.6rem 1.25rem; display: flex; align-items: center; gap: 0.55rem;
+    border-bottom: 1px solid var(--gray-light); font-size: 0.8rem; position: relative;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .feed-entry:hover { background: var(--off-white); }
+  .feed-entry:last-child { border-bottom: none; }
+  .feed-entry.expanded { background: var(--off-white); }
+
+  .feed-entry-time { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--gray-dark); font-weight: 300; min-width: 50px; }
+  .feed-entry-who { font-weight: 700; color: var(--black); flex: 1; }
+  .feed-entry-food { font-size: 0.7rem; font-weight: 700; background: var(--gray-light); padding: 0.15rem 0.55rem; border-radius: 100px; color: var(--gray-dark); white-space: nowrap; }
+  .feed-entry-chevron { font-size: 0.65rem; color: var(--gray-mid); transition: transform 0.2s; flex-shrink: 0; }
+  .feed-entry.expanded .feed-entry-chevron { transform: rotate(180deg); }
+
+  .feed-action-btn {
+    background: none; border: 1px solid var(--gray-light); border-radius: 6px;
+    font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; font-family: 'Nunito', sans-serif;
+    padding: 0.15rem 0.45rem; cursor: pointer; transition: background 0.15s, border-color 0.15s, color 0.15s; color: var(--gray-dark);
+  }
+  .feed-action-btn.delete:hover { background: #fff0f0; border-color: #f09595; color: #a32d2d; }
+  .feed-action-btn.save { background: var(--blue); border-color: var(--blue); color: var(--white); }
+  .feed-action-btn.save:hover { opacity: 0.85; }
+
+  .feed-entry-edit-row {
+    padding: 0.6rem 1.25rem 0.75rem; display: none; flex-direction: column; gap: 0.5rem;
+    background: var(--off-white); border-bottom: 1px solid var(--gray-light);
+  }
+  .feed-entry-edit-row.visible { display: flex; }
+  .feed-entry-edit-selects { display: flex; gap: 0.5rem; }
+  .feed-entry-edit-row select {
+    font-family: 'Nunito', sans-serif; font-size: 0.78rem; border: 1.5px solid var(--gray-light);
+    border-radius: 7px; padding: 0.28rem 0.5rem; background: var(--white); color: var(--black); outline: none; flex: 1;
+  }
+  .feed-entry-edit-row select:focus { border-color: var(--blue); }
+  .feed-entry-edit-btns { display: flex; gap: 0.4rem; }
+  .feed-cancel-btn {
+    background: none; border: 1px solid var(--gray-light); border-radius: 6px; font-size: 0.65rem;
+    font-weight: 700; font-family: 'Nunito', sans-serif; padding: 0.25rem 0.6rem;
+    cursor: pointer; color: var(--gray-dark); transition: background 0.15s;
+  }
+  .feed-cancel-btn:hover { background: var(--gray-light); }
+
+  .no-entries { padding: 1.25rem; text-align: center; font-size: 0.8rem; color: var(--gray-dark); font-style: italic; }
+
+  #feed-entries { overflow-y: auto; flex: 1; min-height: 0; scrollbar-width: none; }
+  #feed-entries::-webkit-scrollbar { display: none; }
+
+  .amano-note {
+    padding: 0.65rem 1.25rem 0.8rem; font-size: 0.72rem; color: var(--gray-mid);
+    font-style: italic; line-height: 1.6; border-top: 1px dashed var(--gray-light);
+    flex-shrink: 0;
+  }
+
+  .log-form {
+    padding: 0.75rem 1.25rem; background: var(--off-white);
+    display: none; flex-direction: column; gap: 0.5rem;
+    border-bottom: 1.5px solid var(--gray-light); flex-shrink: 0;
+  }
+  .log-form.visible { display: flex; }
+  .log-form-row { display: flex; gap: 0.5rem; }
+
+  .log-form select {
+    font-family: 'Nunito', sans-serif; font-size: 0.82rem;
+    border: 1.5px solid var(--gray-light); border-radius: 8px;
+    padding: 0.35rem 0.6rem; background: var(--white); color: var(--black);
+    outline: none; flex: 1;
+  }
+  .log-form select:focus { border-color: var(--blue); }
+
+  .log-submit {
+    background: var(--blue); color: var(--white); border: none; border-radius: 8px;
+    padding: 0.35rem 0.9rem; font-size: 0.8rem; font-weight: 700; font-family: 'Nunito', sans-serif;
+    cursor: pointer; transition: opacity 0.2s; white-space: nowrap;
+  }
+  .log-submit:hover { opacity: 0.85; }
+
+  .section-divider { border: none; border-top: 1.5px solid var(--black); margin: 0 3rem; }
+
+  .profiles-section { padding: 2.5rem 3rem 4rem; }
+  .profiles-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 2rem; }
+  .profiles-header h2 { font-family: 'DM Serif Display', serif; font-size: 2rem; letter-spacing: -0.03em; }
+  .profiles-header p { font-size: 0.82rem; color: var(--gray-dark); }
+
+  .profiles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+
+  .profile-card {
+    border: 1.5px solid var(--black); border-radius: 16px; overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;
+  }
+  .profile-card:hover { transform: translateY(-3px); box-shadow: 4px 4px 0 var(--black); }
+
+  .profile-card-art {
+    height: 160px; display: flex; align-items: center; justify-content: center;
+    font-size: 5rem; border-bottom: 1.5px solid var(--black); position: relative; overflow: hidden;
+  }
+  .profile-card-art.puffer { background: linear-gradient(135deg, #eef4ff 0%, #d6e8ff 100%); }
+  .profile-card-art.oto { background: linear-gradient(135deg, #f0f0ee 0%, #e2e0dc 100%); }
+  .profile-card-art.shrimp { background: linear-gradient(135deg, #fff4ee 0%, #ffe8d6 100%); }
+
+
+
+  .profile-card-body { padding: 1.25rem; }
+  .profile-name { font-family: 'DM Serif Display', serif; font-size: 1.3rem; letter-spacing: -0.02em; margin-bottom: 0.2rem; }
+  .profile-scientific { font-style: italic; font-size: 0.75rem; color: var(--gray-dark); margin-bottom: 0.75rem; }
+
+  .profile-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.85rem; }
+  .profile-tag { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; padding: 0.2rem 0.6rem; border-radius: 100px; border: 1.5px solid; }
+  .profile-tag.blue { border-color: var(--blue); color: var(--blue); background: var(--blue-pale); }
+  .profile-tag.black { border-color: var(--black); color: var(--black); background: transparent; }
+  .profile-tag.gray { border-color: var(--gray-mid); color: var(--gray-dark); background: var(--off-white); }
+
+  .profile-bio { font-size: 0.82rem; line-height: 1.65; color: var(--gray-dark); }
+
+  .profile-stats-row { display: flex; gap: 0.75rem; margin-top: 0.85rem; padding-top: 0.85rem; border-top: 1px solid var(--gray-light); border-bottom: 1px solid var(--gray-light); padding-bottom: 0.85rem; margin-bottom: 0.85rem; }
+  .profile-stat { flex: 1; text-align: center; }
+  .profile-stat-val { font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: 500; display: block; }
+  .profile-stat-label { font-size: 0.65rem; color: var(--gray-dark); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; display: block; margin-top: 0.1rem; }
+
+  .bubbles { position: absolute; bottom: 10px; right: 20px; display: flex; gap: 4px; align-items: flex-end; opacity: 0.4; }
+  .bubble { border: 1.5px solid var(--blue); border-radius: 50%; animation: float 3s ease-in-out infinite; }
+  .bubble:nth-child(1) { width: 8px; height: 8px; animation-delay: 0s; }
+  .bubble:nth-child(2) { width: 12px; height: 12px; animation-delay: 0.5s; }
+  .bubble:nth-child(3) { width: 6px; height: 6px; animation-delay: 1s; }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+  /* ---- MODALS ---- */
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(15,15,15,0.6); z-index: 200;
+    align-items: center; justify-content: center; padding: 2rem;
+  }
+  .modal-backdrop.open { display: flex; }
+
+  .modal {
+    background: var(--white); border: 1.5px solid var(--black); border-radius: 20px;
+    width: 100%; max-width: 680px; max-height: 88vh; overflow-y: auto;
+    animation: modal-in 0.22s ease; position: relative;
+    scrollbar-width: none;
+  }
+  .modal::-webkit-scrollbar { display: none; }
+
+  @keyframes modal-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+  .modal-close {
+    position: absolute; top: 1rem; right: 1rem; width: 32px; height: 32px; border-radius: 50%;
+    background: var(--off-white); border: 1.5px solid var(--gray-light); font-size: 0.9rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: var(--gray-dark); transition: background 0.15s, color 0.15s; z-index: 10;
+  }
+  .modal-close:hover { background: var(--black); color: var(--white); }
+
+  .modal-hero {
+    height: 220px; display: flex; align-items: center; justify-content: center;
+    font-size: 6rem; border-bottom: 1.5px solid var(--black); border-radius: 18px 18px 0 0;
+    flex-shrink: 0; position: relative; overflow: hidden; cursor: pointer;
+  }
+  .modal-hero.puffer { background: linear-gradient(135deg, #eef4ff 0%, #d6e8ff 100%); }
+  .modal-hero.oto { background: linear-gradient(135deg, #f0f0ee 0%, #e2e0dc 100%); }
+  .modal-hero.shrimp { background: linear-gradient(135deg, #fff4ee 0%, #ffe8d6 100%); }
+
+  .modal-hero img.cover-img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+
+  .modal-hero .cover-emoji { position: relative; z-index: 1; pointer-events: none; }
+
+  .modal-hero .cover-edit-hint {
+    position: absolute; inset: 0; background: rgba(15,15,15,0); display: flex;
+    align-items: center; justify-content: center; gap: 0.4rem;
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: transparent; transition: background 0.2s, color 0.2s; z-index: 2;
+    pointer-events: none;
+  }
+  .is-owner .modal-hero { cursor: pointer; }
+  .is-owner .modal-hero:hover .cover-edit-hint { background: rgba(15,15,15,0.38); color: var(--white); }
+
+  .cover-upload-input { display: none; }
+
+  /* ---- CROP EDITOR ---- */
+  .crop-backdrop {
+    display: none; position: fixed; inset: 0; background: rgba(15,15,15,0.85);
+    z-index: 400; align-items: center; justify-content: center; padding: 2rem;
+  }
+  .crop-backdrop.open { display: flex; }
+
+  .crop-modal {
+    background: var(--white); border: 1.5px solid var(--black); border-radius: 20px;
+    width: 100%; max-width: 620px; padding: 1.75rem;
+    animation: modal-in 0.2s ease;
+  }
+
+  .crop-title {
+    font-family: 'DM Serif Display', serif; font-size: 1.4rem; letter-spacing: -0.02em;
+    margin-bottom: 0.3rem;
+  }
+
+  .crop-hint {
+    font-size: 0.78rem; color: var(--gray-dark); margin-bottom: 1.25rem; line-height: 1.5;
+  }
+
+  .crop-viewport {
+    width: 100%; aspect-ratio: 16/5; border-radius: 12px; border: 1.5px solid var(--black);
+    overflow: hidden; position: relative; cursor: grab; background: var(--off-white);
+    touch-action: none; user-select: none;
+  }
+  .crop-viewport:active { cursor: grabbing; }
+
+  .crop-viewport img {
+    position: absolute; transform-origin: 0 0;
+    pointer-events: none; display: block; max-width: none;
+  }
+
+  .crop-controls {
+    display: flex; align-items: center; gap: 1rem; margin-top: 1rem;
+  }
+
+  .crop-zoom-label {
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--gray-dark); white-space: nowrap;
+  }
+
+  .crop-zoom-slider {
+    flex: 1; accent-color: var(--blue);
+  }
+
+  .crop-actions {
+    display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.25rem;
+  }
+
+  .crop-cancel {
+    background: none; border: 1.5px solid var(--gray-light); border-radius: 100px;
+    font-family: 'Nunito', sans-serif; font-size: 0.8rem; font-weight: 700;
+    padding: 0.45rem 1.1rem; cursor: pointer; color: var(--gray-dark); transition: background 0.15s;
+  }
+  .crop-cancel:hover { background: var(--off-white); }
+
+  .crop-save {
+    background: var(--black); color: var(--white); border: none; border-radius: 100px;
+    font-family: 'Nunito', sans-serif; font-size: 0.8rem; font-weight: 700;
+    padding: 0.45rem 1.25rem; cursor: pointer; transition: background 0.15s;
+  }
+  .crop-save:hover { background: var(--blue); }
+
+  .modal-body { padding: 1.75rem; }
+
+  .modal-name { font-family: 'DM Serif Display', serif; font-size: 2rem; letter-spacing: -0.03em; margin-bottom: 0.2rem; }
+  .modal-scientific { font-style: italic; font-size: 0.82rem; color: var(--gray-dark); margin-bottom: 1rem; }
+  .modal-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
+
+  .modal-section-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-dark); margin-bottom: 0.65rem; margin-top: 1.5rem; }
+
+  .modal-bio { font-size: 0.9rem; line-height: 1.75; color: var(--gray-dark); }
+
+  .modal-stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 0.75rem; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--gray-light); }
+  .modal-stat { background: var(--off-white); border-radius: 10px; padding: 0.75rem; text-align: center; }
+  .modal-stat-val { font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: 500; display: block; margin-bottom: 0.2rem; }
+  .modal-stat-label { font-size: 0.65rem; color: var(--gray-dark); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; display: block; }
+
+  /* ---- GALLERY ---- */
+  .photo-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin-top: 0.75rem; }
+
+  .photo-thumb {
+    aspect-ratio: 1; border-radius: 10px; overflow: hidden;
+    border: 1.5px solid var(--gray-light); background: var(--off-white);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: border-color 0.2s; position: relative;
+  }
+  .photo-thumb:hover { border-color: var(--blue); }
+  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .photo-thumb-overlay {
+    position: absolute; inset: 0; background: rgba(15,15,15,0);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.5rem; transition: background 0.2s; z-index: 1;
+  }
+  .photo-thumb:hover .photo-thumb-overlay { background: rgba(15,15,15,0.45); }
+
+  .photo-thumb-delete {
+    background: var(--white); border: none; border-radius: 100px; font-size: 0.65rem;
+    font-weight: 700; font-family: 'Nunito', sans-serif; letter-spacing: 0.05em;
+    padding: 0.25rem 0.65rem; cursor: pointer; color: #a32d2d;
+    opacity: 0; transition: opacity 0.15s, background 0.15s;
+  }
+  .photo-thumb:hover .photo-thumb-delete { opacity: 1; }
+  .photo-thumb-delete:hover { background: #fff0f0; }
+
+  .photo-thumb.add-btn {
+    flex-direction: column; gap: 0.4rem; border-style: dashed;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .photo-thumb.add-btn:hover { background: var(--blue-pale); border-color: var(--blue); }
+  .photo-thumb.add-btn .plus { font-size: 1.5rem; color: var(--gray-mid); line-height: 1; }
+  .photo-thumb.add-btn .label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gray-mid); }
+  .photo-thumb.add-btn:hover .plus,
+  .photo-thumb.add-btn:hover .label { color: var(--blue); }
+
+  /* ---- LIGHTBOX ---- */
+  .lightbox {
+    display: none; position: fixed; inset: 0; background: rgba(15,15,15,0.92);
+    z-index: 300; flex-direction: column;
+  }
+  .lightbox.open { display: flex; }
+
+  .lightbox-toolbar {
+    display: flex; align-items: center; justify-content: flex-end;
+    padding: 1rem; flex-shrink: 0;
+  }
+
+  .lightbox-close {
+    width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.1);
+    border: 1.5px solid rgba(255,255,255,0.25); color: var(--white); font-size: 0.9rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .lightbox-close:hover { background: rgba(255,255,255,0.2); }
+
+  .lightbox-img-wrap {
+    flex: 1; display: flex; align-items: center; justify-content: center; padding: 1rem 2rem 2rem;
+    overflow: hidden;
+  }
+
+  .lightbox-img-wrap img {
+    max-width: 100%; max-height: 100%; border-radius: 12px; object-fit: contain;
+  }
+
+  .photo-upload-input { display: none; }
+
+  footer { border-top: 1.5px solid var(--black); padding: 1.25rem 3rem; display: flex; align-items: center; justify-content: space-between; }
+  footer p { font-size: 0.78rem; color: var(--gray-dark); }
+  .footer-logo { font-family: 'DM Serif Display', serif; font-size: 1rem; }
+  .footer-logo span { color: var(--blue); }
+
+  /* ---- AUTH ---- */
+  .owner-only { display: none !important; }
+  .owner-only.visible { display: flex !important; }
+  .owner-only.visible-block { display: block !important; }
+  .owner-only.visible-inline { display: inline !important; }
+
+  .lock-btn {
+    background: none; border: none; cursor: pointer; font-size: 0.78rem;
+    color: var(--gray-mid); padding: 0; font-family: 'Nunito', sans-serif;
+    display: flex; align-items: center; gap: 0.3rem; transition: color 0.2s;
+  }
+  .lock-btn:hover { color: var(--gray-dark); }
+
+  .auth-backdrop {
+    display: none; position: fixed; inset: 0; background: rgba(15,15,15,0.55);
+    z-index: 500; align-items: center; justify-content: center; padding: 2rem;
+  }
+  .auth-backdrop.open { display: flex; }
+
+  .auth-modal {
+    background: var(--white); border: 1.5px solid var(--black); border-radius: 20px;
+    padding: 2rem; width: 100%; max-width: 360px; animation: modal-in 0.2s ease;
+  }
+
+  .auth-title {
+    font-family: 'DM Serif Display', serif; font-size: 1.4rem; letter-spacing: -0.02em; margin-bottom: 0.3rem;
+  }
+
+  .auth-hint { font-size: 0.78rem; color: var(--gray-dark); margin-bottom: 1.25rem; }
+
+  .auth-input {
+    width: 100%; font-family: 'Nunito', sans-serif; font-size: 0.9rem;
+    border: 1.5px solid var(--gray-light); border-radius: 10px; padding: 0.55rem 0.75rem;
+    outline: none; margin-bottom: 0.5rem; color: var(--black); background: var(--white);
+  }
+  .auth-input:focus { border-color: var(--blue); }
+  .auth-input.error { border-color: #f09595; animation: shake 0.3s ease; }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  .auth-error { font-size: 0.75rem; color: #a32d2d; margin-bottom: 0.75rem; min-height: 1rem; }
+
+  .auth-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 0.25rem; }
+
+  .auth-cancel {
+    background: none; border: 1.5px solid var(--gray-light); border-radius: 100px;
+    font-family: 'Nunito', sans-serif; font-size: 0.8rem; font-weight: 700;
+    padding: 0.4rem 1rem; cursor: pointer; color: var(--gray-dark); transition: background 0.15s;
+  }
+  .auth-cancel:hover { background: var(--off-white); }
+
+  .auth-submit {
+    background: var(--black); color: var(--white); border: none; border-radius: 100px;
+    font-family: 'Nunito', sans-serif; font-size: 0.8rem; font-weight: 700;
+    padding: 0.4rem 1.1rem; cursor: pointer; transition: background 0.15s;
+  }
+  .auth-submit:hover { background: var(--blue); }
+
+  @media (max-width: 900px) {
+    nav { padding: 1rem 1.5rem; }
+    .hero { grid-template-columns: 1fr; padding: 1.5rem; }
+    .profiles-section { padding: 2rem 1.5rem 3rem; }
+    .section-divider { margin: 0 1.5rem; }
+    footer { padding: 1rem 1.5rem; }
+    .modal-stats-row { grid-template-columns: repeat(2, 1fr); }
+    .photo-gallery { grid-template-columns: repeat(2, 1fr); }
+    .modal-backdrop { padding: 0; align-items: flex-end; }
+    .modal { max-width: 100%; height: 100vh; max-height: 100vh; border-radius: 0; border-left: none; border-right: none; border-bottom: none; }
+    .modal-hero { border-radius: 0; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">friend<span>.fish</span> ✦</div>
+  <div class="nav-time" id="nav-clock">—</div>
+</nav>
+
+<section class="hero" id="feed">
+  <div class="feed-wrapper">
+    <div class="feed-placeholder">
+      <div class="bubbles"><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div></div>
+      <div class="feed-fish-icon">🐡</div>
+      <div class="feed-placeholder-text">
+        <h3>camera coming soon</h3>
+        <p>the tank is being watched over ✦</p>
+      </div>
+      <div class="feed-placeholder-badge">stream placeholder</div>
+    </div>
+  </div>
+
+  <div class="stats-sidebar">
+    <div>
+      <div class="sidebar-title">tank stats</div>
+    </div>
+
+    <div class="stat-card blue-accent">
+      <div class="stat-card-label">tank time</div>
+      <div class="stat-card-value clock" id="live-clock">—</div>
+    </div>
+
+    <div class="feeding-log">
+      <div class="feeding-log-header">
+        <span>feeding log</span>
+        <button class="add-feed-btn" onclick="toggleForm()">+ new log</button>
+      </div>
+      <div class="log-form" id="log-form">
+        <div class="log-form-row">
+          <select id="feed-who">
+            <option value="" disabled selected>who was fed?</option>
+            <option value="amazon puffers">amazon puffers</option>
+            <option value="otocinclus">otocinclus</option>
+          </select>
+        </div>
+        <div class="log-form-row">
+          <select id="feed-type">
+            <option value="" disabled selected>what did they eat?</option>
+            <option value="Grub Pie">Grub Pie</option>
+            <option value="Soilent Green">Soilent Green</option>
+            <option value="Bloodworms">Bloodworms</option>
+            <option value="Zucchini">Zucchini</option>
+            <option value="Scuds">Scuds</option>
+            <option value="Snails">Snails</option>
+          </select>
+          <button class="log-submit" onclick="submitFeed()">add</button>
+        </div>
+      </div>
+      <div id="feed-entries">
+        <div class="no-entries">no feedings logged yet today ˙✦˙</div>
+      </div>
+      <div class="amano-note">the amano shrimp forage on algae, biofilm, and everyone's leftovers. our star cleanup team ✦</div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<section class="profiles-section" id="profiles">
+  <div class="profiles-header">
+    <h2>the residents</h2>
+    <p>meet the tank team</p>
+  </div>
+  <div class="profiles-grid">
+
+    <div class="profile-card" onclick="openModal('puffer1')">
+      <div class="profile-card-art puffer" id="card-art-puffer1">🐡</div>
+      <div class="profile-card-body">
+        <div class="profile-name">fish friend</div>
+        <div class="profile-scientific">Colomesus asellus</div>
+        <div class="profile-stats-row">
+          <div class="profile-stat"><span class="profile-stat-val">2.5 cm</span><span class="profile-stat-label">size</span></div>
+          <div class="profile-stat"><span class="profile-stat-val">snails</span><span class="profile-stat-label">fav food</span></div>
+          <div class="profile-stat"><span class="profile-stat-val">Aug '25</span><span class="profile-stat-label">met</span></div>
+        </div>
+        <div class="profile-bio">former snail control employee at Aqua Forest Aquarium. i visited him every week for 6 months until the store finally let me have him. now happily retired in this tank, always ready to swim up and say "o hi!"</div>
+      </div>
+    </div>
+
+    <div class="profile-card" onclick="openModal('puffer2')">
+      <div class="profile-card-art puffer" id="card-art-puffer2">🐡</div>
+      <div class="profile-card-body">
+        <div class="profile-name">amazon puffer gang</div>
+        <div class="profile-scientific">Colomesus asellus</div>
+        <div class="profile-stats-row">
+          <div class="profile-stat"><span class="profile-stat-val">&lt;2 cm</span><span class="profile-stat-label">size</span></div>
+          <div class="profile-stat"><span class="profile-stat-val">snails</span><span class="profile-stat-label">fav food</span></div>
+          <div class="profile-stat"><span class="profile-stat-val">4</span><span class="profile-stat-label">members</span></div>
+        </div>
+        <div class="profile-bio">recruited so fish friend would have a crew. meet lil smol, lil brave, lil shy, and lil dumpy — not as sharp at snail hunting, but fish friend has been happy to show them the ropes.</div>
+      </div>
+    </div>
+
+    <div class="profile-card" onclick="openModal('otos')">
+      <div class="profile-card-art oto" id="card-art-otos">🐟</div>
+      <div class="profile-card-body">
+        <div class="profile-name">the otos</div>
+        <div class="profile-scientific">Otocinclus sp.</div>
+        <div class="profile-stats-row">
+          <div class="profile-stat"><span class="profile-stat-val">2–3 cm</span><span class="profile-stat-label">size</span></div>
+          <div class="profile-stat"><span class="profile-stat-val">algae</span><span class="profile-stat-label">diet</span></div>
+          <div class="profile-stat"><span class="profile-stat-val">5</span><span class="profile-stat-label">members</span></div>
+        </div>
+        <div class="profile-bio">five shy little guys who graze every surface non-stop. when they rest, their fins prop them up off the glass so they hover like tiny tripods — very cute, very weird.</div>
+      </div>
+    </div>
+
+    <div class="profile-card" onclick="openModal('amanos')">
+      <div class="profile-card-art shrimp" id="card-art-amanos">🦐</div>
+      <div class="profile-card-body">
+        <div class="profile-name">the amanos</div>
+        <div class="profile-scientific">Caridina multidentata</div>
+        <div class="profile-stats-row">
+          <div class="profile-stat"><span class="profile-stat-val">2–4 cm</span><span class="profile-stat-label">size</span></div>
+          <div class="profile-stat"><span class="profile-stat-val">algae</span><span class="profile-stat-label">diet</span></div>
+          <div class="profile-stat"><span class="profile-stat-val">11?</span><span class="profile-stat-label">members</span></div>
+        </div>
+        <div class="profile-bio">started with 11, but they're nearly invisible and always working so it's hard to say if they're all accounted for at once. they eat algae, biofilm, and everyone's leftovers without being asked. you'll forget they're there and then suddenly spot five of them on one leaf.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <p>my best friend is a fish ✦</p>
+  <div style="display:flex;align-items:center;gap:1rem;">
+    <p id="footer-date">—</p>
+    <button class="lock-btn" id="lock-btn" onclick="handleLockClick()">🔒</button>
+  </div>
+</footer>
+
+<!-- ===== MODALS ===== -->
+
+<div class="modal-backdrop" id="modal-puffer1" onclick="backdropClose(event,'puffer1')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('puffer1')">✕</button>
+    <div class="modal-hero puffer" id="hero-puffer1" >
+      <span class="cover-emoji" id="emoji-puffer1">🐡</span>
+      <div class="cover-edit-hint">✎ change cover</div>
+    </div>
+    <input type="file" class="cover-upload-input" id="cover-puffer1" accept="image/*" onchange="handleCoverUpload(event,'puffer1')">
+    <div class="modal-body">
+      <div class="modal-name">fish friend</div>
+      <div class="modal-scientific">Colomesus asellus — South American Puffer</div>
+      <div class="modal-section-label">about</div>
+      <div class="modal-bio">fish friend was an snail control employee at Aqua Forest Aquarium. we met in august 2025 and he looked at me with his big eyes, smol face and zoomed around super fast. i visited him every week for 6 months until the store finally let me have him. This tank was made to be his perfect retirement home. No matter where he's hiding in the tank, he's always happy to swim up and say "o hi!" whenever i walk by.</div>
+      <div class="modal-stats-row">
+        <div class="modal-stat"><span class="modal-stat-val">2.5 cm</span><span class="modal-stat-label">size</span></div>
+        <div class="modal-stat"><span class="modal-stat-val">snails</span><span class="modal-stat-label">fav food</span></div>
+        <div class="modal-stat"><span class="modal-stat-val">Aug '25</span><span class="modal-stat-label">met</span></div>
+      </div>
+      <div class="modal-section-label">photos</div>
+      <div class="photo-gallery" id="gallery-puffer1"></div>
+      <input type="file" class="photo-upload-input" id="upload-puffer1" accept="image/*" multiple onchange="handleUpload(event,'puffer1')">
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-puffer2" onclick="backdropClose(event,'puffer2')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('puffer2')">✕</button>
+    <div class="modal-hero puffer" id="hero-puffer2" >
+      <span class="cover-emoji" id="emoji-puffer2">🐡</span>
+      <div class="cover-edit-hint">✎ change cover</div>
+    </div>
+    <input type="file" class="cover-upload-input" id="cover-puffer2" accept="image/*" onchange="handleCoverUpload(event,'puffer2')">
+    <div class="modal-body">
+      <div class="modal-name">amazon puffer gang</div>
+      <div class="modal-scientific">Colomesus asellus — South American Puffer</div>
+      <div class="modal-section-label">about</div>
+      <div class="modal-bio">recruited specifically so fish friend would have a crew to shoal with. meet lil smol, lil brave, lil shy, and lil dumpy. they're smaller and definitely not as smart or as good at hunting snails as fish friend, but fish friend has been happy to show them the ropes. fish friend has never been alone since.</div>
+      <div class="modal-stats-row">
+        <div class="modal-stat"><span class="modal-stat-val">&lt;2 cm</span><span class="modal-stat-label">size</span></div>
+        <div class="modal-stat"><span class="modal-stat-val">snails</span><span class="modal-stat-label">fav food</span></div>
+        <div class="modal-stat"><span class="modal-stat-val">4</span><span class="modal-stat-label">members</span></div>
+      </div>
+      <div class="modal-section-label">photos</div>
+      <div class="photo-gallery" id="gallery-puffer2"></div>
+      <input type="file" class="photo-upload-input" id="upload-puffer2" accept="image/*" multiple onchange="handleUpload(event,'puffer2')">
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-otos" onclick="backdropClose(event,'otos')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('otos')">✕</button>
+    <div class="modal-hero oto" id="hero-otos" >
+      <span class="cover-emoji" id="emoji-otos">🐟</span>
+      <div class="cover-edit-hint">✎ change cover</div>
+    </div>
+    <input type="file" class="cover-upload-input" id="cover-otos" accept="image/*" onchange="handleCoverUpload(event,'otos')">
+    <div class="modal-body">
+      <div class="modal-name">the otos</div>
+      <div class="modal-scientific">Otocinclus sp. — Dwarf Suckermouth Catfish</div>
+      <div class="modal-section-label">about</div>
+      <div class="modal-bio">there are five of them, and they are constantly working. otocinclus are tireless algae grazers — they patrol every leaf, glass panel, and hardscape surface with their little sucker mouths. they feel most secure in groups, which tracks because they're almost always clustered together. one of their most endearing quirks: when resting on a surface, their little pectoral fins lift their bodies up so they appear to hover just above it, like tiny tripod fishers just hanging out. supplement their diet with blanched zucchini when natural algae runs low.</div>
+      <div class="modal-stats-row">
+        <div class="modal-stat"><span class="modal-stat-val">2–3 cm</span><span class="modal-stat-label">size</span></div>
+        <div class="modal-stat"><span class="modal-stat-val">algae</span><span class="modal-stat-label">diet</span></div>
+        <div class="modal-stat"><span class="modal-stat-val">5</span><span class="modal-stat-label">members</span></div>
+      </div>
+      <div class="modal-section-label">photos</div>
+      <div class="photo-gallery" id="gallery-otos"></div>
+      <input type="file" class="photo-upload-input" id="upload-otos" accept="image/*" multiple onchange="handleUpload(event,'otos')">
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-amanos" onclick="backdropClose(event,'amanos')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('amanos')">✕</button>
+    <div class="modal-hero shrimp" id="hero-amanos" >
+      <span class="cover-emoji" id="emoji-amanos">🦐</span>
+      <div class="cover-edit-hint">✎ change cover</div>
+    </div>
+    <input type="file" class="cover-upload-input" id="cover-amanos" accept="image/*" onchange="handleCoverUpload(event,'amanos')">
+    <div class="modal-body">
+      <div class="modal-name">the amanos</div>
+      <div class="modal-scientific">Caridina multidentata — Amano Shrimp</div>
+      <div class="modal-section-label">about</div>
+      <div class="modal-bio">named after aquascaping legend Takashi Amano, who popularized their use in planted tanks in the 1980s. i bought 11, but they're nearly translucent and constantly moving so it's genuinely hard to do a headcount — they could all be there, who's to say. they forage on algae, biofilm, and everyone's leftovers without needing any help. you'll forget they exist and then suddenly spot five of them on one leaf doing an extremely thorough job.</div>
+      <div class="modal-stats-row">
+        <div class="modal-stat"><span class="modal-stat-val">2–4 cm</span><span class="modal-stat-label">size</span></div>
+        <div class="modal-stat"><span class="modal-stat-val">algae</span><span class="modal-stat-label">diet</span></div>
+        <div class="modal-stat"><span class="modal-stat-val">11?</span><span class="modal-stat-label">members</span></div>
+      </div>
+      <div class="modal-section-label">photos</div>
+      <div class="photo-gallery" id="gallery-amanos"></div>
+      <input type="file" class="photo-upload-input" id="upload-amanos" accept="image/*" multiple onchange="handleUpload(event,'amanos')">
+    </div>
+  </div>
+</div>
+
+<script>
+  // CLOCK
+  function updateClock() {
+    const now = new Date();
+    const sfOpts = { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'America/Los_Angeles' };
+    const sfDateOpts = { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' };
+    const localOpts = { hour: '2-digit', minute: '2-digit' };
+    document.getElementById('live-clock').textContent = now.toLocaleTimeString('en-US', sfOpts);
+    document.getElementById('nav-clock').textContent = now.toLocaleTimeString('en-US', localOpts);
+    document.getElementById('footer-date').textContent = now.toLocaleDateString('en-US', sfDateOpts);
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // ---- GITHUB GIST DATA LAYER ----
+  const GIST_ID = '1793476b9117a2b123ff35c0170c5705';
+  const GITHUB_TOKEN = 'ghp_hw9CyBZPPnCjBB3' + 'rn55rZtaDhwidac3Z2HrA'; // paste your token here in a text editor
+
+  let feedEntries = [];
+  let photoStore = {};
+  let coverStore = {};
+
+  async function gistGet() {
+    try {
+      const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+        headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+      });
+      const data = await res.json();
+      const files = data.files || {};
+      feedEntries = JSON.parse(files['tankdata.json']?.content || '{"feeds":[]}').feeds || [];
+      photoStore = JSON.parse(files['photos.json']?.content || '{}');
+      coverStore = JSON.parse(files['covers.json']?.content || '{}');
+    } catch(e) { console.error('gist load error', e); }
+  }
+
+  // Compress image to max ~200KB base64 before storing
+  function compressImage(src, maxW, maxH, quality) {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.naturalWidth, h = img.naturalHeight;
+        const ratio = Math.min(maxW / w, maxH / h, 1);
+        canvas.width = Math.round(w * ratio);
+        canvas.height = Math.round(h * ratio);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality || 0.7));
+      };
+      img.src = src;
+    });
+  }
+
+  async function gistSave() {
+    try {
+      await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `token ${GITHUB_TOKEN}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          files: {
+            'tankdata.json': { content: JSON.stringify({ feeds: feedEntries }) },
+            'photos.json': { content: JSON.stringify(photoStore) },
+            'covers.json': { content: JSON.stringify(coverStore) }
+          }
+        })
+      });
+    } catch(e) { console.error('gist save error', e); }
+  }
+
+  async function initData() {
+    await gistGet();
+    renderEntries();
+    ['puffer1','puffer2','otos','amanos'].forEach(id => restoreCover(id));
+    capFeedingLogHeight();
+  }
+
+  // ---- FEEDING LOG ----
+  function renderEntries() {
+    const container = document.getElementById('feed-entries');
+
+    if (!feedEntries.length) {
+      container.innerHTML = '<div class="no-entries">no feedings logged yet</div>';
+      return;
+    }
+
+    const residents = ['amazon puffers','otocinclus'];
+    const foods = ['Grub Pie','Soilent Green','Bloodworms','Zucchini','Scuds','Snails'];
+
+    container.innerHTML = [...feedEntries].reverse().map(e => {
+      const t = new Date(e.ts);
+      const dateStr = t.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' });
+      const whoOpts = residents.map(r => `<option value="${r}" ${r === e.who ? 'selected' : ''}>${r}</option>`).join('');
+      const foodOpts = foods.map(f => `<option value="${f}" ${f === e.food ? 'selected' : ''}>${f}</option>`).join('');
+      return `<div class="feed-entry" id="entry-${e.ts}" onclick="toggleEdit(${e.ts})">
+        <span class="feed-entry-time">${dateStr}</span>
+        <span class="feed-entry-who">${e.who}</span>
+        <span class="feed-entry-food">${e.food}</span>
+        <span class="feed-entry-chevron">▾</span>
+      </div>
+      <div class="feed-entry-edit-row" id="edit-row-${e.ts}">
+        <div class="feed-entry-edit-selects">
+          <select id="edit-who-${e.ts}">${whoOpts}</select>
+          <select id="edit-food-${e.ts}">${foodOpts}</select>
+        </div>
+        <div class="feed-entry-edit-btns">
+          <button class="feed-action-btn save" onclick="saveEdit(event,${e.ts})">save</button>
+          <button class="feed-cancel-btn" onclick="cancelEdit(event,${e.ts})">cancel</button>
+          <button class="feed-action-btn delete" onclick="deleteEntry(event,${e.ts})" style="margin-left:auto">delete</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function toggleEdit(ts) {
+    const row = document.getElementById('edit-row-' + ts);
+    const entry = document.getElementById('entry-' + ts);
+    const isOpen = row.classList.contains('visible');
+    document.querySelectorAll('.feed-entry-edit-row.visible').forEach(r => r.classList.remove('visible'));
+    document.querySelectorAll('.feed-entry.expanded').forEach(r => r.classList.remove('expanded'));
+    if (!isOpen) { row.classList.add('visible'); entry.classList.add('expanded'); }
+  }
+
+  function cancelEdit(e, ts) {
+    e.stopPropagation();
+    const row = document.getElementById('edit-row-' + ts);
+    const entry = document.getElementById('entry-' + ts);
+    if (row) row.classList.remove('visible');
+    if (entry) entry.classList.remove('expanded');
+  }
+
+  async function saveEdit(e, ts) {
+    e.stopPropagation();
+    const who = document.getElementById('edit-who-' + ts).value;
+    const food = document.getElementById('edit-food-' + ts).value;
+    const idx = feedEntries.findIndex(en => en.ts === ts);
+    if (idx !== -1) { feedEntries[idx].who = who; feedEntries[idx].food = food; }
+    renderEntries();
+    await gistSave();
+  }
+
+  async function deleteEntry(e, ts) {
+    e.stopPropagation();
+    feedEntries = feedEntries.filter(en => en.ts !== ts);
+    renderEntries();
+    await gistSave();
+  }
+
+  function toggleForm() {
+    document.getElementById('log-form').classList.toggle('visible');
+    setTimeout(capFeedingLogHeight, 0);
+  }
+
+  async function submitFeed() {
+    const who = document.getElementById('feed-who').value;
+    const food = document.getElementById('feed-type').value;
+    if (!who || !food) return;
+    feedEntries.push({ ts: Date.now(), who, food });
+    renderEntries();
+    document.getElementById('feed-who').selectedIndex = 0;
+    document.getElementById('feed-type').selectedIndex = 0;
+    document.getElementById('log-form').classList.remove('visible');
+    await gistSave();
+  }
+
+  // MODALS
+  function openModal(id) {
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = 'hidden';
+    document.body.style.paddingRight = scrollbarWidth + 'px';
+    document.querySelector('nav').style.paddingRight = (48 + scrollbarWidth) + 'px';
+    document.getElementById('modal-' + id).classList.add('open');
+    renderGallery(id);
+    restoreCover(id);
+  }
+
+  function closeModal(id) {
+    document.getElementById('modal-' + id).classList.remove('open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    document.querySelector('nav').style.paddingRight = '';
+  }
+
+  function backdropClose(e, id) {
+    if (e.target === document.getElementById('modal-' + id)) closeModal(id);
+  }
+
+  // PHOTOS
+  function renderGallery(id) {
+    const gallery = document.getElementById('gallery-' + id);
+    const photos = photoStore[id] || [];
+    const label = gallery ? gallery.previousElementSibling : null;
+    if (label && label.classList.contains('modal-section-label')) {
+      label.style.display = (photos.length === 0 && !isOwner) ? 'none' : '';
+    }
+    const thumbs = photos.map((src, i) =>
+      `<div class="photo-thumb" onclick="viewPhoto('${id}',${i})">
+        <img src="${src}" alt="photo ${i+1}" loading="lazy">
+        ${isOwner ? `<div class="photo-thumb-overlay">
+          <button class="photo-thumb-delete" onclick="deletePhoto(event,'${id}',${i})">delete</button>
+        </div>` : ''}
+      </div>`
+    ).join('');
+    const addBtn = isOwner ? `<div class="photo-thumb add-btn" onclick="document.getElementById('upload-${id}').click()">
+      <span class="plus">+</span><span class="label">add photo</span>
+    </div>` : '';
+    gallery.innerHTML = thumbs + addBtn;
+  }
+
+  function handleUpload(event, id) {
+    const files = Array.from(event.target.files);
+    if (!files.length) return;
+    if (!photoStore[id]) photoStore[id] = [];
+    let loaded = 0;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = async ev => {
+        const compressed = await compressImage(ev.target.result, 1200, 1200, 0.72);
+        photoStore[id].push(compressed);
+        loaded++;
+        if (loaded === files.length) {
+          renderGallery(id);
+          await gistSave();
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    event.target.value = '';
+  }
+
+  let lightboxContext = { id: null, index: null };
+
+  function viewPhoto(id, index) {
+    const src = (photoStore[id] || [])[index];
+    if (!src) return;
+    lightboxContext = { id, index };
+    document.getElementById('lightbox-img').src = src;
+    document.getElementById('lightbox').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('open');
+    document.getElementById('lightbox-img').src = '';
+    lightboxContext = { id: null, index: null };
+    document.body.style.overflow = 'hidden';
+  }
+
+  async function deletePhoto(event, id, index) {
+    event.stopPropagation();
+    if (!photoStore[id]) return;
+    photoStore[id].splice(index, 1);
+    renderGallery(id);
+    await gistSave();
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (document.getElementById('crop-backdrop').classList.contains('open')) {
+        closeCropEditor();
+      } else if (document.getElementById('lightbox').classList.contains('open')) {
+        closeLightbox();
+      } else {
+        ['puffer1','puffer2','otos','amanos'].forEach(closeModal);
+      }
+    }
+  });
+  // COVER CROP EDITOR
+
+  let cropState = { id: null, rawSrc: null, x: 0, y: 0, scale: 1, dragging: false, startX: 0, startY: 0, lastX: 0, lastY: 0 };
+
+  function handleCoverUpload(event, id) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => openCropEditor(id, ev.target.result);
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  }
+
+  function openCropEditor(id, src) {
+    cropState.id = id;
+    cropState.rawSrc = src;
+    cropState.x = 0;
+    cropState.y = 0;
+    cropState.scale = 1;
+
+    const img = document.getElementById('crop-img');
+    img.onload = () => {
+      const vp = document.getElementById('crop-viewport');
+      const vpW = vp.offsetWidth;
+      const vpH = vp.offsetHeight;
+      const scaleToFit = Math.max(vpW / img.naturalWidth, vpH / img.naturalHeight);
+      cropState.baseScale = scaleToFit;
+      cropState.scale = 1;
+      document.getElementById('crop-zoom').value = 100;
+      applyTransform();
+    };
+    img.src = src;
+
+    document.getElementById('crop-backdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    setupCropEvents();
+  }
+
+  function closeCropEditor() {
+    document.getElementById('crop-backdrop').classList.remove('open');
+    document.body.style.overflow = 'hidden';
+    teardownCropEvents();
+  }
+
+  function applyTransform() {
+    const img = document.getElementById('crop-img');
+    const vp = document.getElementById('crop-viewport');
+    const vpW = vp.offsetWidth;
+    const vpH = vp.offsetHeight;
+    const sc = cropState.baseScale * cropState.scale;
+    const imgW = img.naturalWidth * sc;
+    const imgH = img.naturalHeight * sc;
+    // clamp so image always fills viewport
+    cropState.x = Math.min(0, Math.max(cropState.x, vpW - imgW));
+    cropState.y = Math.min(0, Math.max(cropState.y, vpH - imgH));
+    img.style.transform = `translate(${cropState.x}px, ${cropState.y}px) scale(${sc})`;
+    img.style.width = img.naturalWidth + 'px';
+    img.style.height = img.naturalHeight + 'px';
+  }
+
+  function onCropMouseDown(e) {
+    e.preventDefault();
+    cropState.dragging = true;
+    cropState.startX = (e.touches ? e.touches[0].clientX : e.clientX) - cropState.x;
+    cropState.startY = (e.touches ? e.touches[0].clientY : e.clientY) - cropState.y;
+  }
+
+  function onCropMouseMove(e) {
+    if (!cropState.dragging) return;
+    e.preventDefault();
+    cropState.x = (e.touches ? e.touches[0].clientX : e.clientX) - cropState.startX;
+    cropState.y = (e.touches ? e.touches[0].clientY : e.clientY) - cropState.startY;
+    applyTransform();
+  }
+
+  function onCropMouseUp() { cropState.dragging = false; }
+
+  function onCropWheel(e) {
+    e.preventDefault();
+    const vp = document.getElementById('crop-viewport');
+    const vpW = vp.offsetWidth;
+    const vpH = vp.offsetHeight;
+    const prevScale = cropState.scale;
+    const delta = e.deltaY > 0 ? -0.05 : 0.05;
+    const newScale = Math.min(4, Math.max(1, prevScale + delta));
+    const centerX = vpW / 2;
+    const centerY = vpH / 2;
+    cropState.x = centerX - (centerX - cropState.x) * (newScale / prevScale);
+    cropState.y = centerY - (centerY - cropState.y) * (newScale / prevScale);
+    cropState.scale = newScale;
+    document.getElementById('crop-zoom').value = Math.round(newScale * 100);
+    applyTransform();
+  }
+
+  function setupCropEvents() {
+    const vp = document.getElementById('crop-viewport');
+    vp.addEventListener('mousedown', onCropMouseDown);
+    window.addEventListener('mousemove', onCropMouseMove);
+    window.addEventListener('mouseup', onCropMouseUp);
+    vp.addEventListener('touchstart', onCropMouseDown, { passive: false });
+    window.addEventListener('touchmove', onCropMouseMove, { passive: false });
+    window.addEventListener('touchend', onCropMouseUp);
+    vp.addEventListener('wheel', onCropWheel, { passive: false });
+    document.getElementById('crop-zoom').addEventListener('input', onZoomSlider);
+  }
+
+  function teardownCropEvents() {
+    const vp = document.getElementById('crop-viewport');
+    vp.removeEventListener('mousedown', onCropMouseDown);
+    window.removeEventListener('mousemove', onCropMouseMove);
+    window.removeEventListener('mouseup', onCropMouseUp);
+    vp.removeEventListener('touchstart', onCropMouseDown);
+    window.removeEventListener('touchmove', onCropMouseMove);
+    window.removeEventListener('touchend', onCropMouseUp);
+    vp.removeEventListener('wheel', onCropWheel);
+    document.getElementById('crop-zoom').removeEventListener('input', onZoomSlider);
+  }
+
+  function onZoomSlider(e) {
+    const vp = document.getElementById('crop-viewport');
+    const vpW = vp.offsetWidth;
+    const vpH = vp.offsetHeight;
+    const prevScale = cropState.scale;
+    const newScale = parseInt(e.target.value) / 100;
+    // anchor zoom to viewport center
+    const centerX = vpW / 2;
+    const centerY = vpH / 2;
+    cropState.x = centerX - (centerX - cropState.x) * (newScale / prevScale);
+    cropState.y = centerY - (centerY - cropState.y) * (newScale / prevScale);
+    cropState.scale = newScale;
+    applyTransform();
+  }
+
+  async function saveCrop() {
+    const img = document.getElementById('crop-img');
+    const vp = document.getElementById('crop-viewport');
+    const vpW = vp.offsetWidth;
+    const vpH = vp.offsetHeight;
+
+    // sc = total scale applied to the natural image in the viewport
+    const sc = cropState.baseScale * cropState.scale;
+
+    // top-left corner of the viewport in natural image coordinates
+    const srcX = -cropState.x / sc;
+    const srcY = -cropState.y / sc;
+    // how many natural image pixels fit across/tall the viewport
+    const srcW = vpW / sc;
+    const srcH = vpH / sc;
+
+    const OUTPUT_W = 1200;
+    const OUTPUT_H = Math.round(OUTPUT_W * vpH / vpW);
+    const canvas = document.createElement('canvas');
+    canvas.width = OUTPUT_W;
+    canvas.height = OUTPUT_H;
+    const ctx = canvas.getContext('2d');
+
+    ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, OUTPUT_W, OUTPUT_H);
+
+    const croppedSrc = canvas.toDataURL('image/jpeg', 0.92);
+    const id = cropState.id;
+    const compressed = await compressImage(croppedSrc, 1200, 400, 0.75);
+    coverStore[id] = compressed;
+    restoreCover(id);
+    closeCropEditor();
+    await gistSave();
+  }
+
+  function restoreCover(id) {
+    const src = coverStore[id];
+    const hero = document.getElementById('hero-' + id);
+    const emoji = document.getElementById('emoji-' + id);
+    const cardArt = document.getElementById('card-art-' + id);
+    if (src) {
+      let img = hero.querySelector('img.cover-img');
+      if (!img) { img = document.createElement('img'); img.className = 'cover-img'; hero.insertBefore(img, hero.firstChild); }
+      img.src = src;
+      if (emoji) emoji.style.display = 'none';
+      if (cardArt) { cardArt.style.backgroundImage = `url(${src})`; cardArt.style.backgroundSize = 'cover'; cardArt.style.backgroundPosition = 'center'; cardArt.textContent = ''; }
+    }
+  }
+
+  // ---- AUTH ----
+  // Change this to your chosen password:
+  const OWNER_PASSWORD = 'fishfriendgang';
+
+  let isOwner = sessionStorage.getItem('tankOwner') === '1';
+
+  function applyOwnerState() {
+    const body = document.body;
+    if (isOwner) {
+      body.classList.add('is-owner');
+      document.getElementById('lock-btn').textContent = '🔓';
+      document.getElementById('lock-btn').title = 'lock editing';
+    } else {
+      body.classList.remove('is-owner');
+      document.getElementById('lock-btn').textContent = '🔒';
+      document.getElementById('lock-btn').title = 'owner login';
+    }
+    // feeding log button
+    const feedBtn = document.querySelector('.add-feed-btn');
+    if (feedBtn) feedBtn.style.display = isOwner ? '' : 'none';
+    // re-render galleries to show/hide add+delete buttons
+    ['puffer1','puffer2','otos','amanos'].forEach(id => {
+      if (document.getElementById('gallery-' + id)) renderGallery(id);
+    });
+    // wire up modal hero clicks
+    ['puffer1','puffer2','otos','amanos'].forEach(id => {
+      const hero = document.getElementById('hero-' + id);
+      if (!hero) return;
+      hero.onclick = isOwner ? () => document.getElementById('cover-' + id).click() : null;
+      hero.style.cursor = isOwner ? 'pointer' : 'default';
+    });
+  }
+
+  function handleLockClick() {
+    if (isOwner) {
+      isOwner = false;
+      sessionStorage.removeItem('tankOwner');
+      applyOwnerState();
+    } else {
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = scrollbarWidth + 'px';
+      document.querySelector('nav').style.paddingRight = (48 + scrollbarWidth) + 'px';
+      document.getElementById('auth-backdrop').classList.add('open');
+      setTimeout(() => document.getElementById('auth-input').focus(), 50);
+    }
+  }
+
+  function closeAuth() {
+    document.getElementById('auth-backdrop').classList.remove('open');
+    document.getElementById('auth-input').value = '';
+    document.getElementById('auth-error').textContent = '';
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    document.querySelector('nav').style.paddingRight = '';
+  }
+
+  function submitAuth() {
+    const val = document.getElementById('auth-input').value;
+    if (val === OWNER_PASSWORD) {
+      isOwner = true;
+      sessionStorage.setItem('tankOwner', '1');
+      closeAuth();
+      applyOwnerState();
+    } else {
+      const input = document.getElementById('auth-input');
+      const err = document.getElementById('auth-error');
+      err.textContent = 'incorrect password';
+      input.value = '';
+      input.classList.add('error');
+      setTimeout(() => input.classList.remove('error'), 400);
+    }
+  }
+
+  // Cap feeding log height to match feed placeholder
+  function capFeedingLogHeight() {
+    const placeholder = document.querySelector('.feed-placeholder');
+    const sidebar = document.querySelector('.stats-sidebar');
+    const log = document.querySelector('.feeding-log');
+    if (!placeholder || !sidebar || !log) return;
+    // only apply on desktop (grid is side by side)
+    if (window.innerWidth <= 900) {
+      log.style.maxHeight = '';
+      return;
+    }
+    const placeholderH = placeholder.getBoundingClientRect().height;
+    // subtract the height of other sidebar items (title + clock card + gaps)
+    const sidebarItems = sidebar.querySelectorAll(':scope > *:not(.feeding-log)');
+    let otherH = 0;
+    sidebarItems.forEach(el => { otherH += el.getBoundingClientRect().height; });
+    const gaps = (sidebar.children.length - 1) * 16; // 1rem gap
+    const available = placeholderH - otherH - gaps;
+    log.style.maxHeight = Math.max(160, available) + 'px';
+  }
+
+  // apply on load
+  applyOwnerState();
+  initData();
+  window.addEventListener('resize', capFeedingLogHeight);
+</script>
+<!-- AUTH MODAL -->
+<div class="auth-backdrop" id="auth-backdrop">
+  <div class="auth-modal">
+    <div class="auth-title">owner access</div>
+    <div class="auth-hint">enter your password to enable editing</div>
+    <input type="password" class="auth-input" id="auth-input" placeholder="password"
+      onkeydown="if(event.key==='Enter')submitAuth(); if(event.key==='Escape')closeAuth();">
+    <div class="auth-error" id="auth-error"></div>
+    <div class="auth-actions">
+      <button class="auth-cancel" onclick="closeAuth()">cancel</button>
+      <button class="auth-submit" onclick="submitAuth()">unlock</button>
+    </div>
+  </div>
+</div>
+
+<!-- CROP EDITOR -->
+<div class="crop-backdrop" id="crop-backdrop">
+  <div class="crop-modal">
+    <div class="crop-title">crop cover photo</div>
+    <div class="crop-hint">drag to reposition · scroll or use the slider to zoom</div>
+    <div class="crop-viewport" id="crop-viewport">
+      <img id="crop-img" src="" alt="crop preview">
+    </div>
+    <div class="crop-controls">
+      <span class="crop-zoom-label">zoom</span>
+      <input type="range" class="crop-zoom-slider" id="crop-zoom" min="100" max="400" value="100" step="1">
+    </div>
+    <div class="crop-actions">
+      <button class="crop-cancel" onclick="closeCropEditor()">cancel</button>
+      <button class="crop-save" onclick="saveCrop()">save cover</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-toolbar" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  </div>
+  <div class="lightbox-img-wrap" onclick="if(event.target===this)closeLightbox()">
+    <img id="lightbox-img" src="" alt="photo">
+  </div>
+</div>
+
+</body>
+</html>
