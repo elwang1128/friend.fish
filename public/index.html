@@ -749,15 +749,6 @@
 
   const PHOTO_LIMIT = 8 * 1024 * 1024; // 8MB safety threshold (upstream gist limit is 10MB, proxied via /api/data)
   const PHOTO_WARN  = 6 * 1024 * 1024; // warn at 6MB
-  const ENTRY_TTL_MS = 90 * 24 * 60 * 60 * 1000; // prune feed entries older than ~3 months
-
-  async function pruneOldEntries() {
-    const cutoff = Date.now() - ENTRY_TTL_MS;
-    const kept = feedEntries.filter(e => e.ts >= cutoff);
-    if (kept.length === feedEntries.length) return;
-    feedEntries = kept;
-    await gistSave();
-  }
 
   // Compress image to max ~200KB base64 before storing
   function compressImage(src, maxW, maxH, quality) {
@@ -800,7 +791,6 @@
   async function initData() {
     await checkSession();
     await gistGet();
-    if (isOwner) await pruneOldEntries();
     applyOwnerState();
     renderEntries();
     ['puffer1','puffer2','otos','amanos'].forEach(id => restoreCover(id));
