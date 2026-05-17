@@ -1,0 +1,31 @@
+[Unit]
+Description=friend.fish RTSPS to MoQ publisher
+Documentation=https://github.com/elwang1128/friend.fish
+After=network-online.target
+Wants=network-online.target
+
+# Disable the default start-rate limit so the unit will keep retrying
+# forever after camera/network outages instead of entering "failed" state.
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+WorkingDirectory=__WORKING_DIRECTORY__
+EnvironmentFile=__ENV_FILE__
+
+# `nix develop` evaluates the flake in WorkingDirectory and runs the
+# publish script inside the dev shell, so ffmpeg + moq-cli are on PATH.
+ExecStart=__NIX_BIN__ develop --command ./scripts/publish.sh
+
+Restart=always
+RestartSec=5s
+TimeoutStopSec=15
+
+# Send a clean SIGINT first so ffmpeg can flush before SIGKILL.
+KillSignal=SIGINT
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
