@@ -509,7 +509,8 @@
       <moq-watch
         url="https://cdn.moq.dev/anon"
         name="friend.fish/tank"
-        muted>
+        muted
+        reload>
         <canvas></canvas>
       </moq-watch>
       <div class="feed-overlay">
@@ -1322,6 +1323,8 @@
   // window absorbs network/encoder stutter without flickering the overlay.
   // moq-watch keeps decoding in the background; the gray overlay just paints
   // over the (possibly stale) canvas when we're not confident it's live.
+  // The `reload` attribute on <moq-watch> makes it wait for the relay's
+  // ANNOUNCE so it picks up a publisher that starts after page load.
   const STALL_MS = 8000;
   let lastFrameCount = -1;
   let lastFrameTime = 0;
