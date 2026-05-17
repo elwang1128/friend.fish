@@ -1,18 +1,5 @@
 name: publisher-image
 
-# Publishes the publisher Docker image from `flake.nix#docker` as a
-# multi-arch manifest on GHCR. Delegates to the reusable workflow at
-# nicolaschan/publish-nix-image, which builds on native amd64/arm64
-# runners, stages in an in-job registry, and pushes the combined
-# manifest. Tags: `:latest` and `:<ref>-<run_id>`.
-#
-# PRs build both arches to validate the Nix build but skip the push.
-#
-# Run locally for the host arch:
-#   nix build .#docker
-#   docker load < result
-#   docker run --rm -e RTSPS_SOURCE=rtsps://... friend-fish-publisher:latest
-
 on:
   push:
     branches: [main]
