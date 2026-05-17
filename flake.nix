@@ -38,10 +38,9 @@
         };
 
         # Minimal layered image — only ffmpeg, moq-cli, cacert, and the
-        # publish wrapper end up in the closure. `streamLayeredImage`
-        # writes a script that streams the tarball on stdout, so CI can
-        # pipe it straight into `docker load` without spilling to disk.
-        docker = pkgs.dockerTools.streamLayeredImage {
+        # publish wrapper end up in the closure. Build with
+        # `nix build .#docker && docker load < result`.
+        docker = pkgs.dockerTools.buildLayeredImage {
           name = "friend-fish-publisher";
           tag = "latest";
           contents = [ pkgs.cacert ];
