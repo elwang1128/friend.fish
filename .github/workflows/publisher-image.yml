@@ -6,8 +6,7 @@ name: publisher-image
 # runners, stages in an in-job registry, and pushes the combined
 # manifest. Tags: `:latest` and `:<ref>-<run_id>`.
 #
-# Skipped on pull requests — the reusable workflow always pushes when
-# called, so PR runs would clobber `:latest`.
+# PRs build both arches to validate the Nix build but skip the push.
 #
 # Run locally for the host arch:
 #   nix build .#docker
@@ -17,6 +16,7 @@ name: publisher-image
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
