@@ -1,6 +1,6 @@
 name: publisher-image
 
-# Builds the publisher Docker image from `flake.nix#dockerImage` using
+# Builds the publisher Docker image from `flake.nix#docker` using
 # `dockerTools.streamLayeredImage`, on both amd64 and arm64 native runners,
 # then combines them into a multi-arch manifest on GHCR.
 #
@@ -11,7 +11,7 @@ name: publisher-image
 # Pull requests: builds on both arches (no push, no login).
 #
 # Run locally for the host arch:
-#   nix build .#dockerImage
+#   nix build .#docker
 #   ./result | docker load
 #   docker run --rm -e RTSPS_SOURCE=rtsps://... friend-fish-publisher:latest
 
@@ -50,7 +50,7 @@ jobs:
             accept-flake-config = true
 
       - name: Build streaming image
-        run: nix build .#dockerImage
+        run: nix build .#docker
 
       - name: Load image into the local daemon
         run: ./result | docker load

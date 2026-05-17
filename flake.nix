@@ -41,7 +41,7 @@
         # publish wrapper end up in the closure. `streamLayeredImage`
         # writes a script that streams the tarball on stdout, so CI can
         # pipe it straight into `docker load` without spilling to disk.
-        dockerImage = pkgs.dockerTools.streamLayeredImage {
+        docker = pkgs.dockerTools.streamLayeredImage {
           name = "friend-fish-publisher";
           tag = "latest";
           contents = [ pkgs.cacert ];
@@ -54,7 +54,7 @@
         };
       in {
         packages = {
-          inherit publish dockerImage;
+          inherit publish docker;
           default = publish;
         };
 
