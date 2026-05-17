@@ -1,13 +1,24 @@
 {
   description = "friend.fish dev shell";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-  inputs.flake-utils.url = "github:numtide/flake-utils";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+    moq = {
+      url = "github:moq-dev/moq";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
 
-  outputs = { nixpkgs, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem (system: {
-      devShells.default = nixpkgs.legacyPackages.${system}.mkShell {
-        packages = [ nixpkgs.legacyPackages.${system}.nodejs_22 ];
-      };
-    });
+  outputs = { nixpkgs, flake-utils, moq, ... }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let pkgs = nixpkgs.legacyPackages.${system}; in {
+        devShells.default = pkgs.mkShell {
+          packages = [
+            pkgs.nodejs_22
+            pkgs.ffmpeg
+            moq.packages.${system}.moq-cli
+          ];
+        };
+      });
 }
