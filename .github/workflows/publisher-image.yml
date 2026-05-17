@@ -1,0 +1,64 @@
+name: publisher-image
+
+# Builds the publisher Docker image from `flake.nix#dockerImage` using
+# `dockerTools.streamLayeredImage`, then pushes it to GHCR.
+#
+# Tags on main: `latest` and the 7-char commit SHA.
+# Pull requests: builds only (no push, no login).
+#
+# Run locally:
+#   nix build .#dockerImage
+#   ./result | docker load
+#   docker run --rm -e RTSPS_SOURCE=rtsps://... friend-fish-publisher:latest
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publisher-image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v30
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
+
+      - name: Build streaming image
+        run: nix build .#dockerImage
+
+      - name: Load image into the local daemon
+        run: ./result | docker load
+
+      - name: Log in to GHCR
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag and push
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: |
+          set -euo pipefail
+          repo_lower="${GITHUB_REPOSITORY,,}"
+          image="ghcr.io/${repo_lower}"
+          sha="${GITHUB_SHA::7}"
+          docker tag friend-fish-publisher:latest "${image}:latest"
+          docker tag friend-fish-publisher:latest "${image}:${sha}"
+          docker push "${image}:latest"
+          docker push "${image}:${sha}"
