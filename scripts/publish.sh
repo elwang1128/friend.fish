@@ -21,7 +21,7 @@ BROADCAST="${MOQ_BROADCAST:-friend.fish/tank}"
 RELAY_URL="${MOQ_RELAY_URL:-https://cdn.moq.dev/anon}"
 
 ffmpeg \
-  -fflags nobuffer -flags low_delay -probesize 32 -analyzeduration 0 \
+  -fflags nobuffer -flags low_delay \
   -rtsp_transport tcp -i "$RTSPS_SOURCE" \
   -c:v copy -an \
   -f mp4 -movflags +frag_every_frame+empty_moov+default_base_moof+omit_tfhd_offset - \

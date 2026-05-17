@@ -1314,9 +1314,9 @@
 <script type="module">
   import "https://cdn.jsdelivr.net/npm/@moq/watch@0.2/element.js/+esm";
 
-  const el = document.querySelector('moq-watch');
+  let el = document.querySelector('moq-watch');
   const box = document.getElementById('feed-placeholder');
-  const canvas = el.querySelector('canvas');
+  let canvas = el.querySelector('canvas');
 
   // Live when the decoder's frame counter has advanced recently. The catalog
   // signal stays non-null even after the publisher disconnects (relay caches
@@ -1324,17 +1324,36 @@
   // window absorbs network/encoder stutter without flickering the overlay.
   // moq-watch keeps decoding in the background; the gray overlay just paints
   // over the (possibly stale) canvas when we're not confident it's live.
-  // The `reload` attribute on <moq-watch> makes it wait for the relay's
-  // ANNOUNCE so it picks up a publisher that starts after page load.
+  // The `reload` attribute makes Chrome subscribe on the relay's ANNOUNCE.
+  // Firefox doesn't seem to deliver ANNOUNCE reliably, so as a fallback we
+  // also clone+replace the element after a longer offline window to force
+  // a fresh connection from scratch.
   const STALL_MS = 8000;
+  const RECREATE_AFTER_MS = 15000;
   let lastFrameCount = -1;
   let lastFrameTime = 0;
+  let offlineSince = performance.now();
   let isLive = false;
 
   function setLive(live) {
     if (live === isLive) return;
     isLive = live;
     box.classList.toggle('is-live', live);
+    if (!live) offlineSince = performance.now();
+  }
+
+  function recreateMoqWatch() {
+    const parent = el.parentNode;
+    const fresh = el.cloneNode(true);
+    // The original element relies on the ANNOUNCE-driven path (`reload=true`)
+    // which Firefox doesn't deliver reliably. On retry, drop reload so the
+    // new element subscribes eagerly — works in any browser.
+    fresh.removeAttribute('reload');
+    parent.replaceChild(fresh, el);
+    el = fresh;
+    canvas = el.querySelector('canvas');
+    lastFrameCount = -1;
+    offlineSince = performance.now();
   }
 
   setInterval(() => {
@@ -1345,7 +1364,9 @@
       lastFrameCount = count;
       lastFrameTime = now;
     }
-    setLive(lastFrameCount > 0 && (now - lastFrameTime) < STALL_MS);
+    const live = lastFrameCount > 0 && (now - lastFrameTime) < STALL_MS;
+    setLive(live);
+    if (!live && now - offlineSince > RECREATE_AFTER_MS) recreateMoqWatch();
   }, 500);
 
   box.addEventListener('click', () => {
