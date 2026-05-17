@@ -1,12 +1,16 @@
 name: publisher-image
 
 # Builds the publisher Docker image from `flake.nix#dockerImage` using
-# `dockerTools.streamLayeredImage`, then pushes it to GHCR.
+# `dockerTools.streamLayeredImage`, on both amd64 and arm64 native runners,
+# then combines them into a multi-arch manifest on GHCR.
 #
-# Tags on main: `latest` and the 7-char commit SHA.
-# Pull requests: builds only (no push, no login).
+# Tags on main: `latest` and the 7-char commit SHA (both multi-arch),
+# plus per-arch `<tag>-amd64` / `<tag>-arm64` tags used to assemble the
+# manifest.
 #
-# Run locally:
+# Pull requests: builds on both arches (no push, no login).
+#
+# Run locally for the host arch:
 #   nix build .#dockerImage
 #   ./result | docker load
 #   docker run --rm -e RTSPS_SOURCE=rtsps://... friend-fish-publisher:latest
@@ -26,8 +30,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
 
@@ -51,14 +63,39 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Tag and push
+      - name: Tag and push per-arch
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         run: |
           set -euo pipefail
           repo_lower="${GITHUB_REPOSITORY,,}"
           image="ghcr.io/${repo_lower}"
           sha="${GITHUB_SHA::7}"
-          docker tag friend-fish-publisher:latest "${image}:latest"
-          docker tag friend-fish-publisher:latest "${image}:${sha}"
-          docker push "${image}:latest"
-          docker push "${image}:${sha}"
+          arch="${{ matrix.arch }}"
+          docker tag friend-fish-publisher:latest "${image}:latest-${arch}"
+          docker tag friend-fish-publisher:latest "${image}:${sha}-${arch}"
+          docker push "${image}:latest-${arch}"
+          docker push "${image}:${sha}-${arch}"
+
+  manifest:
+    needs: build
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create and push multi-arch manifests
+        run: |
+          set -euo pipefail
+          repo_lower="${GITHUB_REPOSITORY,,}"
+          image="ghcr.io/${repo_lower}"
+          sha="${GITHUB_SHA::7}"
+          for tag in latest "${sha}"; do
+            docker buildx imagetools create -t "${image}:${tag}" \
+              "${image}:${tag}-amd64" \
+              "${image}:${tag}-arm64"
+          done
