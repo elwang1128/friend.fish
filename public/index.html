@@ -517,7 +517,7 @@
       <div class="feed-overlay">
         <div class="feed-fish-icon">🐡</div>
         <div class="feed-placeholder-text">
-          <h3>livestream offline</h3>
+          <h3 class="feed-overlay-headline">livestream connecting</h3>
           <p>tank stuff is under construction right now</p>
         </div>
         <div class="bubbles"><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div></div>
@@ -1316,6 +1316,7 @@
 
   let el = document.querySelector('moq-watch');
   const box = document.getElementById('feed-placeholder');
+  const headline = box.querySelector('.feed-overlay-headline');
   let canvas = el.querySelector('canvas');
 
   // Live when the decoder's frame counter has advanced recently. The catalog
@@ -1330,16 +1331,30 @@
   // a fresh connection from scratch.
   const STALL_MS = 8000;
   const RECREATE_AFTER_MS = 15000;
+  const CONNECTING_GRACE_MS = 5000;
+  const pageLoadAt = performance.now();
   let lastFrameCount = -1;
   let lastFrameTime = 0;
   let offlineSince = performance.now();
   let isLive = false;
+  let stateDetermined = false;
 
   function setLive(live) {
     if (live === isLive) return;
     isLive = live;
     box.classList.toggle('is-live', live);
     if (!live) offlineSince = performance.now();
+  }
+
+  // Headline starts as "livestream connecting" and flips to "livestream
+  // offline" once we either see a frame or wait out the grace window. After
+  // that first determination we never revert to "connecting".
+  function maybeFlipToOffline(now, seenFrame) {
+    if (stateDetermined) return;
+    if (seenFrame || now - pageLoadAt > CONNECTING_GRACE_MS) {
+      stateDetermined = true;
+      headline.textContent = 'livestream offline';
+    }
   }
 
   function recreateMoqWatch() {
@@ -1360,12 +1375,14 @@
     const stats = el.backend?.video?.stats?.peek?.();
     const count = stats?.frameCount ?? 0;
     const now = performance.now();
-    if (count > lastFrameCount) {
+    const seenFrame = count > lastFrameCount;
+    if (seenFrame) {
       lastFrameCount = count;
       lastFrameTime = now;
     }
     const live = lastFrameCount > 0 && (now - lastFrameTime) < STALL_MS;
     setLive(live);
+    maybeFlipToOffline(now, seenFrame);
     if (!live && now - offlineSince > RECREATE_AFTER_MS) recreateMoqWatch();
   }, 500);
 
