@@ -2,20 +2,22 @@
 
 **Date:** 2026-05-16
 **Status:** Approved (pending user review of this written spec)
-**Topic:** Replace the "livestream coming soon" placeholder in `public/index.html` with a live video subscriber for the camera feed already being published to Cloudflare's MoQ relay (`relay.cloudflare.mediaoverquic.com`) via `hang publish`. Video only, viewer-public, no audio, no controls beyond click-to-fullscreen.
+**Topic:** Replace the "livestream coming soon" placeholder in `public/index.html` with a live video subscriber for the camera feed already being published to Cloudflare's MoQ relay (`relay.cloudflare.mediaoverquic.com`). Video only, viewer-public, no audio, no controls beyond click-to-fullscreen. Also add the `moq-cli` publisher binary to the Nix dev shell so the camera-bridge can be run from this directory.
 
 ---
 
 ## Background
 
-The camera publishes via:
+The camera publishes via (after this change, with `moq-cli` in the dev shell):
 
 ```
 ffmpeg -rtsp_transport tcp -i 'rtsps://<console-ip>:7441/<token>?enableSrtp' \
   -c:v copy -c:a aac \
   -f mp4 -movflags +frag_keyframe+empty_moov+default_base_moof - \
-  | hang publish https://relay.cloudflare.mediaoverquic.com/friend.fish/tank
+  | moq-cli publish https://relay.cloudflare.mediaoverquic.com/friend.fish/tank
 ```
+
+The user has historically run this via a binary named `hang`, which was the original name of the moq-dev/moq publisher CLI. The crate `hang` is now library-only on crates.io and the binary was renamed to `moq-cli` in the 0.7.x line. Same code, same wire protocol, same compatibility with the Cloudflare relay (which speaks IETF moq-transport draft-07; `moq-lite`, the dialect both `moq-cli` and `@moq/watch` use, is wire-compatible with it).
 
 The frontend (`public/index.html` lines 485–495) currently shows a static placeholder inside a 16:10 dashed-border box: a fish emoji, the headline "livestream coming soon", a subtitle, and a row of seven floating bubble divs (the bubbles loader from commit `0e476dc`). The CSS for a `LIVE` pill (`.feed-label` + `.live-dot` at lines 62–70) is already defined but unused.
 
@@ -29,6 +31,7 @@ The site is one vanilla HTML file served by a Hono Cloudflare Worker, with inlin
 4. Click-to-fullscreen the video.
 5. Reconnect automatically if the publisher restarts or the connection drops.
 6. Ship with no new build tooling — load the subscriber library from a CDN as ESM.
+7. Add the `moq-cli` publisher binary (the current name of what was `hang`) to the Nix dev shell so the camera-bridge command can be run from this directory without separately installing it.
 
 ## Non-goals
 
@@ -40,6 +43,70 @@ The site is one vanilla HTML file served by a Hono Cloudflare Worker, with inlin
 - **No automated tests.** The site has none today; manual smoke is the verification path.
 - **No bundler, no npm dep added to `package.json`.** The library loads from a jsDelivr `+esm` URL pinned to a major version.
 - **No changes to the Worker (`src/worker.js`).** This is a pure frontend change.
+
+## Publisher tooling (adjacent scope)
+
+To make local publishing self-contained for anyone working in this directory, add the `moq-cli` binary to the Nix dev shell. `moq-cli` is the current name of the publisher binary that used to ship as `hang` in the kixelated/moq-dev stack — same codebase, same wire protocol, just renamed. It speaks moq-lite, which is wire-compatible with `relay.cloudflare.mediaoverquic.com`.
+
+**Source of truth.** The `moq-dev/moq` repo provides a Nix flake (`github:moq-dev/moq`) whose overlay exposes `moq-cli` as a derivation built via `crane`. We consume that flake as an input rather than re-deriving the build ourselves (which would mean pulling Rust, gstreamer, etc. into this flake).
+
+**Binary cache.** Add `kixelated.cachix.org` as a substituter so users don't have to compile from source. The public key is documented in upstream's `flake.nix`:
+
+```
+extra-substituters = https://kixelated.cachix.org
+extra-trusted-public-keys = kixelated.cachix.org-1:CmFcV0lyM6KuVM2m9mih0q4SrAa0XyCsiM7GHrz3KKk=
+```
+
+This is documented in `flake.nix` as a comment; configuring it system-wide is a one-time operator step (`cachix use kixelated` or adding to `/etc/nix/nix.conf` / `~/.config/nix/nix.conf`). Without it, `moq-cli` is built from source on first entry — slow but correct.
+
+**Flake changes.** `flake.nix` (currently 14 lines) grows to add the `moq-dev/moq` input and reference `moq-cli` from its overlay:
+
+```nix
+{
+  description = "friend.fish dev shell";
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+    moq = {
+      url = "github:moq-dev/moq";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+
+  nixConfig = {
+    extra-substituters = [ "https://kixelated.cachix.org" ];
+    extra-trusted-public-keys = [
+      "kixelated.cachix.org-1:CmFcV0lyM6KuVM2m9mih0q4SrAa0XyCsiM7GHrz3KKk="
+    ];
+  };
+
+  outputs = { nixpkgs, flake-utils, moq, ... }:
+    flake-utils.lib.eachDefaultSystem (system: {
+      devShells.default = nixpkgs.legacyPackages.${system}.mkShell {
+        packages = [
+          nixpkgs.legacyPackages.${system}.nodejs_22
+          moq.packages.${system}.moq-cli
+        ];
+      };
+    });
+}
+```
+
+`flake.lock` will pick up the new input on first `nix develop` / `direnv reload`. Commit it.
+
+**Caveat.** `moq-dev/moq`'s flake builds with `crane` + `rust-overlay`; the closure is larger than the current node-only shell. Without the Cachix substituter, the first `nix develop` after this change will spend a long time compiling Rust. The Cachix line in `nixConfig` makes this opt-in per-user — Nix prompts before trusting a new substituter unless the user is already in `trusted-users`. Acceptable: the user can `cachix use kixelated` once if they want zero-compile installs.
+
+**Verification.** After `direnv reload`, `which moq-cli` should resolve inside the dev shell, and `moq-cli publish --help` should print usage. The pre-existing publisher command becomes:
+
+```sh
+ffmpeg -rtsp_transport tcp -i 'rtsps://<console-ip>:7441/<token>?enableSrtp' \
+  -c:v copy -c:a aac \
+  -f mp4 -movflags +frag_keyframe+empty_moov+default_base_moof - \
+  | moq-cli publish https://relay.cloudflare.mediaoverquic.com/friend.fish/tank
+```
+
+If `moq-cli publish` exits with a flag-parsing error (its CLI has shifted across the 0.7.x line), `moq-cli publish --help` is the authoritative reference; the publisher invocation is one line in the user's terminal, not a file we ship.
 
 ## Library choice
 
@@ -82,13 +149,16 @@ The `<moq-watch>` element opens a WebTransport connection to the relay, subscrib
 
 ## Files changed
 
-Single file: `public/index.html`.
+- **`public/index.html`** — the only frontend change.
+  - **Edit** the `<style>` block: add rules for `.feed-placeholder moq-watch`, `.feed-placeholder canvas`, `.feed-overlay`, `.live-pill`, and a small visibility toggle (`.feed-placeholder.is-live .feed-overlay { display: none; }`). Touch `.feed-placeholder` to remove or adjust the dashed border so it doesn't look broken behind live video.
+  - **Edit** the markup inside `<div class="feed-placeholder">` (lines 487–494) to the structure shown in *Architecture* above.
+  - **Add** a `<script type="module">` that imports the element module and wires up the online/offline state toggle.
 
-- **Edit** the `<style>` block: add rules for `.feed-placeholder moq-watch`, `.feed-placeholder canvas`, `.feed-overlay`, `.live-pill`, and a small visibility toggle (`.feed-placeholder.is-live .feed-overlay { display: none; }`). Touch `.feed-placeholder` to remove or adjust the dashed border so it doesn't look broken behind live video.
-- **Edit** the markup inside `<div class="feed-placeholder">` (lines 487–494) to the structure shown in *Architecture* above.
-- **Add** a `<script type="module">` that imports the element module and wires up the online/offline state toggle.
+- **`flake.nix`** — add the `moq-dev/moq` flake input and put `moq-cli` in the dev shell. See *Publisher tooling* below for the full edit.
 
-No new files. No worker changes.
+- **`flake.lock`** — auto-updated on first `nix develop` / `direnv reload`; commit the new lock so the build is reproducible.
+
+No worker changes.
 
 ## Subscription parameters
 
@@ -248,17 +318,19 @@ On unsupported browsers the canvas stays blank and the overlay stays in `connect
 
 Manual smoke after deploy:
 
-1. **Publisher offline, page load.** Box shows bubbles + "connecting…". After ~2–3s with no announcement, it should still read "connecting…" (the script can't distinguish "no announcement yet" from "connection still establishing" with the chosen signal; this is fine — see *Open questions*).
-2. **Start publisher.** Within ~2s of `hang publish` starting, the canvas should fill with video and the `LIVE` pill should appear.
-3. **Stop publisher.** Within the reconnect/timeout window (~5s), the overlay should reappear with copy "stream offline".
-4. **Restart publisher.** The overlay should disappear again and the canvas fill, with no page reload.
-5. **Click the box while live.** Canvas goes fullscreen on Chrome/Firefox desktop. Press Esc to exit.
-6. **Mobile (Android Chrome).** Same flow; fullscreen tap works.
-7. **Mobile (iOS Safari 18+).** Video plays inline; clicks are harmless no-ops on fullscreen.
-8. **DevTools network tab during a live session.** Should show a single WebTransport session to `relay.cloudflare.mediaoverquic.com` and nothing else new.
-9. **Owner-only UI unaffected.** `body.is-owner` toggling still shows/hides the add-feed button; the livestream change doesn't touch that path.
+1. **Dev shell.** `direnv reload` (or `nix develop` cold) → `which moq-cli` resolves; `moq-cli publish --help` prints. If Cachix isn't configured the first build compiles Rust from source — acceptable, just slow.
+2. **End-to-end publish from this dir.** Run the camera-bridge command above with `moq-cli publish`; it should connect to the relay without error.
+3. **Publisher offline, page load.** Box shows bubbles + "connecting…". After ~2–3s with no announcement, it should still read "connecting…" (the script can't distinguish "no announcement yet" from "connection still establishing" with the chosen signal; this is fine — see *Open questions*).
+4. **Start publisher.** Within ~2s of `moq-cli publish` starting, the canvas should fill with video and the `LIVE` pill should appear.
+5. **Stop publisher.** Within the reconnect/timeout window (~5s), the overlay should reappear with copy "stream offline".
+6. **Restart publisher.** The overlay should disappear again and the canvas fill, with no page reload.
+7. **Click the box while live.** Canvas goes fullscreen on Chrome/Firefox desktop. Press Esc to exit.
+8. **Mobile (Android Chrome).** Same flow; fullscreen tap works.
+9. **Mobile (iOS Safari 18+).** Video plays inline; clicks are harmless no-ops on fullscreen.
+10. **DevTools network tab during a live session.** Should show a single WebTransport session to `relay.cloudflare.mediaoverquic.com` and nothing else new.
+11. **Owner-only UI unaffected.** `body.is-owner` toggling still shows/hides the add-feed button; the livestream change doesn't touch that path.
 
-Rollback: `git revert <merge-commit>` restores the placeholder.
+Rollback: `git revert <merge-commit>` restores the placeholder and the flake.
 
 ## Risks
 
@@ -268,6 +340,8 @@ Rollback: `git revert <merge-commit>` restores the placeholder.
 - **WebTransport on corporate networks.** Some firewalls block QUIC/UDP. Users behind those see the overlay forever. Out of scope to mitigate — the protocol's nature.
 - **Letterbox bars** if the camera ever produces non-16:9 output. The 16:10 box accommodates 16:9 cleanly; aspect ratios outside `16:9..16:10` would look worse. The Unifi camera doesn't change aspect at runtime, so this is theoretical.
 - **`broadcast.video.media` signal path.** Verified by reading `js/watch/src/element.ts` but not by running the code. If the path is wrong at implementation time, fall back to `broadcast.catalog` or `connection.established` (logic identical).
+- **`moq-cli` CLI surface drift.** `moq-cli` is at version 0.7.22 today; flag names have shifted across the 0.7.x line and may shift again. The verification step (`moq-cli publish --help`) is the safety net — the operator command is one line they type in a terminal, not something baked into the repo.
+- **Closure size after adding the moq-dev/moq flake input.** The dev shell goes from "node only" to "node + a Rust-built binary + its transitive substituters." First-build cost is mitigated by Cachix; ongoing storage cost is a few hundred MB in the Nix store. Acceptable for the dev shell of a project whose author runs the publisher locally.
 
 ## Open questions
 
