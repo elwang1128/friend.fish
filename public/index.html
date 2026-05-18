@@ -553,6 +553,7 @@
             <option value="zucchini">zucchini</option>
             <option value="scuds">scuds</option>
             <option value="snails">snails</option>
+            <option value="micro pellets">micro pellets</option>
           </select>
           <button class="log-submit" onclick="submitFeed()">add</button>
         </div>
@@ -838,7 +839,7 @@
     }
 
     const residents = ['amazon puffers','otocinclus'];
-    const foods = ['grub pie','soilent green','bloodworms','zucchini','scuds','snails'];
+    const foods = ['grub pie','soilent green','bloodworms','zucchini','scuds','snails','micro pellets'];
 
     container.innerHTML = [...feedEntries].reverse().map(e => {
       const t = new Date(e.ts);
