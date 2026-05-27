@@ -177,7 +177,7 @@
 
   .no-entries { padding: 1.25rem; text-align: center; font-size: 0.8rem; color: var(--gray-dark); font-style: italic; }
 
-  #feed-entries { overflow-y: auto; flex: 1; min-height: 0; scrollbar-width: none; }
+  #feed-entries { overflow-y: auto; flex: 1; min-height: 0; max-height: 11rem; scrollbar-width: none; }
   #feed-entries::-webkit-scrollbar { display: none; }
 
   .amano-note {
@@ -872,7 +872,11 @@
     const isOpen = row.classList.contains('visible');
     document.querySelectorAll('.feed-entry-edit-row.visible').forEach(r => r.classList.remove('visible'));
     document.querySelectorAll('.feed-entry.expanded').forEach(r => r.classList.remove('expanded'));
-    if (!isOpen) { row.classList.add('visible'); entry.classList.add('expanded'); }
+    if (!isOpen) {
+      row.classList.add('visible');
+      entry.classList.add('expanded');
+      row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
   }
 
   function cancelEdit(e, ts) {
