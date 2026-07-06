@@ -42,20 +42,31 @@ export async function readGist(env) {
     catch { return fallback; }
   };
 
-  const [tankdata, photos, covers] = await Promise.all([
+  const [tankdata, photos, covers, guestbook] = await Promise.all([
     readFile('tankdata.json'),
     readFile('photos.json'),
     readFile('covers.json'),
+    readFile('guestbook.json'),
   ]);
 
   return {
     feeds: parse(tankdata, { feeds: [] }).feeds || [],
     photos: parse(photos, {}),
     covers: parse(covers, {}),
+    guestbook: parse(guestbook, []),
   };
 }
 
-export async function writeGist(env, { feeds, photos, covers }) {
+// Writes only the fields that are provided, so e.g. a guestbook write can
+// never clobber photos and vice versa.
+export async function writeGist(env, { feeds, photos, covers, guestbook }) {
+  const files = {};
+  if (feeds !== undefined) files['tankdata.json'] = { content: JSON.stringify({ feeds }) };
+  if (photos !== undefined) files['photos.json'] = { content: JSON.stringify(photos) };
+  if (covers !== undefined) files['covers.json'] = { content: JSON.stringify(covers) };
+  if (guestbook !== undefined) files['guestbook.json'] = { content: JSON.stringify(guestbook) };
+  if (!Object.keys(files).length) return;
+
   const res = await fetch(`https://api.github.com/gists/${env.GIST_ID}`, {
     method: 'PATCH',
     headers: {
@@ -64,13 +75,7 @@ export async function writeGist(env, { feeds, photos, covers }) {
       'Content-Type': 'application/json',
       'User-Agent': UA,
     },
-    body: JSON.stringify({
-      files: {
-        'tankdata.json': { content: JSON.stringify({ feeds }) },
-        'photos.json': { content: JSON.stringify(photos) },
-        'covers.json': { content: JSON.stringify(covers) },
-      },
-    }),
+    body: JSON.stringify({ files }),
   });
   if (!res.ok) throw githubError('gist write failed', res.status);
 }
