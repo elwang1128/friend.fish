@@ -149,6 +149,21 @@
   }
   .livestream.is-live .livestream-status { display: none; }
 
+  .livestream-sleeping {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    z-index: 2;
+    font-family: var(--mono);
+    font-size: 16px;
+    text-transform: uppercase;
+    padding: 20px;
+    pointer-events: none;
+    color: #ffffff;
+    display: none;
+  }
+  .livestream.is-live.is-sleeping .livestream-sleeping { display: block; }
+
   .livestream-status .dots::after {
     content: '';
     animation: dots 1.6s steps(1, end) infinite;
@@ -333,7 +348,7 @@
   .tank-figure {
     position: relative;
     width: 100%;
-    margin-bottom: 48px;
+    margin-bottom: 60px;
   }
 
   .tank-photo {
@@ -359,7 +374,7 @@
   .camera-line {
     position: absolute;
     left: 78.3%;
-    top: calc(61.8% + 12px);
+    top: calc(61.8% + 24px);
     height: 35.6%;
     width: 1px;
     background: var(--black);
@@ -375,7 +390,7 @@
     font-size: 10px;
     letter-spacing: -0.03em;
     text-transform: uppercase;
-    margin-top: 14px;
+    margin-top: 26px;
   }
 
   .specs-text {
@@ -895,6 +910,7 @@
         <canvas></canvas>
       </moq-watch>
       <div class="livestream-status" id="livestream-status"><span id="livestream-status-label">livestream connecting</span><span class="dots"></span></div>
+      <div class="livestream-sleeping">THE FISH ARE SLEEPING RIGHT NOW 😴</div>
     </div>
   </div>
 </div>
@@ -1295,8 +1311,51 @@
     if (live === isLive) return;
     isLive = live;
     box.classList.toggle('is-live', live);
-    if (!live) offlineSince = performance.now();
+    if (!live) { offlineSince = performance.now(); setSleeping(false); }
   }
+
+  // ---- SLEEPING FISH (dark stream) DETECTION ----
+  // Sample the stream canvas every couple seconds and average its luma.
+  // If the picture stays near-black across several samples (lights out),
+  // show the sleeping note instead of leaving a black void. A near-zero
+  // average alpha means the canvas buffer wasn't readable at draw time
+  // (e.g. a cleared WebGL backbuffer) — skip those samples rather than
+  // mistaking them for darkness.
+  const DARK_LUMA = 12;          // 0-255; below this counts as pitch black
+  const DARK_SAMPLES_NEEDED = 3; // ~6s of sustained darkness before flipping
+  const sampleCanvas = document.createElement('canvas');
+  sampleCanvas.width = 32;
+  sampleCanvas.height = 18;
+  const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+  let darkStreak = 0;
+
+  function setSleeping(sleeping) {
+    box.classList.toggle('is-sleeping', sleeping);
+    if (!sleeping) darkStreak = 0;
+  }
+
+  function sampleDarkness() {
+    if (!isLive || !canvas) { setSleeping(false); return; }
+    try {
+      sampleCtx.clearRect(0, 0, 32, 18);
+      sampleCtx.drawImage(canvas, 0, 0, 32, 18);
+      const d = sampleCtx.getImageData(0, 0, 32, 18).data;
+      let luma = 0, alpha = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        luma += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+        alpha += d[i + 3];
+      }
+      const n = d.length / 4;
+      if (alpha / n < 200) return; // unreadable frame; keep current state
+      if (luma / n < DARK_LUMA) darkStreak++;
+      else { darkStreak = 0; setSleeping(false); return; }
+      if (darkStreak >= DARK_SAMPLES_NEEDED) setSleeping(true);
+    } catch (e) {
+      // canvas not drawable/tainted — never claim the fish are asleep
+      setSleeping(false);
+    }
+  }
+  setInterval(sampleDarkness, 2000);
 
   // Status starts as "livestream connecting..." and flips to "livestream
   // offline" once we either see a frame or wait out the grace window. After
