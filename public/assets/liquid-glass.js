@@ -119,7 +119,6 @@
         'box-shadow:' +
           'inset 0 0 2px 1px rgba(255,255,255,0.42),' +   /* fresnel rim */
           'inset 0 0 16px rgba(255,255,255,0.28),' +
-          'inset -8px -10px 20px rgba(140,170,205,0.20),' +
           '0 16px 30px rgba(30,50,80,0.02);' +            /* drop shadow */
       '}' +
       /* while merged with a neighbor, soften the rim + highlight so the pair
@@ -128,7 +127,6 @@
         'box-shadow:' +
           'inset 0 0 2px 1px rgba(255,255,255,0.14),' +
           'inset 0 0 16px rgba(255,255,255,0.10),' +
-          'inset -8px -10px 20px rgba(140,170,205,0.08),' +
           '0 16px 30px rgba(30,50,80,0.02);' +
       '}' +
       '.lg-orb::before{' +                                 /* specular highlight */
@@ -248,21 +246,40 @@
     var ts = t / 1000;
     var i, o;
 
+    var MIN_SPEED = 24, MAX_SPEED = 95;
     for (i = 0; i < orbs.length; i++) {
       o = orbs[i];
       // time-based sine drift + slight damping
       o.vx += Math.sin(ts * o.fx + o.phase) * 14 * dt;
       o.vy += Math.cos(ts * o.fy + o.phase * 1.37) * 14 * dt;
-      o.vx *= 0.998;
-      o.vy *= 0.998;
+      o.vx *= 0.999;
+      o.vy *= 0.999;
+
+      // keep every orb travelling: below the speed floor, ease it back up
+      // along its current heading (the drift forces can otherwise cancel a
+      // slow orb into hovering in place)
+      var sp = Math.sqrt(o.vx * o.vx + o.vy * o.vy);
+      if (sp < 0.5) {
+        var ang = o.phase + ts * 0.2;
+        o.vx = Math.cos(ang) * MIN_SPEED;
+        o.vy = Math.sin(ang) * MIN_SPEED;
+      } else if (sp < MIN_SPEED) {
+        var boost = 1 + (MIN_SPEED / sp - 1) * Math.min(1, dt * 3);
+        o.vx *= boost;
+        o.vy *= boost;
+      } else if (sp > MAX_SPEED) {
+        o.vx *= MAX_SPEED / sp;
+        o.vy *= MAX_SPEED / sp;
+      }
+
       o.x += o.vx * dt;
       o.y += o.vy * dt;
 
-      // soft elastic bounce off viewport edges
-      if (o.x < 0) { o.x = 0; o.vx = Math.abs(o.vx) * 0.82 + 4; }
-      if (o.y < 0) { o.y = 0; o.vy = Math.abs(o.vy) * 0.82 + 4; }
-      if (o.x > W - o.d) { o.x = W - o.d; o.vx = -Math.abs(o.vx) * 0.82 - 4; }
-      if (o.y > H - o.d) { o.y = H - o.d; o.vy = -Math.abs(o.vy) * 0.82 - 4; }
+      // near-elastic bounce off viewport edges
+      if (o.x < 0) { o.x = 0; o.vx = Math.abs(o.vx) * 0.96 + 4; }
+      if (o.y < 0) { o.y = 0; o.vy = Math.abs(o.vy) * 0.96 + 4; }
+      if (o.x > W - o.d) { o.x = W - o.d; o.vx = -Math.abs(o.vx) * 0.96 - 4; }
+      if (o.y > H - o.d) { o.y = H - o.d; o.vy = -Math.abs(o.vy) * 0.96 - 4; }
       o.targetScale = 1;
       o.nowMerged = false;
     }
