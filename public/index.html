@@ -271,7 +271,12 @@
     gap: 4px;
     align-items: center;
     height: 240px;
-    width: 100%;
+    /* bleed past the card's 16px side padding so photos scroll flush
+       to the panel edges; inner padding keeps the first photo aligned
+       with the text above it */
+    width: calc(100% + 32px);
+    margin: 0 -16px;
+    padding: 0 16px;
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: none;
@@ -1275,6 +1280,10 @@
     renderGuestbook();
   }
   initData();
+
+  // wide screens land with the tank team already open — the panel sits
+  // inline there; on narrower widths it would cover the page as an overlay
+  if (window.matchMedia('(min-width: 1251px)').matches) togglePanel('team');
 </script>
 
 <script type="module">
