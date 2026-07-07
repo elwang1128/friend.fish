@@ -6,7 +6,7 @@
   'use strict';
 
   var STORAGE_KEY = 'lg-bubbles';
-  var ORB_COUNT = 3;
+  var ORB_COUNT = 5;
   var Z_ORBS = 800; // above overlay panels (500), below lightbox (900)
 
   // ---- feature detection --------------------------------------------------
@@ -94,6 +94,13 @@
     if (!img) return;
     img.setAttribute('width', px.toFixed(1));
     img.setAttribute('height', px.toFixed(1));
+    // displacement strength tracks the orb size (with R/G/B offsets for the
+    // chromatic fringe) so small orbs don't over-bend what's behind them
+    var maps = img.parentNode.querySelectorAll('feDisplacementMap');
+    var scales = [0.40, 0.45, 0.50];
+    for (var k = 0; k < maps.length; k++) {
+      maps[k].setAttribute('scale', (px * scales[k]).toFixed(1));
+    }
   }
 
   // ---- styles -------------------------------------------------------------
@@ -108,17 +115,28 @@
         (isChromium
           ? ''  /* per-orb backdrop-filter set inline in buildOrbs */
           : 'backdrop-filter:blur(7px) saturate(1.35);-webkit-backdrop-filter:blur(7px) saturate(1.35);') +
+        'transition:box-shadow .35s ease;' +
         'box-shadow:' +
           'inset 0 0 2px 1px rgba(255,255,255,0.42),' +   /* fresnel rim */
           'inset 0 0 16px rgba(255,255,255,0.28),' +
           'inset -8px -10px 20px rgba(140,170,205,0.20),' +
-          '0 16px 30px rgba(30,50,80,0.14);' +            /* drop shadow */
+          '0 16px 30px rgba(30,50,80,0.02);' +            /* drop shadow */
+      '}' +
+      /* while merged with a neighbor, soften the rim + highlight so the pair
+         reads as one liquid body instead of two stacked circles */
+      '.lg-orb.lg-merged{' +
+        'box-shadow:' +
+          'inset 0 0 2px 1px rgba(255,255,255,0.14),' +
+          'inset 0 0 16px rgba(255,255,255,0.10),' +
+          'inset -8px -10px 20px rgba(140,170,205,0.08),' +
+          '0 16px 30px rgba(30,50,80,0.02);' +
       '}' +
       '.lg-orb::before{' +                                 /* specular highlight */
         'content:"";position:absolute;left:16%;top:11%;width:36%;height:27%;' +
-        'border-radius:50%;opacity:.55;filter:blur(1.5px);' +
+        'border-radius:50%;opacity:.28;filter:blur(1.5px);transition:opacity .35s ease;' +
         'background:radial-gradient(closest-side,rgba(255,255,255,0.8),rgba(255,255,255,0));' +
       '}' +
+      '.lg-orb.lg-merged::before{opacity:.12;}' +
       '.lg-orb.lg-hidden{display:none;}' +
 
       '.lg-toggle-wrap{display:flex;gap:12px;align-items:center;order:99;margin-left:auto;}' +
@@ -182,7 +200,7 @@
 
   function orbSizes() {
     var base = window.innerHeight * 0.15;
-    return [base, base * 0.9, base * 1.1];
+    return [base, base * 0.9, base * 1.1, base * 0.95, base * 1.05];
   }
 
   function buildOrbs() {
@@ -197,8 +215,8 @@
       orbs.push({
         el: el,
         d: d,
-        x: (0.15 + 0.3 * i) * window.innerWidth,
-        y: (0.2 + 0.25 * ((i * 2) % 3)) * window.innerHeight,
+        x: (0.06 + 0.19 * i) * window.innerWidth,
+        y: (0.12 + 0.2 * ((i * 2) % 4)) * window.innerHeight,
         vx: (Math.random() - 0.5) * 30,
         vy: (Math.random() - 0.5) * 30,
         fx: 0.35 + 0.18 * i,
@@ -246,6 +264,7 @@
       if (o.x > W - o.d) { o.x = W - o.d; o.vx = -Math.abs(o.vx) * 0.82 - 4; }
       if (o.y > H - o.d) { o.y = H - o.d; o.vy = -Math.abs(o.vy) * 0.82 - 4; }
       o.targetScale = 1;
+      o.nowMerged = false;
     }
 
     // orb-orb repulsion — deliberately late (0.5x combined radii) so orbs
@@ -260,6 +279,7 @@
         var trigger = 0.5 * (ra + rb);
         if (dist < ra + rb) {           // overlapping at all: swell a touch
           a.targetScale = b.targetScale = 1.065;
+          a.nowMerged = b.nowMerged = true;
         }
         if (dist < trigger) {           // deep overlap: gentle spring apart
           var push = (trigger - dist) / trigger * 60 * dt;
@@ -274,6 +294,10 @@
       o = orbs[i];
       o.scale += (o.targetScale - o.scale) * Math.min(1, dt * 6); // ease in/out
       o.el.style.transform = 'translate3d(' + o.x.toFixed(2) + 'px,' + o.y.toFixed(2) + 'px,0) scale(' + o.scale.toFixed(3) + ')';
+      if (o.nowMerged !== o.merged) {
+        o.merged = o.nowMerged;
+        o.el.classList.toggle('lg-merged', o.merged);
+      }
     }
   }
 
