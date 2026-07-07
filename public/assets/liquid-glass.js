@@ -114,7 +114,7 @@
         'background:rgba(255,255,255,0.15);' +
         (isChromium
           ? ''  /* per-orb backdrop-filter set inline in buildOrbs */
-          : 'backdrop-filter:blur(7px) saturate(1.35);-webkit-backdrop-filter:blur(7px) saturate(1.35);') +
+          : 'backdrop-filter:blur(3px) saturate(1.35);-webkit-backdrop-filter:blur(3px) saturate(1.35);') +
         'transition:box-shadow .35s ease;' +
         'box-shadow:' +
           'inset 0 0 2px 1px rgba(255,255,255,0.42),' +   /* fresnel rim */
