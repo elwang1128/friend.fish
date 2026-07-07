@@ -119,22 +119,16 @@
         'box-shadow:' +
           'inset 0 0 2px 1px rgba(255,255,255,0.42),' +   /* fresnel rim */
           'inset 0 0 16px rgba(255,255,255,0.28),' +
-          '0 16px 30px rgba(30,50,80,0.02);' +            /* drop shadow */
+          '0 16px 30px rgba(30,50,80,0.05);' +            /* drop shadow */
       '}' +
-      /* while merged with a neighbor, soften the rim + highlight so the pair
-         reads as one liquid body instead of two stacked circles */
+      /* while merged with a neighbor, soften the rim so the pair reads as
+         one liquid body instead of two stacked circles */
       '.lg-orb.lg-merged{' +
         'box-shadow:' +
           'inset 0 0 2px 1px rgba(255,255,255,0.14),' +
           'inset 0 0 16px rgba(255,255,255,0.10),' +
-          '0 16px 30px rgba(30,50,80,0.02);' +
+          '0 16px 30px rgba(30,50,80,0.05);' +
       '}' +
-      '.lg-orb::before{' +                                 /* specular highlight */
-        'content:"";position:absolute;left:16%;top:11%;width:36%;height:27%;' +
-        'border-radius:50%;opacity:.28;filter:blur(1.5px);transition:opacity .35s ease;' +
-        'background:radial-gradient(closest-side,rgba(255,255,255,0.8),rgba(255,255,255,0));' +
-      '}' +
-      '.lg-orb.lg-merged::before{opacity:.12;}' +
       '.lg-orb.lg-hidden{display:none;}' +
 
       '.lg-toggle-wrap{display:flex;gap:12px;align-items:center;order:99;margin-left:auto;}' +
