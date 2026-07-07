@@ -4,508 +4,882 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>friend.fish</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='78' text-anchor='middle' font-size='90' fill='%230000ff'>✦</text></svg>">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='78' text-anchor='middle' font-size='90' fill='%23000000'>✦</text></svg>">
 <style>
+  @font-face {
+    font-family: 'Fira Mono';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/assets/fonts/fira-mono-latin-400-normal.woff2') format('woff2');
+  }
   :root {
-    --black: #0f0f0f;
-    --white: #fafaf8;
-    --off-white: #f2f0ec;
-    --blue: #0000ff;
-    --blue-light: #c7c7ff;
-    --blue-pale: #ebebff;
-    --gray-light: #e8e6e2;
-    --gray-mid: #a8a6a2;
-    --gray-dark: #5a5856;
+    --bg: #f5f5f5;
+    --black: #000000;
+    --gray-pill: #dddddd;
+    --gray-text: #737373;
+    --gray-date: #b5b5b5;
+    --gray-line: #e5e5e5;
+    --mono: 'Fira Mono', 'Courier New', monospace;
+    --sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  html, body { height: 100%; }
+
   body {
-    background: var(--white);
+    background: var(--bg);
     color: var(--black);
-    font-family: 'Nunito', sans-serif;
-    font-weight: 400;
-    min-height: 100vh;
-  }
-
-  nav {
+    font-family: var(--sans);
     display: flex;
-    align-items: center;
+    gap: 28px;
+    justify-content: flex-end;
+    align-items: stretch;
+    padding: 28px;
+    overflow: hidden;
+  }
+
+  button { font: inherit; background: none; border: none; cursor: pointer; color: inherit; }
+
+  .mono { font-family: var(--mono); }
+
+  /* ---------- MAIN SECTION (right column) ---------- */
+  .main-section {
+    width: 852px;
+    max-width: 100%;
+    min-width: 580px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
     justify-content: space-between;
-    padding: 1.25rem 3rem;
-    border-bottom: 1.5px solid var(--black);
-    position: sticky;
-    top: 0;
-    background: var(--white);
-    z-index: 100;
+    height: 100%;
+    min-width: 0;
   }
 
-  .nav-logo { font-family: 'DM Serif Display', serif; font-size: 1.5rem; letter-spacing: -0.02em; }
-  .nav-logo span { color: var(--blue); }
-
-  nav ul { list-style: none; display: flex; gap: 2rem; }
-  nav ul a {
-    text-decoration: none; color: var(--black); font-size: 0.85rem;
-    font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; transition: color 0.2s;
-  }
-  nav ul a:hover { color: var(--blue); }
-
-  .nav-time { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--gray-dark); font-weight: 300; }
-
-  .hero { padding: 2rem 3rem; display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start; }
-
-  .feed-wrapper { position: relative; }
-
-  .feed-label {
-    display: inline-flex; align-items: center; gap: 0.4rem; background: var(--black);
-    color: var(--white); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
-    text-transform: uppercase; padding: 0.35rem 0.75rem; border-radius: 100px; margin-bottom: 0.75rem;
+  .tabs {
+    display: flex;
+    gap: 52px;
+    padding: 24px 0;
+    flex-wrap: wrap;
   }
 
-  .live-dot { width: 6px; height: 6px; background: #ff4444; border-radius: 50%; animation: pulse 1.5s infinite; }
+  .tab {
+    font-family: var(--mono);
+    font-size: 16px;
+    letter-spacing: -0.04em;
+    text-transform: uppercase;
+    color: var(--black);
+    white-space: nowrap;
+    padding: 0;
+  }
+  .tab:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .tab.active { text-decoration: underline; text-underline-offset: 4px; }
 
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-  .feed-placeholder {
-    width: 100%; aspect-ratio: 16/10; background: var(--off-white);
-    border: 2px dashed var(--gray-light); border-radius: 16px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 1rem; position: relative; overflow: hidden;
+  .livestream-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
   }
 
-  .feed-placeholder::before {
-    content: ''; position: absolute; inset: 0;
-    background: rgba(58,123,213,0.04);
+  .headline-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    width: 100%;
   }
 
-  .feed-fish-icon { font-size: 3.5rem; line-height: 1; filter: grayscale(0.3); }
-  .feed-placeholder-text { text-align: center; z-index: 1; }
-  .feed-placeholder-text h3 { font-family: 'DM Serif Display', serif; font-size: 1.2rem; margin-bottom: 0.3rem; }
-  .feed-placeholder-text p { font-size: 0.8rem; color: var(--gray-dark); }
+  .headline {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 90px;
+    letter-spacing: -0.04em;
+    line-height: 0.99;
+  }
 
-  .feed-placeholder moq-watch {
+  .tank-time {
+    font-family: var(--sans);
+    font-weight: 400;
+    font-size: 18px;
+    letter-spacing: -0.03em;
+    white-space: nowrap;
+    padding-bottom: 6px;
+  }
+
+  .livestream {
+    width: 100%;
+    aspect-ratio: 841 / 473;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+  }
+
+  .livestream-bg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    z-index: 0;
+  }
+  .livestream.is-live .livestream-bg { display: none; }
+
+  .livestream moq-watch {
     position: absolute; inset: 0;
     width: 100%; height: 100%;
     z-index: 1;
   }
-  .feed-placeholder:not(.is-live) moq-watch { visibility: hidden; }
-  .feed-placeholder canvas {
+  .livestream:not(.is-live) moq-watch { visibility: hidden; }
+  .livestream canvas {
     display: block; width: 100%; height: 100%;
-    object-fit: cover; background: var(--off-white);
+    object-fit: cover; background: var(--bg);
+  }
+  .livestream.is-live { cursor: pointer; }
+
+  .livestream-status {
+    position: relative;
+    z-index: 2;
+    font-family: var(--mono);
+    font-size: 16px;
+    text-transform: uppercase;
+    padding: 20px;
+    pointer-events: none;
+  }
+  .livestream.is-live .livestream-status { display: none; }
+
+  .livestream-status .dots::after {
+    content: '';
+    animation: dots 1.6s steps(1, end) infinite;
+  }
+  .livestream-status.no-dots .dots { display: none; }
+  @keyframes dots {
+    0%   { content: ''; }
+    25%  { content: '.'; }
+    50%  { content: '..'; }
+    75%  { content: '...'; }
+    100% { content: ''; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .livestream-status .dots::after { animation: none; content: '...'; }
   }
 
-  .feed-overlay {
-    position: absolute; inset: 0; z-index: 2;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 1rem; pointer-events: none;
-    background: var(--off-white);
-  }
-  .feed-placeholder.is-live .feed-overlay { display: none; }
-  .feed-placeholder.is-live { cursor: pointer; }
-
-  .stats-sidebar { display: flex; flex-direction: column; gap: 1rem; min-height: 0; }
-
-  .stat-card-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-dark); margin-bottom: 0.4rem; }
-  .stat-card.blue-accent .stat-card-label { color: var(--blue); }
-  .stat-card-value { font-family: 'DM Mono', monospace; font-size: 1.4rem; font-weight: 500; letter-spacing: -0.02em; }
-  .stat-card-value.clock { font-size: 2rem; }
-
-  .feeding-log { background: var(--white); border: 1.5px solid var(--gray-light); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; min-height: 160px; }
-
-  .feeding-log-header {
-    padding: 0.75rem 1.25rem; border-bottom: 1.5px solid var(--gray-light);
-    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
-  }
-  .feeding-log-header span { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-dark); }
-
-  .add-feed-btn {
-    background: var(--black); color: var(--white); border: none; border-radius: 100px;
-    padding: 0.3rem 0.75rem; font-size: 0.72rem; font-weight: 700; font-family: 'Nunito', sans-serif;
-    cursor: pointer; letter-spacing: 0.04em; transition: background 0.2s;
+  /* ---------- PANELS (left) ---------- */
+  .panel-area {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
     display: none;
   }
-  body.is-owner .add-feed-btn { display: inline-block; }
-  .add-feed-btn:hover { background: var(--blue); }
+  .panel-area.open { display: block; }
 
-  .feed-entry {
-    padding: 0.6rem 1.25rem; display: flex; align-items: center; gap: 0.55rem;
-    border-bottom: 1px solid var(--gray-light); font-size: 0.8rem; position: relative;
-    cursor: pointer; transition: background 0.15s;
+  .panel {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    border: 1px solid var(--black);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--bg);
   }
-  .feed-entry:hover { background: var(--off-white); }
-  .feed-entry:last-child { border-bottom: none; }
-  .feed-entry.expanded { background: var(--off-white); }
+  .panel.open { display: flex; }
+  .panel.white { background: #ffffff; }
 
-  .feed-entry-time { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--gray-dark); font-weight: 300; min-width: 50px; }
-  .feed-entry-who { font-weight: 400; color: var(--black); flex: 1; }
-  .feed-entry-food { font-size: 0.7rem; font-weight: 400; background: var(--gray-light); padding: 0.15rem 0.55rem; border-radius: 100px; color: var(--gray-dark); white-space: nowrap; }
-  .feed-entry-chevron { font-size: 0.65rem; color: var(--gray-mid); transition: transform 0.2s; flex-shrink: 0; }
-  .feed-entry.expanded .feed-entry-chevron { transform: rotate(180deg); }
-
-  .feed-action-btn {
-    background: none; border: 1px solid var(--gray-light); border-radius: 6px;
-    font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; font-family: 'Nunito', sans-serif;
-    padding: 0.15rem 0.45rem; cursor: pointer; transition: background 0.15s, border-color 0.15s, color 0.15s; color: var(--gray-dark);
-  }
-  .feed-action-btn.delete { background: var(--white); }
-  .feed-action-btn.delete:hover { background: #fff0f0; border-color: #f09595; color: #a32d2d; }
-  .feed-action-btn.save { background: var(--blue); border-color: var(--blue); color: var(--white); }
-  .feed-action-btn.save:hover { opacity: 0.85; }
-
-  .feed-entry-edit-row {
-    padding: 0.6rem 1.25rem 0.75rem; display: none; flex-direction: column; gap: 0.5rem;
-    background: var(--off-white); border-bottom: 1px solid var(--gray-light);
-  }
-  .feed-entry-edit-row.visible { display: flex; }
-  .feed-entry-edit-selects { display: flex; gap: 0.5rem; }
-  .feed-entry-edit-row select {
-    font-family: 'Nunito', sans-serif; font-size: 0.78rem; border: 1.5px solid var(--gray-light);
-    border-radius: 7px; padding: 0.28rem 0.5rem; background: var(--white); color: var(--black); outline: none; flex: 1;
-  }
-  .feed-entry-edit-row select:focus { border-color: var(--blue); }
-  .feed-entry-edit-btns { display: flex; gap: 0.4rem; }
-  .feed-cancel-btn {
-    background: var(--white); border: 1px solid var(--gray-light); border-radius: 6px; font-size: 0.65rem;
-    font-weight: 700; font-family: 'Nunito', sans-serif; padding: 0.25rem 0.6rem;
-    cursor: pointer; color: var(--gray-dark); transition: background 0.15s;
-  }
-  .feed-cancel-btn:hover { background: var(--gray-light); }
-
-  .no-entries { padding: 1.25rem; text-align: center; font-size: 0.8rem; color: var(--gray-dark); font-style: italic; }
-
-  #feed-entries { overflow-y: auto; flex: 1; min-height: 0; max-height: 11rem; scrollbar-width: none; }
-  #feed-entries::-webkit-scrollbar { display: none; }
-
-  .amano-note {
-    padding: 0.65rem 1.25rem 0.8rem; font-size: 0.72rem; color: var(--gray-mid);
-    font-style: italic; line-height: 1.6; border-top: 1px dashed var(--gray-light);
+  .panel-header {
+    background: #ffffff;
+    border-bottom: 1px solid var(--black);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
     flex-shrink: 0;
   }
 
-  .log-form {
-    padding: 0.75rem 1.25rem; background: var(--off-white);
-    display: none; flex-direction: column; gap: 0.5rem;
-    border-bottom: 1.5px solid var(--gray-light); flex-shrink: 0;
+  .panel-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 16px;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
   }
-  .log-form.visible { display: flex; }
-  .log-form-row { display: flex; gap: 0.5rem; }
 
-  .log-form select {
-    font-family: 'Nunito', sans-serif; font-size: 0.82rem;
-    border: 1.5px solid var(--gray-light); border-radius: 8px;
-    padding: 0.35rem 0.6rem; background: var(--white); color: var(--black);
-    outline: none; flex: 1;
+  .panel-dismiss {
+    width: 14px; height: 14px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0;
   }
-  .log-form select:focus { border-color: var(--blue); }
+  .panel-dismiss svg { display: block; }
 
-  .log-submit {
-    background: var(--blue); color: var(--white); border: none; border-radius: 8px;
-    padding: 0.35rem 0.9rem; font-size: 0.8rem; font-weight: 700; font-family: 'Nunito', sans-serif;
-    cursor: pointer; transition: opacity 0.2s; white-space: nowrap;
-  }
-  .log-submit:hover { opacity: 0.85; }
-
-  .section-divider { border: none; border-top: 1.5px solid var(--black); margin: 0 3rem; }
-
-  .profiles-section { padding: 2.5rem 3rem 4rem; }
-  .profiles-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 2rem; }
-  .profiles-header h2 { font-family: 'DM Serif Display', serif; font-size: 2rem; letter-spacing: -0.03em; }
-  .profiles-header p { font-size: 0.82rem; color: var(--gray-dark); }
-
-  .profiles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
-
-  .profile-card {
-    border: 1.5px solid var(--black); border-radius: 16px; overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;
-  }
-  .profile-card:hover { transform: translateY(-3px); box-shadow: 4px 4px 0 var(--black); }
-
-  .profile-card-art {
-    height: 160px; display: flex; align-items: center; justify-content: center;
-    font-size: 5rem; border-bottom: 1.5px solid var(--black); position: relative; overflow: hidden;
-  }
-  .profile-card-art.puffer { background: linear-gradient(135deg, #eef4ff 0%, #d6e8ff 100%); }
-  .profile-card-art.oto { background: linear-gradient(135deg, #f0f0ee 0%, #e2e0dc 100%); }
-  .profile-card-art.shrimp { background: linear-gradient(135deg, #fff4ee 0%, #ffe8d6 100%); }
-
-
-
-  .profile-card-body { padding: 1.25rem; }
-  .profile-name { font-family: 'DM Serif Display', serif; font-size: 1.3rem; letter-spacing: -0.02em; margin-bottom: 0.2rem; }
-  .profile-scientific { font-style: italic; font-size: 0.75rem; color: var(--gray-dark); margin-bottom: 0.75rem; }
-
-  .profile-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.85rem; }
-  .profile-tag { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; padding: 0.2rem 0.6rem; border-radius: 100px; border: 1.5px solid; }
-  .profile-tag.blue { border-color: var(--blue); color: var(--blue); background: var(--blue-pale); }
-  .profile-tag.black { border-color: var(--black); color: var(--black); background: transparent; }
-  .profile-tag.gray { border-color: var(--gray-mid); color: var(--gray-dark); background: var(--off-white); }
-
-  .profile-bio { font-size: 0.82rem; line-height: 1.65; color: var(--gray-dark); }
-
-  .profile-stats-row { display: flex; gap: 0.75rem; margin-top: 0.85rem; padding-top: 0.85rem; border-top: 1px solid var(--gray-light); border-bottom: 1px solid var(--gray-light); padding-bottom: 0.85rem; margin-bottom: 0.85rem; }
-  .profile-stat { flex: 1; text-align: center; }
-  .profile-stat-val { font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: 500; display: block; }
-  .profile-stat-label { font-size: 0.65rem; color: var(--gray-dark); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; display: block; margin-top: 0.1rem; }
-
-  .bubbles { display: flex; gap: 4px; align-items: flex-end; opacity: 0.4; z-index: 1; }
-  .bubble { border: 1.5px solid var(--blue); border-radius: 50%; animation: float 3s ease-in-out infinite; }
-  .bubble:nth-child(1) { width: 8px; height: 8px; animation-delay: 0s; }
-  .bubble:nth-child(2) { width: 12px; height: 12px; animation-delay: 0.5s; }
-  .bubble:nth-child(3) { width: 6px; height: 6px; animation-delay: 1s; }
-  .bubble:nth-child(4) { width: 10px; height: 10px; animation-delay: 1.5s; }
-  .bubble:nth-child(5) { width: 7px; height: 7px; animation-delay: 0.8s; }
-  .bubble:nth-child(6) { width: 9px; height: 9px; animation-delay: 0.3s; }
-  .bubble:nth-child(7) { width: 5px; height: 5px; animation-delay: 1.2s; }
-  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-
-  /* ---- MODALS ---- */
-  .modal-backdrop {
-    display: none; position: fixed; inset: 0;
-    background: rgba(15,15,15,0.6); z-index: 200;
-    align-items: center; justify-content: center; padding: 2rem;
-  }
-  .modal-backdrop.open { display: flex; }
-
-  .modal {
-    background: var(--white); border: 1.5px solid var(--black); border-radius: 20px;
-    width: 100%; max-width: 680px; max-height: 88vh; overflow-y: auto;
-    animation: modal-in 0.22s ease; position: relative;
+  .panel-scroll {
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    min-height: 0;
     scrollbar-width: none;
   }
-  .modal::-webkit-scrollbar { display: none; }
+  .panel-scroll::-webkit-scrollbar { display: none; }
 
-  @keyframes modal-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-
-  .modal-close {
-    position: absolute; top: 1rem; right: 1rem; width: 32px; height: 32px; border-radius: 50%;
-    background: var(--off-white); border: 1.5px solid var(--gray-light); font-size: 0.9rem;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    color: var(--gray-dark); transition: background 0.15s, color 0.15s; z-index: 10;
-  }
-  .modal-close:hover { background: var(--black); color: var(--white); }
-
-  .modal-hero {
-    height: 220px; display: flex; align-items: center; justify-content: center;
-    font-size: 6rem; border-bottom: 1.5px solid var(--black); border-radius: 18px 18px 0 0;
-    flex-shrink: 0; position: relative; overflow: hidden; cursor: pointer;
-  }
-  .modal-hero.puffer { background: linear-gradient(135deg, #eef4ff 0%, #d6e8ff 100%); }
-  .modal-hero.oto { background: linear-gradient(135deg, #f0f0ee 0%, #e2e0dc 100%); }
-  .modal-hero.shrimp { background: linear-gradient(135deg, #fff4ee 0%, #ffe8d6 100%); }
-
-  .modal-hero img.cover-img {
-    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;
-  }
-
-  .modal-hero .cover-emoji { position: relative; z-index: 1; pointer-events: none; }
-
-  .modal-hero .cover-edit-hint {
-    position: absolute; inset: 0; background: rgba(15,15,15,0); display: flex;
-    align-items: center; justify-content: center; gap: 0.4rem;
-    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-    color: transparent; transition: background 0.2s, color 0.2s; z-index: 2;
-    pointer-events: none;
-  }
-  .is-owner .modal-hero { cursor: pointer; }
-  .is-owner .modal-hero:hover .cover-edit-hint { background: rgba(15,15,15,0.38); color: var(--white); }
-
-  .cover-upload-input { display: none; }
-
-  /* ---- CROP EDITOR ---- */
-  .crop-backdrop {
-    display: none; position: fixed; inset: 0; background: rgba(15,15,15,0.85);
-    z-index: 400; align-items: center; justify-content: center; padding: 2rem;
-  }
-  .crop-backdrop.open { display: flex; }
-
-  .crop-modal {
-    background: var(--white); border: 1.5px solid var(--black); border-radius: 20px;
-    width: 100%; max-width: 620px; padding: 1.75rem;
-    animation: modal-in 0.2s ease;
-  }
-
-  .crop-title {
-    font-family: 'DM Serif Display', serif; font-size: 1.4rem; letter-spacing: -0.02em;
-    margin-bottom: 0.3rem;
-  }
-
-  .crop-hint {
-    font-size: 0.78rem; color: var(--gray-dark); margin-bottom: 1.25rem; line-height: 1.5;
-  }
-
-  .crop-viewport {
-    width: 100%; aspect-ratio: 16/5; border-radius: 12px; border: 1.5px solid var(--black);
-    overflow: hidden; position: relative; cursor: grab; background: var(--off-white);
-    touch-action: none; user-select: none;
-  }
-  .crop-viewport:active { cursor: grabbing; }
-
-  .crop-viewport img {
-    position: absolute; transform-origin: 0 0;
-    pointer-events: none; display: block; max-width: none;
-  }
-
-  .crop-controls {
-    display: flex; align-items: center; gap: 1rem; margin-top: 1rem;
-  }
-
-  .crop-zoom-label {
-    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--gray-dark); white-space: nowrap;
-  }
-
-  .crop-zoom-slider {
-    flex: 1; accent-color: var(--blue);
-  }
-
-  .crop-actions {
-    display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.25rem;
-  }
-
-  .crop-cancel {
-    background: none; border: 1.5px solid var(--gray-light); border-radius: 100px;
-    font-family: 'Nunito', sans-serif; font-size: 0.8rem; font-weight: 700;
-    padding: 0.45rem 1.1rem; cursor: pointer; color: var(--gray-dark); transition: background 0.15s;
-  }
-  .crop-cancel:hover { background: var(--off-white); }
-
-  .crop-save {
-    background: var(--black); color: var(--white); border: none; border-radius: 100px;
-    font-family: 'Nunito', sans-serif; font-size: 0.8rem; font-weight: 700;
-    padding: 0.45rem 1.25rem; cursor: pointer; transition: background 0.15s;
-  }
-  .crop-save:hover { background: var(--blue); }
-
-  .modal-body { padding: 1.75rem; }
-
-  .modal-name { font-family: 'DM Serif Display', serif; font-size: 2rem; letter-spacing: -0.03em; margin-bottom: 0.2rem; }
-  .modal-scientific { font-style: italic; font-size: 0.82rem; color: var(--gray-dark); margin-bottom: 1rem; }
-  .modal-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
-
-  .modal-section-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-dark); margin-bottom: 0.65rem; margin-top: 1.5rem; }
-
-  .modal-bio { font-size: 0.9rem; line-height: 1.75; color: var(--gray-dark); }
-
-  .modal-stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 0.75rem; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--gray-light); }
-  .modal-stat { background: var(--off-white); border-radius: 10px; padding: 0.75rem; text-align: center; }
-  .modal-stat-val { font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: 500; display: block; margin-bottom: 0.2rem; }
-  .modal-stat-label { font-size: 0.65rem; color: var(--gray-dark); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; display: block; }
-
-  /* ---- GALLERY ---- */
-  .photo-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin-top: 0.75rem; }
-
-  .photo-thumb {
-    aspect-ratio: 1; border-radius: 10px; overflow: hidden;
-    border: 1.5px solid var(--gray-light); background: var(--off-white);
+  /* lock button in feeding log header */
+  .lock-btn {
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: border-color 0.2s; position: relative;
+    padding: 2px;
   }
-  .photo-thumb:hover { border-color: var(--blue); }
-  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .lock-btn svg { display: block; }
 
-  .photo-thumb-overlay {
-    position: absolute; inset: 0; background: rgba(15,15,15,0);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 0.5rem; transition: background 0.2s; z-index: 1;
-  }
-  .photo-thumb:hover .photo-thumb-overlay { background: rgba(15,15,15,0.45); }
-
-  .photo-thumb-delete {
-    background: var(--white); border: none; border-radius: 100px; font-size: 0.65rem;
-    font-weight: 700; font-family: 'Nunito', sans-serif; letter-spacing: 0.05em;
-    padding: 0.25rem 0.65rem; cursor: pointer; color: #a32d2d;
-    opacity: 0; transition: opacity 0.15s, background 0.15s;
-  }
-  .photo-thumb:hover .photo-thumb-delete { opacity: 1; }
-  .photo-thumb-delete:hover { background: #fff0f0; }
-
-  .photo-thumb.add-btn {
-    flex-direction: column; gap: 0.4rem; border-style: dashed;
-    transition: background 0.2s, border-color 0.2s;
-  }
-  .photo-thumb.add-btn:hover { background: var(--blue-pale); border-color: var(--blue); }
-  .photo-thumb.add-btn .plus { font-size: 1.5rem; color: var(--gray-mid); line-height: 1; }
-  .photo-thumb.add-btn .label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gray-mid); }
-  .photo-thumb.add-btn:hover .plus,
-  .photo-thumb.add-btn:hover .label { color: var(--blue); }
-
-  /* ---- LIGHTBOX ---- */
-  .lightbox {
-    display: none; position: fixed; inset: 0; background: rgba(15,15,15,0.92);
-    z-index: 300; flex-direction: column;
-  }
-  .lightbox.open { display: flex; }
-
-  .lightbox-toolbar {
-    display: flex; align-items: center; justify-content: flex-end;
-    padding: 1rem; flex-shrink: 0;
+  /* ---------- TANK TEAM ---------- */
+  .resident-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px;
+    align-items: flex-start;
   }
 
-  .lightbox-close {
-    width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.1);
-    border: 1.5px solid rgba(255,255,255,0.25); color: var(--white); font-size: 0.9rem;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: background 0.15s;
+  .resident-name {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -0.04em;
   }
-  .lightbox-close:hover { background: rgba(255,255,255,0.2); }
 
-  .lightbox-img-wrap {
-    flex: 1; display: flex; align-items: center; justify-content: center; padding: 1rem 2rem 2rem;
+  .resident-species {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+  }
+
+  .gallery-scroller {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    height: 240px;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    flex-shrink: 0;
+  }
+  .gallery-scroller::-webkit-scrollbar { display: none; }
+
+  .gallery-photo {
+    flex-shrink: 0;
+    position: relative;
+    padding: 14px;
+    cursor: pointer;
+  }
+  .gallery-photo img {
+    display: block;
+    max-height: 180px;
+    max-width: 230px;
+    height: auto;
+    width: auto;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  }
+  .gallery-photo:nth-child(3n) img { max-height: 200px; }
+  .gallery-photo:nth-child(3n+2) img { max-height: 150px; }
+
+  .gallery-photo .photo-delete {
+    position: absolute;
+    top: 6px; right: 6px;
+    background: #ffffff;
+    border: 1px solid var(--black);
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    display: none;
+    z-index: 2;
+  }
+  body.is-owner .gallery-photo:hover .photo-delete { display: block; }
+
+  .gallery-empty {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: -0.03em;
+    color: var(--gray-text);
+  }
+
+  .gallery-add {
+    flex-shrink: 0;
+    border: 1px dashed var(--gray-text);
+    border-radius: 8px;
+    padding: 24px 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--gray-text);
+    display: none;
+  }
+  body.is-owner .gallery-add { display: block; }
+  .gallery-add:hover { border-color: var(--black); color: var(--black); }
+
+  .resident-bio {
+    font-family: var(--sans);
+    font-size: 12px;
+    line-height: 1.35;
+  }
+  .resident-bio p { margin-bottom: 8px; }
+  .resident-bio p:last-child { margin-bottom: 0; }
+  .resident-bio b { font-weight: 700; }
+
+  /* ---------- TANK SPECS ---------- */
+  .tank-figure {
+    position: relative;
+    width: 100%;
+    margin-bottom: 36px;
+  }
+
+  .tank-photo {
+    width: 100%;
+    aspect-ratio: 4096 / 2731;
+    object-fit: cover;
+    display: block;
+  }
+
+  .tank-photo-placeholder {
+    width: 100%;
+    aspect-ratio: 4096 / 2731;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gray-line);
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--gray-text);
+  }
+
+  .camera-line {
+    position: absolute;
+    left: 78.3%;
+    top: 61.8%;
+    height: 35.6%;
+    width: 1px;
+    background: var(--black);
+  }
+
+  .camera-caption {
+    position: absolute;
+    top: 100%;
+    left: 59.1%;
+    width: 38.2%;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .specs-text {
+    font-family: var(--sans);
+    font-size: 12px;
+    line-height: 1.35;
+    padding: 24px 16px;
+  }
+  .specs-text p { margin-bottom: 8px; }
+  .specs-text p:last-child { margin-bottom: 0; }
+  .specs-text b { font-weight: 700; }
+
+  /* ---------- FEEDING LOG ---------- */
+  .feed-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .feed-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--gray-line);
+    gap: 12px;
+  }
+
+  .feed-details {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  .feed-date {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    color: #1d1d1d;
+  }
+
+  .feed-who {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--black);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .feed-row-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+  .food-pill {
+    background: var(--gray-pill);
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    color: var(--gray-text);
+    white-space: nowrap;
+  }
+
+  .feed-delete {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--gray-text);
+    display: none;
+    padding: 2px 4px;
+  }
+  body.is-owner .feed-delete { display: block; }
+  .feed-delete:hover { color: var(--black); }
+
+  .feed-empty {
+    padding: 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    color: var(--gray-text);
+  }
+
+  .feed-add {
+    display: none;
+    gap: 8px;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--gray-line);
+    align-items: center;
+  }
+  body.is-owner .feed-add { display: flex; }
+
+  .feed-add select {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: -0.03em;
+    border: 1px solid var(--gray-line);
+    border-radius: 999px;
+    padding: 4px 8px;
+    background: #fff;
+    color: var(--black);
+    outline: none;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .feed-add-btn {
+    background: var(--black);
+    color: #fff;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .feed-footer {
+    padding: 16px;
+    flex-shrink: 0;
+    margin-top: auto;
+  }
+  .feed-footer p {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    color: var(--gray-text);
+    line-height: 1.5;
+  }
+
+  #panel-log .panel-scroll { display: flex; flex-direction: column; }
+
+  /* ---------- GUESTBOOK ---------- */
+  .guestbook-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .guestbook-messages::-webkit-scrollbar { display: none; }
+
+  .gb-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .gb-message { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; min-width: 0; }
+
+  .gb-name {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    padding: 0 4px;
+  }
+
+  .gb-bubble {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 12px;
+    font-family: var(--sans);
+    font-size: 12px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .gb-date {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    color: var(--gray-date);
+    white-space: nowrap;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .gb-delete {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--gray-date);
+    display: none;
+    padding: 0 2px;
+  }
+  body.is-owner .gb-delete { display: inline; }
+  .gb-delete:hover { color: var(--black); }
+
+  .gb-empty {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: -0.03em;
+    color: var(--gray-text);
+  }
+
+  .gb-input-area {
+    padding: 16px;
+    flex-shrink: 0;
+  }
+
+  .gb-form {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border-radius: 12px;
     overflow: hidden;
   }
 
-  .lightbox-img-wrap img {
-    max-width: 100%; max-height: 100%; border-radius: 12px; object-fit: contain;
+  .gb-form input, .gb-form textarea {
+    font-family: var(--sans);
+    font-size: 12px;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--black);
+    width: 100%;
+    resize: none;
+  }
+  .gb-form input::placeholder, .gb-form textarea::placeholder { color: var(--gray-date); }
+
+  .gb-name-field { padding: 12px 12px 8px; }
+  .gb-divider { border: none; border-top: 1px solid var(--gray-line); margin: 0 0; }
+  .gb-msg-field { padding: 12px 12px 0; height: 42px; }
+
+  .gb-send-row {
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px 8px 8px 12px;
   }
 
-  .photo-upload-input { display: none; }
-
-  footer { border-top: 1.5px solid var(--black); padding: 1.25rem 3rem; display: flex; align-items: center; justify-content: space-between; }
-  footer p { font-size: 0.78rem; color: var(--gray-dark); }
-  .footer-logo { font-family: 'DM Serif Display', serif; font-size: 1rem; }
-  .footer-logo span { color: var(--blue); }
-
-  /* ---- AUTH ---- */
-  .owner-only { display: none !important; }
-  .owner-only.visible { display: flex !important; }
-  .owner-only.visible-block { display: block !important; }
-  .owner-only.visible-inline { display: inline !important; }
-
-  .lock-btn {
-    background: none; border: none; cursor: pointer; font-size: 0.78rem;
-    color: var(--gray-mid); padding: 0; font-family: 'Nunito', sans-serif;
-    display: flex; align-items: center; gap: 0.3rem; transition: color 0.2s;
+  .gb-send {
+    background: var(--black);
+    color: #ffffff;
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
   }
-  .lock-btn:hover { color: var(--gray-dark); }
+  .gb-send:disabled { background: #e9e9e9; cursor: default; }
 
-  @media (max-width: 900px) {
-    nav { padding: 1rem 1.5rem; }
-    .hero { grid-template-columns: 1fr; padding: 1.5rem; }
-    .profiles-section { padding: 2rem 1.5rem 3rem; }
-    .section-divider { margin: 0 1.5rem; }
-    footer { padding: 1rem 1.5rem; }
-    .modal-stats-row { grid-template-columns: repeat(3, 1fr); }
-    .photo-gallery { grid-template-columns: repeat(2, 1fr); }
-    .modal-backdrop { padding: 0; align-items: flex-end; }
-    .modal { max-width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; border-left: none; border-right: none; border-bottom: none; }
-    .modal-hero { border-radius: 0; }
+  /* ---------- LIGHTBOX ---------- */
+  .lightbox {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 900;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    cursor: zoom-out;
+  }
+  .lightbox.open { display: flex; }
+  .lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+  .hidden-input { display: none; }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 1250px) {
+    .panel-area {
+      position: fixed;
+      inset: 12px;
+      z-index: 500;
+      height: auto;
+    }
+    .panel { box-shadow: 0 4px 40px rgba(0,0,0,0.18); }
+  }
+
+  @media (max-width: 636px) {
+    body {
+      display: block;
+      overflow: auto;
+      padding: 38px 0 24px;
+      height: auto;
+    }
+    html, body { height: auto; min-height: 100%; }
+
+    .main-section {
+      width: 100%;
+      min-width: 0;
+      height: auto;
+      min-height: calc(100vh - 62px); /* page padding: 38px top + 24px bottom */
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .livestream-section { order: 1; gap: 8px; }
+
+    /* flatten the headline row so the tank time can move below the stream */
+    .headline-row { display: contents; }
+    .headline { order: -1; font-size: 54px; padding: 0 16px; }
+    .tank-time {
+      order: 2;
+      align-self: flex-end;
+      text-align: right;
+      font-size: 18px;
+      padding: 0 16px 0 0;
+    }
+
+    .tabs {
+      order: 2;
+      flex-direction: column;
+      gap: 0;
+      align-items: stretch;
+      padding: 24px 16px;
+    }
+    .tab {
+      text-align: left;
+      border-top: 1px solid var(--gray-line);
+      padding: 12px 0;
+    }
   }
 </style>
 </head>
 <body>
 
-<nav>
-  <div class="nav-logo">friend.fish <span>✦</span></div>
-  <div class="nav-time" id="nav-clock">—</div>
-</nav>
+<!-- ===== LEFT PANEL AREA ===== -->
+<div class="panel-area" id="panel-area">
 
-<section class="hero" id="feed">
-  <div class="feed-wrapper">
-    <div class="feed-placeholder" id="feed-placeholder">
+  <!-- THE TANK TEAM -->
+  <section class="panel" id="panel-team" aria-label="the tank team">
+    <div class="panel-header">
+      <div class="panel-title">THE TANK TEAM</div>
+      <button class="panel-dismiss" onclick="closePanels()" aria-label="close">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
+      </button>
+    </div>
+    <div class="panel-scroll">
+
+      <div class="resident-card">
+        <div class="resident-name">fish friend</div>
+        <div class="resident-species">Colomesus asellus — South American Puffer</div>
+        <div class="gallery-scroller" id="gallery-puffer1"></div>
+        <input type="file" class="hidden-input" id="upload-puffer1" accept="image/*" multiple onchange="handleUpload(event,'puffer1')">
+        <div class="resident-bio">
+          <p>Fish friend was a snail control employee at Aqua Forest Aquarium. we met in august 2025 and he looked at me with his big eyes, smol face and zoomed around super fast. I visited him every week for 6 months until the store finally let me have him. This tank was made to be his perfect retirement home.</p>
+          <p>No matter where he's hiding in the tank, he's always happy to swim up and say "o hi!" whenever i walk by.</p>
+        </div>
+      </div>
+
+      <div class="resident-card">
+        <div class="resident-name">amazon puffer gang</div>
+        <div class="resident-species">Colomesus asellus — South American Puffer</div>
+        <div class="gallery-scroller" id="gallery-puffer2"></div>
+        <input type="file" class="hidden-input" id="upload-puffer2" accept="image/*" multiple onchange="handleUpload(event,'puffer2')">
+        <div class="resident-bio">
+          <p>Recruited specifically so fish friend would have a crew to shoal with. meet <b>lil smol</b>, <b>lil brave</b>, <b>lil shy</b>, and <b>lil dumpy</b>. they're smaller and definitely not as smart or as good at hunting snails as fish friend, but fish friend has been happy to show them the ropes. fish friend has never been alone since.</p>
+        </div>
+      </div>
+
+      <div class="resident-card">
+        <div class="resident-name">the otos</div>
+        <div class="resident-species">Otocinclus sp. — Dwarf Suckermouth Catfish</div>
+        <div class="gallery-scroller" id="gallery-otos"></div>
+        <input type="file" class="hidden-input" id="upload-otos" accept="image/*" multiple onchange="handleUpload(event,'otos')">
+        <div class="resident-bio">
+          <p>Otocinclus are algae grazers that lick every surface with their little sucker mouths. They feel most secure in groups so you can usually see the six of them grazing together.</p>
+          <p>When resting on a surface, they lower their dorsal fin like a sail and sit on their little pectoral fins, like tiny tripods.</p>
+          <p>I supplement their diet with blanched zucchini when natural algae runs low. It's like crack for them.</p>
+        </div>
+      </div>
+
+      <div class="resident-card">
+        <div class="resident-name">the amanos</div>
+        <div class="resident-species">Caridina multidentata — Amano Shrimp</div>
+        <div class="gallery-scroller" id="gallery-amanos"></div>
+        <input type="file" class="hidden-input" id="upload-amanos" accept="image/*" multiple onchange="handleUpload(event,'amanos')">
+        <div class="resident-bio">
+          <p>Named after aquascaping legend Takashi Amano, who popularized their use in planted tanks in the 1980s.</p>
+          <p>I bought 11, but they're nearly translucent and constantly moving so it's genuinely hard to do a headcount. They could all be there, or they could've gone to the big tank in the sky, who's to say.</p>
+          <p>They forage on algae, biofilm, and everyone's leftovers so I never have to worry about feeding them. I'll forget they exist and then suddenly spot five of them on one leaf doing an extremely thorough job.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- TANK SPECS -->
+  <section class="panel" id="panel-specs" aria-label="tank specs">
+    <div class="panel-header">
+      <div class="panel-title">TANK SPECS</div>
+      <button class="panel-dismiss" onclick="closePanels()" aria-label="close">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
+      </button>
+    </div>
+    <div class="panel-scroll">
+      <div>
+        <div class="tank-figure">
+          <img class="tank-photo" id="tank-photo" src="/assets/tank.jpg" alt="the tank">
+          <div class="camera-line"></div>
+          <div class="camera-caption">THIS IS WHERE THE CAMERA FOR THE LIVESTREAM IS</div>
+        </div>
+        <div class="specs-text">
+          <p><b>Tank:</b> 75cm long × 45cm deep × 45cm high (roughly 40 gallons).</p>
+          <p><b>Light:</b> Twinstar Aquarium Light (C Series) on a UNS Bar Pro Light Hanging Kit</p>
+          <p><b>Filter:</b> Fluval 307 with glass Lily input/output pipes</p>
+          <p><b>Tank lid:</b> There were literally zero glass lids that could fit this size of aquarium so I made my own by going to the local hardware shop and got glass cut to size.</p>
+          <p><b>Tanks stand:</b> It's a heavy duty black steel frame that I was able to get secondhand with the tank! The guy I bought it from said he custom made it himself so kudos to his stellar work.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEEDING LOG -->
+  <section class="panel white" id="panel-log" aria-label="feeding log">
+    <div class="panel-header">
+      <div class="panel-title">
+        FEEDING LOG
+        <button class="lock-btn" id="lock-btn" onclick="handleLockClick()" title="owner login">
+          <svg id="lock-icon-locked" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <rect x="1.5" y="5" width="9" height="6" rx="1" stroke="black"/>
+            <path d="M3.5 5V3.5C3.5 2.12 4.62 1 6 1C7.38 1 8.5 2.12 8.5 3.5V5" stroke="black"/>
+          </svg>
+          <svg id="lock-icon-unlocked" width="14" height="12" viewBox="0 0 14 12" fill="none" style="display:none">
+            <rect x="1.5" y="5" width="9" height="6" rx="1" stroke="black"/>
+            <path d="M8.5 5V3.5C8.5 2.12 9.62 1 11 1C12.38 1 13.5 2.12 13.5 3.5V4" stroke="black"/>
+          </svg>
+        </button>
+      </div>
+      <button class="panel-dismiss" onclick="closePanels()" aria-label="close">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
+      </button>
+    </div>
+    <div class="panel-scroll">
+      <div class="feed-add">
+        <select id="feed-who">
+          <option value="" disabled selected>who?</option>
+          <option value="amazon puffers">amazon puffers</option>
+          <option value="otocinclus">otocinclus</option>
+        </select>
+        <select id="feed-type">
+          <option value="" disabled selected>food?</option>
+          <option value="grub pie">grub pie</option>
+          <option value="soilent green">soilent green</option>
+          <option value="bloodworms">bloodworms</option>
+          <option value="zucchini">zucchini</option>
+          <option value="scuds">scuds</option>
+          <option value="snails">snails</option>
+          <option value="micro pellets">micro pellets</option>
+        </select>
+        <button class="feed-add-btn" onclick="submitFeed()">ADD</button>
+      </div>
+      <div class="feed-list" id="feed-list"></div>
+      <div class="feed-footer">
+        <p>The amano shrimp forage on algae, biofilm, and everyone's leftovers. Our star cleanup team ★!</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- GUESTBOOK -->
+  <section class="panel" id="panel-guestbook" aria-label="guestbook">
+    <div class="panel-header">
+      <div class="panel-title">GUESTBOOK</div>
+      <button class="panel-dismiss" onclick="closePanels()" aria-label="close">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
+      </button>
+    </div>
+    <div class="guestbook-messages" id="guestbook-messages"></div>
+    <div class="gb-input-area">
+      <form class="gb-form" id="gb-form" onsubmit="return submitGuestbook(event)">
+        <div class="gb-name-field">
+          <input type="text" id="gb-name" placeholder="Name" maxlength="60" autocomplete="nickname">
+        </div>
+        <hr class="gb-divider">
+        <div class="gb-msg-field">
+          <textarea id="gb-msg" placeholder="Type a message" maxlength="280" rows="1"></textarea>
+        </div>
+        <div class="gb-send-row">
+          <button type="submit" class="gb-send" id="gb-send" disabled>SEND</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+</div>
+
+<!-- ===== MAIN SECTION ===== -->
+<div class="main-section">
+  <nav class="tabs">
+    <button class="tab" id="tab-team" onclick="togglePanel('team')">The tank team</button>
+    <button class="tab" id="tab-specs" onclick="togglePanel('specs')">Tank specs</button>
+    <button class="tab" id="tab-log" onclick="togglePanel('log')">Feeding log</button>
+    <button class="tab" id="tab-guestbook" onclick="togglePanel('guestbook')">Guestbook</button>
+  </nav>
+
+  <div class="livestream-section">
+    <div class="headline-row">
+      <h1 class="headline">friend.fish</h1>
+      <div class="tank-time" id="tank-time">TANK TIME —</div>
+    </div>
+    <div class="livestream" id="livestream">
+      <video class="livestream-bg" src="/assets/livestream.webm" autoplay muted loop playsinline disablepictureinpicture aria-hidden="true"></video>
       <moq-watch
         url="https://cdn.moq.dev/anon"
         name="friend.fish/tank"
@@ -514,256 +888,75 @@
         latency="real-time">
         <canvas></canvas>
       </moq-watch>
-      <div class="feed-overlay">
-        <div class="feed-fish-icon">🐡</div>
-        <div class="feed-placeholder-text">
-          <h3 class="feed-overlay-headline">livestream connecting</h3>
-          <p>tank stuff is under construction right now</p>
-        </div>
-        <div class="bubbles"><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="stats-sidebar">
-    <div class="stat-card blue-accent">
-      <div class="stat-card-label">tank time</div>
-      <div class="stat-card-value clock" id="live-clock">—</div>
-    </div>
-
-    <div class="feeding-log">
-      <div class="feeding-log-header">
-        <span>feeding log</span>
-        <button class="add-feed-btn" onclick="toggleForm()">+ new log</button>
-      </div>
-      <div class="log-form" id="log-form">
-        <div class="log-form-row">
-          <select id="feed-who">
-            <option value="" disabled selected>who was fed?</option>
-            <option value="amazon puffers">amazon puffers</option>
-            <option value="otocinclus">otocinclus</option>
-          </select>
-        </div>
-        <div class="log-form-row">
-          <select id="feed-type">
-            <option value="" disabled selected>what did they eat?</option>
-            <option value="grub pie">grub pie</option>
-            <option value="soilent green">soilent green</option>
-            <option value="bloodworms">bloodworms</option>
-            <option value="zucchini">zucchini</option>
-            <option value="scuds">scuds</option>
-            <option value="snails">snails</option>
-            <option value="micro pellets">micro pellets</option>
-          </select>
-          <button class="log-submit" onclick="submitFeed()">add</button>
-        </div>
-      </div>
-      <div id="feed-entries">
-        <div class="no-entries">no feedings logged yet today ˙✦˙</div>
-      </div>
-      <div class="amano-note">the amano shrimp forage on algae, biofilm, and everyone's leftovers. our star cleanup team ✦</div>
-    </div>
-  </div>
-</section>
-
-<hr class="section-divider">
-
-<section class="profiles-section" id="profiles">
-  <div class="profiles-header">
-    <h2>the residents</h2>
-    <p>meet the tank team</p>
-  </div>
-  <div class="profiles-grid">
-
-    <div class="profile-card" onclick="openModal('puffer1')">
-      <div class="profile-card-art puffer" id="card-art-puffer1">🐡</div>
-      <div class="profile-card-body">
-        <div class="profile-name">fish friend</div>
-        <div class="profile-scientific">Colomesus asellus</div>
-        <div class="profile-stats-row">
-          <div class="profile-stat"><span class="profile-stat-val">2.5 cm</span><span class="profile-stat-label">size</span></div>
-          <div class="profile-stat"><span class="profile-stat-val">snails</span><span class="profile-stat-label">fav food</span></div>
-          <div class="profile-stat"><span class="profile-stat-val">Aug '25</span><span class="profile-stat-label">met</span></div>
-        </div>
-        <div class="profile-bio">former snail control employee at Aqua Forest Aquarium. i visited him every week for 6 months until the store finally let me have him. now happily retired in this tank, always ready to swim up and say "o hi!"</div>
-      </div>
-    </div>
-
-    <div class="profile-card" onclick="openModal('puffer2')">
-      <div class="profile-card-art puffer" id="card-art-puffer2">🐡</div>
-      <div class="profile-card-body">
-        <div class="profile-name">amazon puffer gang</div>
-        <div class="profile-scientific">Colomesus asellus</div>
-        <div class="profile-stats-row">
-          <div class="profile-stat"><span class="profile-stat-val">&lt;2 cm</span><span class="profile-stat-label">size</span></div>
-          <div class="profile-stat"><span class="profile-stat-val">snails</span><span class="profile-stat-label">fav food</span></div>
-          <div class="profile-stat"><span class="profile-stat-val">4</span><span class="profile-stat-label">members</span></div>
-        </div>
-        <div class="profile-bio">recruited so fish friend would have a crew. meet lil smol, lil brave, lil shy, and lil dumpy — not as sharp at snail hunting, but fish friend has been happy to show them the ropes.</div>
-      </div>
-    </div>
-
-    <div class="profile-card" onclick="openModal('otos')">
-      <div class="profile-card-art oto" id="card-art-otos">🐟</div>
-      <div class="profile-card-body">
-        <div class="profile-name">the otos</div>
-        <div class="profile-scientific">Otocinclus sp.</div>
-        <div class="profile-stats-row">
-          <div class="profile-stat"><span class="profile-stat-val">2–3 cm</span><span class="profile-stat-label">size</span></div>
-          <div class="profile-stat"><span class="profile-stat-val">algae</span><span class="profile-stat-label">diet</span></div>
-          <div class="profile-stat"><span class="profile-stat-val">6</span><span class="profile-stat-label">members</span></div>
-        </div>
-        <div class="profile-bio">six shy little guys who graze every surface non-stop. when they rest, their fins prop them up off the glass so they hover like tiny tripods — very cute, very weird.</div>
-      </div>
-    </div>
-
-    <div class="profile-card" onclick="openModal('amanos')">
-      <div class="profile-card-art shrimp" id="card-art-amanos">🦐</div>
-      <div class="profile-card-body">
-        <div class="profile-name">the amanos</div>
-        <div class="profile-scientific">Caridina multidentata</div>
-        <div class="profile-stats-row">
-          <div class="profile-stat"><span class="profile-stat-val">2–4 cm</span><span class="profile-stat-label">size</span></div>
-          <div class="profile-stat"><span class="profile-stat-val">algae</span><span class="profile-stat-label">diet</span></div>
-          <div class="profile-stat"><span class="profile-stat-val">11?</span><span class="profile-stat-label">members</span></div>
-        </div>
-        <div class="profile-bio">started with 11, but they're nearly invisible and always working so it's hard to say if they're all accounted for at once. they eat algae, biofilm, and everyone's leftovers without being asked. you'll forget they're there and then suddenly spot five of them on one leaf.</div>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<footer>
-  <p>my best friend is a fish ✦</p>
-  <div style="display:flex;align-items:center;gap:1rem;">
-    <p id="footer-date">—</p>
-    <button class="lock-btn" id="lock-btn" onclick="handleLockClick()">🔒</button>
-  </div>
-</footer>
-
-<!-- ===== MODALS ===== -->
-
-<div class="modal-backdrop" id="modal-puffer1" onclick="backdropClose(event,'puffer1')">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('puffer1')">✕</button>
-    <div class="modal-hero puffer" id="hero-puffer1" >
-      <span class="cover-emoji" id="emoji-puffer1">🐡</span>
-      <div class="cover-edit-hint">✎ change cover</div>
-    </div>
-    <input type="file" class="cover-upload-input" id="cover-puffer1" accept="image/*" onchange="handleCoverUpload(event,'puffer1')">
-    <div class="modal-body">
-      <div class="modal-name">fish friend</div>
-      <div class="modal-scientific">Colomesus asellus — South American Puffer</div>
-      <div class="modal-section-label">about</div>
-      <div class="modal-bio">fish friend was an snail control employee at Aqua Forest Aquarium. we met in august 2025 and he looked at me with his big eyes, smol face and zoomed around super fast. i visited him every week for 6 months until the store finally let me have him. This tank was made to be his perfect retirement home. No matter where he's hiding in the tank, he's always happy to swim up and say "o hi!" whenever i walk by.</div>
-      <div class="modal-stats-row">
-        <div class="modal-stat"><span class="modal-stat-val">2.5 cm</span><span class="modal-stat-label">size</span></div>
-        <div class="modal-stat"><span class="modal-stat-val">snails</span><span class="modal-stat-label">fav food</span></div>
-        <div class="modal-stat"><span class="modal-stat-val">Aug '25</span><span class="modal-stat-label">met</span></div>
-      </div>
-      <div class="modal-section-label">photos</div>
-      <div class="photo-gallery" id="gallery-puffer1"></div>
-      <input type="file" class="photo-upload-input" id="upload-puffer1" accept="image/*" multiple onchange="handleUpload(event,'puffer1')">
+      <div class="livestream-status" id="livestream-status"><span id="livestream-status-label">livestream connecting</span><span class="dots"></span></div>
     </div>
   </div>
 </div>
 
-<div class="modal-backdrop" id="modal-puffer2" onclick="backdropClose(event,'puffer2')">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('puffer2')">✕</button>
-    <div class="modal-hero puffer" id="hero-puffer2" >
-      <span class="cover-emoji" id="emoji-puffer2">🐡</span>
-      <div class="cover-edit-hint">✎ change cover</div>
-    </div>
-    <input type="file" class="cover-upload-input" id="cover-puffer2" accept="image/*" onchange="handleCoverUpload(event,'puffer2')">
-    <div class="modal-body">
-      <div class="modal-name">amazon puffer gang</div>
-      <div class="modal-scientific">Colomesus asellus — South American Puffer</div>
-      <div class="modal-section-label">about</div>
-      <div class="modal-bio">recruited specifically so fish friend would have a crew to shoal with. meet lil smol, lil brave, lil shy, and lil dumpy. they're smaller and definitely not as smart or as good at hunting snails as fish friend, but fish friend has been happy to show them the ropes. fish friend has never been alone since.</div>
-      <div class="modal-stats-row">
-        <div class="modal-stat"><span class="modal-stat-val">&lt;2 cm</span><span class="modal-stat-label">size</span></div>
-        <div class="modal-stat"><span class="modal-stat-val">snails</span><span class="modal-stat-label">fav food</span></div>
-        <div class="modal-stat"><span class="modal-stat-val">4</span><span class="modal-stat-label">members</span></div>
-      </div>
-      <div class="modal-section-label">photos</div>
-      <div class="photo-gallery" id="gallery-puffer2"></div>
-      <input type="file" class="photo-upload-input" id="upload-puffer2" accept="image/*" multiple onchange="handleUpload(event,'puffer2')">
-    </div>
-  </div>
-</div>
-
-<div class="modal-backdrop" id="modal-otos" onclick="backdropClose(event,'otos')">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('otos')">✕</button>
-    <div class="modal-hero oto" id="hero-otos" >
-      <span class="cover-emoji" id="emoji-otos">🐟</span>
-      <div class="cover-edit-hint">✎ change cover</div>
-    </div>
-    <input type="file" class="cover-upload-input" id="cover-otos" accept="image/*" onchange="handleCoverUpload(event,'otos')">
-    <div class="modal-body">
-      <div class="modal-name">the otos</div>
-      <div class="modal-scientific">Otocinclus sp. — Dwarf Suckermouth Catfish</div>
-      <div class="modal-section-label">about</div>
-      <div class="modal-bio">there are six of them, and they are constantly working. otocinclus are tireless algae grazers — they patrol every leaf, glass panel, and hardscape surface with their little sucker mouths. they feel most secure in groups, which tracks because they're almost always clustered together. one of their most endearing quirks: when resting on a surface, their little pectoral fins lift their bodies up so they appear to hover just above it, like tiny tripod fishers just hanging out. supplement their diet with blanched zucchini when natural algae runs low.</div>
-      <div class="modal-stats-row">
-        <div class="modal-stat"><span class="modal-stat-val">2–3 cm</span><span class="modal-stat-label">size</span></div>
-        <div class="modal-stat"><span class="modal-stat-val">algae</span><span class="modal-stat-label">diet</span></div>
-        <div class="modal-stat"><span class="modal-stat-val">6</span><span class="modal-stat-label">members</span></div>
-      </div>
-      <div class="modal-section-label">photos</div>
-      <div class="photo-gallery" id="gallery-otos"></div>
-      <input type="file" class="photo-upload-input" id="upload-otos" accept="image/*" multiple onchange="handleUpload(event,'otos')">
-    </div>
-  </div>
-</div>
-
-<div class="modal-backdrop" id="modal-amanos" onclick="backdropClose(event,'amanos')">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('amanos')">✕</button>
-    <div class="modal-hero shrimp" id="hero-amanos" >
-      <span class="cover-emoji" id="emoji-amanos">🦐</span>
-      <div class="cover-edit-hint">✎ change cover</div>
-    </div>
-    <input type="file" class="cover-upload-input" id="cover-amanos" accept="image/*" onchange="handleCoverUpload(event,'amanos')">
-    <div class="modal-body">
-      <div class="modal-name">the amanos</div>
-      <div class="modal-scientific">Caridina multidentata — Amano Shrimp</div>
-      <div class="modal-section-label">about</div>
-      <div class="modal-bio">named after aquascaping legend Takashi Amano, who popularized their use in planted tanks in the 1980s. i bought 11, but they're nearly translucent and constantly moving so it's genuinely hard to do a headcount — they could all be there, who's to say. they forage on algae, biofilm, and everyone's leftovers without needing any help. you'll forget they exist and then suddenly spot five of them on one leaf doing an extremely thorough job.</div>
-      <div class="modal-stats-row">
-        <div class="modal-stat"><span class="modal-stat-val">2–4 cm</span><span class="modal-stat-label">size</span></div>
-        <div class="modal-stat"><span class="modal-stat-val">algae</span><span class="modal-stat-label">diet</span></div>
-        <div class="modal-stat"><span class="modal-stat-val">11?</span><span class="modal-stat-label">members</span></div>
-      </div>
-      <div class="modal-section-label">photos</div>
-      <div class="photo-gallery" id="gallery-amanos"></div>
-      <input type="file" class="photo-upload-input" id="upload-amanos" accept="image/*" multiple onchange="handleUpload(event,'amanos')">
-    </div>
-  </div>
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="photo">
 </div>
 
 <script>
-  // CLOCK
+  // ---- CLOCK (tank time = San Francisco) ----
   function updateClock() {
     const now = new Date();
-    const sfOpts = { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'America/Los_Angeles' };
-    const sfDateOpts = { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' };
-    const localOpts = { hour: '2-digit', minute: '2-digit' };
-    document.getElementById('live-clock').textContent = now.toLocaleTimeString('en-US', sfOpts);
-    document.getElementById('nav-clock').textContent = now.toLocaleTimeString('en-US', localOpts);
-    document.getElementById('footer-date').textContent = now.toLocaleDateString('en-US', sfDateOpts);
+    const t = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' });
+    document.getElementById('tank-time').textContent = 'TANK TIME ' + t;
   }
   updateClock();
-  setInterval(updateClock, 1000);
+  setInterval(updateClock, 15000);
 
-  // ---- DATA LAYER (via Cloudflare Worker /api/data) ----
-
+  // ---- STATE ----
   let feedEntries = [];
   let photoStore = {};
   let coverStore = {};
+  let guestbook = [];
+  let isOwner = false;
 
+  const RESIDENTS = ['puffer1', 'puffer2', 'otos', 'amanos'];
+  const ROTATIONS = [12.36, 3.73, -11.45, -10.6, 10.84, -0.11, 7.23, -8.81, -5.43, 10.79];
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // ---- PANELS ----
+  let activePanel = null;
+
+  function togglePanel(name) {
+    if (activePanel === name) { closePanels(); return; }
+    activePanel = name;
+    document.getElementById('panel-area').classList.add('open');
+    ['team','specs','log','guestbook'].forEach(p => {
+      document.getElementById('panel-' + p).classList.toggle('open', p === name);
+      document.getElementById('tab-' + p).classList.toggle('active', p === name);
+    });
+    if (name === 'guestbook') scrollGuestbookToEnd();
+  }
+
+  function closePanels() {
+    activePanel = null;
+    document.getElementById('panel-area').classList.remove('open');
+    ['team','specs','log','guestbook'].forEach(p => {
+      document.getElementById('panel-' + p).classList.remove('open');
+      document.getElementById('tab-' + p).classList.remove('active');
+    });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (document.getElementById('lightbox').classList.contains('open')) closeLightbox();
+      else closePanels();
+    }
+  });
+
+  // ---- DATA LAYER ----
   async function gistGet() {
     try {
       const res = await fetch('/api/data');
@@ -772,31 +965,8 @@
       feedEntries = Array.isArray(data.feeds) ? data.feeds : [];
       photoStore  = (data.photos && typeof data.photos === 'object') ? data.photos : {};
       coverStore  = (data.covers && typeof data.covers === 'object') ? data.covers : {};
+      guestbook   = Array.isArray(data.guestbook) ? data.guestbook : [];
     } catch (e) { console.error('data load error', e); }
-  }
-
-  function photosSize() {
-    return new Blob([JSON.stringify(photoStore)]).size;
-  }
-
-  const PHOTO_LIMIT = 8 * 1024 * 1024; // 8MB safety threshold (upstream gist limit is 10MB, proxied via /api/data)
-  const PHOTO_WARN  = 6 * 1024 * 1024; // warn at 6MB
-
-  // Compress image to max ~200KB base64 before storing
-  function compressImage(src, maxW, maxH, quality) {
-    return new Promise(resolve => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let w = img.naturalWidth, h = img.naturalHeight;
-        const ratio = Math.min(maxW / w, maxH / h, 1);
-        canvas.width = Math.round(w * ratio);
-        canvas.height = Math.round(h * ratio);
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', quality || 0.7));
-      };
-      img.src = src;
-    });
   }
 
   async function gistSave() {
@@ -820,93 +990,48 @@
     }
   }
 
-  async function initData() {
-    await checkSession();
-    await gistGet();
-    applyOwnerState();
-    renderEntries();
-    ['puffer1','puffer2','otos','amanos'].forEach(id => restoreCover(id));
-    capFeedingLogHeight();
+  const PHOTO_LIMIT = 8 * 1024 * 1024;
+
+  function compressImage(src, maxW, maxH, quality) {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const w = img.naturalWidth, h = img.naturalHeight;
+        const ratio = Math.min(maxW / w, maxH / h, 1);
+        canvas.width = Math.round(w * ratio);
+        canvas.height = Math.round(h * ratio);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality || 0.7));
+      };
+      img.src = src;
+    });
   }
 
   // ---- FEEDING LOG ----
-  function renderEntries() {
-    const container = document.getElementById('feed-entries');
+  function fmtFeedDate(ts) {
+    const d = new Date(ts);
+    const parts = new Intl.DateTimeFormat('en-US', { month: '2-digit', day: '2-digit', timeZone: 'America/Los_Angeles' }).format(d);
+    return parts.replace('/', '.');
+  }
 
+  function renderFeed() {
+    const list = document.getElementById('feed-list');
     if (!feedEntries.length) {
-      container.innerHTML = '<div class="no-entries">no feedings logged yet</div>';
+      list.innerHTML = '<div class="feed-empty">no feedings logged yet ˙✦˙</div>';
       return;
     }
-
-    const residents = ['amazon puffers','otocinclus'];
-    const foods = ['grub pie','soilent green','bloodworms','zucchini','scuds','snails','micro pellets'];
-
-    container.innerHTML = [...feedEntries].reverse().map(e => {
-      const t = new Date(e.ts);
-      const dateStr = t.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' });
-      const whoOpts = residents.map(r => `<option value="${r}" ${r === e.who ? 'selected' : ''}>${r}</option>`).join('');
-      const foodOpts = foods.map(f => `<option value="${f}" ${f === e.food ? 'selected' : ''}>${f}</option>`).join('');
-      return `<div class="feed-entry" id="entry-${e.ts}" ${isOwner ? `onclick="toggleEdit(${e.ts})"` : ''} style="cursor:${isOwner ? 'pointer' : 'default'}">
-        <span class="feed-entry-time">${dateStr}</span>
-        <span class="feed-entry-who">${e.who}</span>
-        <span class="feed-entry-food">${e.food}</span>
-        ${isOwner ? `<span class="feed-entry-chevron">▾</span>` : ''}
-      </div>
-      ${isOwner ? `<div class="feed-entry-edit-row" id="edit-row-${e.ts}">
-        <div class="feed-entry-edit-selects">
-          <select id="edit-who-${e.ts}">${whoOpts}</select>
-          <select id="edit-food-${e.ts}">${foodOpts}</select>
+    list.innerHTML = [...feedEntries].reverse().map(e => `
+      <div class="feed-row">
+        <div class="feed-details">
+          <span class="feed-date">${fmtFeedDate(e.ts)}</span>
+          <span class="feed-who">${escapeHtml(e.who)}</span>
         </div>
-        <div class="feed-entry-edit-btns">
-          <button class="feed-action-btn delete" onclick="deleteEntry(event,${e.ts})">delete</button>
-          <button class="feed-action-btn save" onclick="saveEdit(event,${e.ts})" style="margin-left:auto">save</button>
-          <button class="feed-cancel-btn" onclick="cancelEdit(event,${e.ts})">cancel</button>
+        <div class="feed-row-right">
+          <span class="food-pill">${escapeHtml(e.food)}</span>
+          <button class="feed-delete" onclick="deleteFeed(${e.ts})" title="delete">✕</button>
         </div>
-      </div>` : ''}`;
-    }).join('');
-  }
-
-  function toggleEdit(ts) {
-    const row = document.getElementById('edit-row-' + ts);
-    const entry = document.getElementById('entry-' + ts);
-    const isOpen = row.classList.contains('visible');
-    document.querySelectorAll('.feed-entry-edit-row.visible').forEach(r => r.classList.remove('visible'));
-    document.querySelectorAll('.feed-entry.expanded').forEach(r => r.classList.remove('expanded'));
-    if (!isOpen) {
-      row.classList.add('visible');
-      entry.classList.add('expanded');
-      row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    }
-  }
-
-  function cancelEdit(e, ts) {
-    e.stopPropagation();
-    const row = document.getElementById('edit-row-' + ts);
-    const entry = document.getElementById('entry-' + ts);
-    if (row) row.classList.remove('visible');
-    if (entry) entry.classList.remove('expanded');
-  }
-
-  async function saveEdit(e, ts) {
-    e.stopPropagation();
-    const who = document.getElementById('edit-who-' + ts).value;
-    const food = document.getElementById('edit-food-' + ts).value;
-    const idx = feedEntries.findIndex(en => en.ts === ts);
-    if (idx !== -1) { feedEntries[idx].who = who; feedEntries[idx].food = food; }
-    renderEntries();
-    await gistSave();
-  }
-
-  async function deleteEntry(e, ts) {
-    e.stopPropagation();
-    feedEntries = feedEntries.filter(en => en.ts !== ts);
-    renderEntries();
-    await gistSave();
-  }
-
-  function toggleForm() {
-    document.getElementById('log-form').classList.toggle('visible');
-    setTimeout(capFeedingLogHeight, 0);
+      </div>`).join('');
   }
 
   async function submitFeed() {
@@ -914,55 +1039,33 @@
     const food = document.getElementById('feed-type').value;
     if (!who || !food) return;
     feedEntries.push({ ts: Date.now(), who, food });
-    renderEntries();
+    renderFeed();
     document.getElementById('feed-who').selectedIndex = 0;
     document.getElementById('feed-type').selectedIndex = 0;
-    document.getElementById('log-form').classList.remove('visible');
     await gistSave();
   }
 
-  // MODALS
-  function openModal(id) {
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    document.body.style.overflow = 'hidden';
-    document.body.style.paddingRight = scrollbarWidth + 'px';
-    document.querySelector('nav').style.paddingRight = (48 + scrollbarWidth) + 'px';
-    document.getElementById('modal-' + id).classList.add('open');
-    renderGallery(id);
-    restoreCover(id);
+  async function deleteFeed(ts) {
+    feedEntries = feedEntries.filter(e => e.ts !== ts);
+    renderFeed();
+    await gistSave();
   }
 
-  function closeModal(id) {
-    document.getElementById('modal-' + id).classList.remove('open');
-    document.body.style.overflow = '';
-    document.body.style.paddingRight = '';
-    document.querySelector('nav').style.paddingRight = '';
-  }
-
-  function backdropClose(e, id) {
-    if (e.target === document.getElementById('modal-' + id)) closeModal(id);
-  }
-
-  // PHOTOS
+  // ---- GALLERIES ----
   function renderGallery(id) {
-    const gallery = document.getElementById('gallery-' + id);
+    const el = document.getElementById('gallery-' + id);
+    if (!el) return;
     const photos = photoStore[id] || [];
-    const label = gallery ? gallery.previousElementSibling : null;
-    if (label && label.classList.contains('modal-section-label')) {
-      label.style.display = (photos.length === 0 && !isOwner) ? 'none' : '';
-    }
-    const thumbs = photos.map((src, i) =>
-      `<div class="photo-thumb" onclick="viewPhoto('${id}',${i})">
-        <img src="${src}" alt="photo ${i+1}" loading="lazy">
-        ${isOwner ? `<div class="photo-thumb-overlay">
-          <button class="photo-thumb-delete" onclick="deletePhoto(event,'${id}',${i})">delete</button>
-        </div>` : ''}
-      </div>`
-    ).join('');
-    const addBtn = isOwner ? `<div class="photo-thumb add-btn" onclick="document.getElementById('upload-${id}').click()">
-      <span class="plus">+</span><span class="label">add photo</span>
-    </div>` : '';
-    gallery.innerHTML = thumbs + addBtn;
+    const thumbs = photos.map((src, i) => {
+      const rot = ROTATIONS[i % ROTATIONS.length];
+      return `<div class="gallery-photo" onclick="viewPhoto('${id}',${i})">
+        <img src="${src}" alt="photo ${i + 1}" loading="lazy" style="transform:rotate(${rot}deg)">
+        <button class="photo-delete" onclick="deletePhoto(event,'${id}',${i})">✕</button>
+      </div>`;
+    }).join('');
+    const empty = (!photos.length && !isOwner) ? '<span class="gallery-empty">photos coming soon ˙✦˙</span>' : '';
+    const addBtn = `<button class="gallery-add" onclick="document.getElementById('upload-${id}').click()">+ add photo</button>`;
+    el.innerHTML = thumbs + empty + addBtn;
   }
 
   function handleUpload(event, id) {
@@ -974,14 +1077,11 @@
       const reader = new FileReader();
       reader.onload = async ev => {
         const compressed = await compressImage(ev.target.result, 1200, 1200, 0.72);
-        const testSize = new Blob([JSON.stringify({...photoStore, [id]: [...(photoStore[id]||[]), compressed]})]).size;
+        const testSize = new Blob([JSON.stringify({ ...photoStore, [id]: [...(photoStore[id] || []), compressed] })]).size;
         if (testSize > PHOTO_LIMIT) {
           alert('photo storage is full — delete some photos before adding more.');
           loaded++;
           return;
-        }
-        if (testSize > PHOTO_WARN) {
-          alert('heads up: you\'re getting close to the photo storage limit. consider deleting old photos soon.');
         }
         photoStore[id].push(compressed);
         loaded++;
@@ -995,24 +1095,6 @@
     event.target.value = '';
   }
 
-  let lightboxContext = { id: null, index: null };
-
-  function viewPhoto(id, index) {
-    const src = (photoStore[id] || [])[index];
-    if (!src) return;
-    lightboxContext = { id, index };
-    document.getElementById('lightbox-img').src = src;
-    document.getElementById('lightbox').classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeLightbox() {
-    document.getElementById('lightbox').classList.remove('open');
-    document.getElementById('lightbox-img').src = '';
-    lightboxContext = { id: null, index: null };
-    document.body.style.overflow = 'hidden';
-  }
-
   async function deletePhoto(event, id, index) {
     event.stopPropagation();
     if (!photoStore[id]) return;
@@ -1021,201 +1103,119 @@
     await gistSave();
   }
 
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      if (document.getElementById('crop-backdrop').classList.contains('open')) {
-        closeCropEditor();
-      } else if (document.getElementById('lightbox').classList.contains('open')) {
-        closeLightbox();
-      } else {
-        ['puffer1','puffer2','otos','amanos'].forEach(closeModal);
-      }
+  function viewPhoto(id, index) {
+    const src = (photoStore[id] || [])[index];
+    if (!src) return;
+    document.getElementById('lightbox-img').src = src;
+    document.getElementById('lightbox').classList.add('open');
+  }
+
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('open');
+    document.getElementById('lightbox-img').src = '';
+  }
+
+  // ---- TANK PHOTO ----
+  // Static asset; show a placeholder if /assets/tank.jpg is missing.
+  document.getElementById('tank-photo').onerror = function () {
+    const ph = document.createElement('div');
+    ph.className = 'tank-photo-placeholder';
+    ph.textContent = 'tank portrait coming soon ˙✦˙';
+    this.replaceWith(ph);
+  };
+
+  // ---- GUESTBOOK ----
+  function fmtGbDate(ts) {
+    const d = new Date(ts);
+    const parts = new Intl.DateTimeFormat('en-US', { month: '2-digit', day: '2-digit', year: '2-digit', timeZone: 'America/Los_Angeles' }).format(d);
+    return parts.replace(/\//g, '.');
+  }
+
+  function renderGuestbook() {
+    const el = document.getElementById('guestbook-messages');
+    if (!guestbook.length) {
+      el.innerHTML = '<span class="gb-empty">no messages yet — say hi to the fish ˙✦˙</span>';
+      return;
+    }
+    el.innerHTML = guestbook.map(m => `
+      <div class="gb-row">
+        <div class="gb-message">
+          <div class="gb-name">${escapeHtml(m.name)}</div>
+          <div class="gb-bubble">${escapeHtml(m.message)}</div>
+        </div>
+        <div class="gb-date">
+          <button class="gb-delete" onclick="deleteGuestbookMsg('${escapeHtml(m.id)}')" title="delete">✕</button>
+          ${fmtGbDate(m.ts)}
+        </div>
+      </div>`).join('');
+  }
+
+  function scrollGuestbookToEnd() {
+    const el = document.getElementById('guestbook-messages');
+    el.scrollTop = el.scrollHeight;
+  }
+
+  async function submitGuestbook(event) {
+    event.preventDefault();
+    const nameEl = document.getElementById('gb-name');
+    const msgEl = document.getElementById('gb-msg');
+    const sendBtn = document.getElementById('gb-send');
+    const name = nameEl.value.trim();
+    const message = msgEl.value.trim();
+    if (!name || !message) return false;
+    sendBtn.disabled = true;
+    try {
+      const res = await fetch('/api/guestbook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, message }),
+      });
+      if (!res.ok) { alert("couldn't send — try again?"); return false; }
+      const entry = await res.json();
+      guestbook.push(entry);
+      renderGuestbook();
+      scrollGuestbookToEnd();
+      msgEl.value = '';
+    } catch (e) {
+      console.error('guestbook send error', e);
+      alert("couldn't send — try again?");
+    } finally {
+      updateSendEnabled();
+    }
+    return false;
+  }
+
+  async function deleteGuestbookMsg(id) {
+    try {
+      const res = await fetch('/api/guestbook/' + encodeURIComponent(id), {
+        method: 'DELETE',
+        credentials: 'same-origin',
+      });
+      if (!res.ok) { alert("couldn't delete"); return; }
+      guestbook = guestbook.filter(m => m.id !== id);
+      renderGuestbook();
+    } catch (e) {
+      console.error('guestbook delete error', e);
+    }
+  }
+
+  // enter-to-send in the message box (shift+enter for newline)
+  document.getElementById('gb-msg').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      document.getElementById('gb-form').requestSubmit();
     }
   });
-  // COVER CROP EDITOR
 
-  let cropState = { id: null, rawSrc: null, x: 0, y: 0, scale: 1, dragging: false, startX: 0, startY: 0, lastX: 0, lastY: 0 };
-
-  function handleCoverUpload(event, id) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => openCropEditor(id, ev.target.result);
-    reader.readAsDataURL(file);
-    event.target.value = '';
+  // send stays disabled until both name and message have content
+  function updateSendEnabled() {
+    const ok = document.getElementById('gb-name').value.trim() && document.getElementById('gb-msg').value.trim();
+    document.getElementById('gb-send').disabled = !ok;
   }
-
-  function openCropEditor(id, src) {
-    cropState.id = id;
-    cropState.rawSrc = src;
-    cropState.x = 0;
-    cropState.y = 0;
-    cropState.scale = 1;
-
-    const img = document.getElementById('crop-img');
-    img.onload = () => {
-      const vp = document.getElementById('crop-viewport');
-      const vpW = vp.offsetWidth;
-      const vpH = vp.offsetHeight;
-      const scaleToFit = Math.max(vpW / img.naturalWidth, vpH / img.naturalHeight);
-      cropState.baseScale = scaleToFit;
-      cropState.scale = 1;
-      document.getElementById('crop-zoom').value = 100;
-      applyTransform();
-    };
-    img.src = src;
-
-    document.getElementById('crop-backdrop').classList.add('open');
-    document.body.style.overflow = 'hidden';
-    setupCropEvents();
-  }
-
-  function closeCropEditor() {
-    document.getElementById('crop-backdrop').classList.remove('open');
-    document.body.style.overflow = 'hidden';
-    teardownCropEvents();
-  }
-
-  function applyTransform() {
-    const img = document.getElementById('crop-img');
-    const vp = document.getElementById('crop-viewport');
-    const vpW = vp.offsetWidth;
-    const vpH = vp.offsetHeight;
-    const sc = cropState.baseScale * cropState.scale;
-    const imgW = img.naturalWidth * sc;
-    const imgH = img.naturalHeight * sc;
-    // clamp so image always fills viewport
-    cropState.x = Math.min(0, Math.max(cropState.x, vpW - imgW));
-    cropState.y = Math.min(0, Math.max(cropState.y, vpH - imgH));
-    img.style.transform = `translate(${cropState.x}px, ${cropState.y}px) scale(${sc})`;
-    img.style.width = img.naturalWidth + 'px';
-    img.style.height = img.naturalHeight + 'px';
-  }
-
-  function onCropMouseDown(e) {
-    e.preventDefault();
-    cropState.dragging = true;
-    cropState.startX = (e.touches ? e.touches[0].clientX : e.clientX) - cropState.x;
-    cropState.startY = (e.touches ? e.touches[0].clientY : e.clientY) - cropState.y;
-  }
-
-  function onCropMouseMove(e) {
-    if (!cropState.dragging) return;
-    e.preventDefault();
-    cropState.x = (e.touches ? e.touches[0].clientX : e.clientX) - cropState.startX;
-    cropState.y = (e.touches ? e.touches[0].clientY : e.clientY) - cropState.startY;
-    applyTransform();
-  }
-
-  function onCropMouseUp() { cropState.dragging = false; }
-
-  function onCropWheel(e) {
-    e.preventDefault();
-    const vp = document.getElementById('crop-viewport');
-    const vpW = vp.offsetWidth;
-    const vpH = vp.offsetHeight;
-    const prevScale = cropState.scale;
-    const delta = e.deltaY > 0 ? -0.05 : 0.05;
-    const newScale = Math.min(4, Math.max(1, prevScale + delta));
-    const centerX = vpW / 2;
-    const centerY = vpH / 2;
-    cropState.x = centerX - (centerX - cropState.x) * (newScale / prevScale);
-    cropState.y = centerY - (centerY - cropState.y) * (newScale / prevScale);
-    cropState.scale = newScale;
-    document.getElementById('crop-zoom').value = Math.round(newScale * 100);
-    applyTransform();
-  }
-
-  function setupCropEvents() {
-    const vp = document.getElementById('crop-viewport');
-    vp.addEventListener('mousedown', onCropMouseDown);
-    window.addEventListener('mousemove', onCropMouseMove);
-    window.addEventListener('mouseup', onCropMouseUp);
-    vp.addEventListener('touchstart', onCropMouseDown, { passive: false });
-    window.addEventListener('touchmove', onCropMouseMove, { passive: false });
-    window.addEventListener('touchend', onCropMouseUp);
-    vp.addEventListener('wheel', onCropWheel, { passive: false });
-    document.getElementById('crop-zoom').addEventListener('input', onZoomSlider);
-  }
-
-  function teardownCropEvents() {
-    const vp = document.getElementById('crop-viewport');
-    vp.removeEventListener('mousedown', onCropMouseDown);
-    window.removeEventListener('mousemove', onCropMouseMove);
-    window.removeEventListener('mouseup', onCropMouseUp);
-    vp.removeEventListener('touchstart', onCropMouseDown);
-    window.removeEventListener('touchmove', onCropMouseMove);
-    window.removeEventListener('touchend', onCropMouseUp);
-    vp.removeEventListener('wheel', onCropWheel);
-    document.getElementById('crop-zoom').removeEventListener('input', onZoomSlider);
-  }
-
-  function onZoomSlider(e) {
-    const vp = document.getElementById('crop-viewport');
-    const vpW = vp.offsetWidth;
-    const vpH = vp.offsetHeight;
-    const prevScale = cropState.scale;
-    const newScale = parseInt(e.target.value) / 100;
-    // anchor zoom to viewport center
-    const centerX = vpW / 2;
-    const centerY = vpH / 2;
-    cropState.x = centerX - (centerX - cropState.x) * (newScale / prevScale);
-    cropState.y = centerY - (centerY - cropState.y) * (newScale / prevScale);
-    cropState.scale = newScale;
-    applyTransform();
-  }
-
-  async function saveCrop() {
-    const img = document.getElementById('crop-img');
-    const vp = document.getElementById('crop-viewport');
-    const vpW = vp.offsetWidth;
-    const vpH = vp.offsetHeight;
-
-    // sc = total scale applied to the natural image in the viewport
-    const sc = cropState.baseScale * cropState.scale;
-
-    // top-left corner of the viewport in natural image coordinates
-    const srcX = -cropState.x / sc;
-    const srcY = -cropState.y / sc;
-    // how many natural image pixels fit across/tall the viewport
-    const srcW = vpW / sc;
-    const srcH = vpH / sc;
-
-    const OUTPUT_W = 1200;
-    const OUTPUT_H = Math.round(OUTPUT_W * vpH / vpW);
-    const canvas = document.createElement('canvas');
-    canvas.width = OUTPUT_W;
-    canvas.height = OUTPUT_H;
-    const ctx = canvas.getContext('2d');
-
-    ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, OUTPUT_W, OUTPUT_H);
-
-    const croppedSrc = canvas.toDataURL('image/jpeg', 0.92);
-    const id = cropState.id;
-    const compressed = await compressImage(croppedSrc, 1200, 400, 0.75);
-    coverStore[id] = compressed;
-    restoreCover(id);
-    closeCropEditor();
-    await gistSave();
-  }
-
-  function restoreCover(id) {
-    const src = coverStore[id];
-    const hero = document.getElementById('hero-' + id);
-    const emoji = document.getElementById('emoji-' + id);
-    const cardArt = document.getElementById('card-art-' + id);
-    if (src) {
-      let img = hero.querySelector('img.cover-img');
-      if (!img) { img = document.createElement('img'); img.className = 'cover-img'; hero.insertBefore(img, hero.firstChild); }
-      img.src = src;
-      if (emoji) emoji.style.display = 'none';
-      if (cardArt) { cardArt.style.backgroundImage = `url(${src})`; cardArt.style.backgroundSize = 'cover'; cardArt.style.backgroundPosition = 'center'; cardArt.textContent = ''; }
-    }
-  }
+  document.getElementById('gb-name').addEventListener('input', updateSendEnabled);
+  document.getElementById('gb-msg').addEventListener('input', updateSendEnabled);
 
   // ---- AUTH ----
-  let isOwner = false;
-
   async function checkSession() {
     try {
       const res = await fetch('/api/me', { credentials: 'same-origin' });
@@ -1224,28 +1224,12 @@
   }
 
   function applyOwnerState() {
-    const body = document.body;
-    if (isOwner) {
-      body.classList.add('is-owner');
-      document.getElementById('lock-btn').textContent = '🔓';
-      document.getElementById('lock-btn').title = 'lock editing';
-    } else {
-      body.classList.remove('is-owner');
-      document.getElementById('lock-btn').textContent = '🔒';
-      document.getElementById('lock-btn').title = 'owner login';
-    }
-    // re-render galleries and feed entries to show/hide edit controls
-    ['puffer1','puffer2','otos','amanos'].forEach(id => {
-      if (document.getElementById('gallery-' + id)) renderGallery(id);
-    });
-    renderEntries();
-    // wire up modal hero clicks
-    ['puffer1','puffer2','otos','amanos'].forEach(id => {
-      const hero = document.getElementById('hero-' + id);
-      if (!hero) return;
-      hero.onclick = isOwner ? () => document.getElementById('cover-' + id).click() : null;
-      hero.style.cursor = isOwner ? 'pointer' : 'default';
-    });
+    document.body.classList.toggle('is-owner', isOwner);
+    document.getElementById('lock-icon-locked').style.display = isOwner ? 'none' : 'block';
+    document.getElementById('lock-icon-unlocked').style.display = isOwner ? 'block' : 'none';
+    document.getElementById('lock-btn').title = isOwner ? 'signed in — click to lock' : 'owner login';
+    RESIDENTS.forEach(renderGallery);
+    renderFeed();
   }
 
   async function handleLockClick() {
@@ -1262,81 +1246,38 @@
     }
   }
 
-  // Cap feeding log height to match feed placeholder
-  function capFeedingLogHeight() {
-    const placeholder = document.querySelector('.feed-placeholder');
-    const sidebar = document.querySelector('.stats-sidebar');
-    const log = document.querySelector('.feeding-log');
-    if (!placeholder || !sidebar || !log) return;
-    // only apply on desktop (grid is side by side)
-    if (window.innerWidth <= 900) {
-      log.style.maxHeight = '';
-      return;
-    }
-    const placeholderH = placeholder.getBoundingClientRect().height;
-    // subtract the height of other sidebar items (title + clock card + gaps)
-    const sidebarItems = sidebar.querySelectorAll(':scope > *:not(.feeding-log)');
-    let otherH = 0;
-    sidebarItems.forEach(el => { otherH += el.getBoundingClientRect().height; });
-    const gaps = (sidebar.children.length - 1) * 16; // 1rem gap
-    const available = placeholderH - otherH - gaps;
-    log.style.maxHeight = Math.max(160, available) + 'px';
+  // ---- INIT ----
+  async function initData() {
+    await checkSession();
+    await gistGet();
+    applyOwnerState();
+    renderGuestbook();
   }
-
-  // apply on load
   initData();
-  window.addEventListener('resize', capFeedingLogHeight);
 </script>
-<!-- CROP EDITOR -->
-<div class="crop-backdrop" id="crop-backdrop">
-  <div class="crop-modal">
-    <div class="crop-title">crop cover photo</div>
-    <div class="crop-hint">drag to reposition · scroll or use the slider to zoom</div>
-    <div class="crop-viewport" id="crop-viewport">
-      <img id="crop-img" src="" alt="crop preview">
-    </div>
-    <div class="crop-controls">
-      <span class="crop-zoom-label">zoom</span>
-      <input type="range" class="crop-zoom-slider" id="crop-zoom" min="100" max="400" value="100" step="1">
-    </div>
-    <div class="crop-actions">
-      <button class="crop-cancel" onclick="closeCropEditor()">cancel</button>
-      <button class="crop-save" onclick="saveCrop()">save cover</button>
-    </div>
-  </div>
-</div>
-
-<!-- LIGHTBOX -->
-<div class="lightbox" id="lightbox">
-  <div class="lightbox-toolbar" onclick="closeLightbox()">
-    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
-  </div>
-  <div class="lightbox-img-wrap" onclick="if(event.target===this)closeLightbox()">
-    <img id="lightbox-img" src="" alt="photo">
-  </div>
-</div>
 
 <script type="module">
   import "https://cdn.jsdelivr.net/npm/@moq/watch@0.2/element.js/+esm";
 
   let el = document.querySelector('moq-watch');
-  const box = document.getElementById('feed-placeholder');
-  const headline = box.querySelector('.feed-overlay-headline');
+  const box = document.getElementById('livestream');
+  const statusEl = document.getElementById('livestream-status');
+  const statusLabel = document.getElementById('livestream-status-label');
   let canvas = el.querySelector('canvas');
 
   // Live when the decoder's frame counter has advanced recently. The catalog
   // signal stays non-null even after the publisher disconnects (relay caches
   // it), so it's not a reliable offline signal — frame flow is. The 8 s
   // window absorbs network/encoder stutter without flickering the overlay.
-  // moq-watch keeps decoding in the background; the gray overlay just paints
-  // over the (possibly stale) canvas when we're not confident it's live.
+  // moq-watch keeps decoding in the background; the status text just shows
+  // when we're not confident it's live.
   // The `reload` attribute makes Chrome subscribe on the relay's ANNOUNCE.
   // Firefox doesn't seem to deliver ANNOUNCE reliably, so as a fallback we
   // also clone+replace the element after a longer offline window to force
   // a fresh connection from scratch.
   const STALL_MS = 8000;
   const RECREATE_AFTER_MS = 15000;
-  const CONNECTING_GRACE_MS = 5000;
+  const CONNECTING_GRACE_MS = 12000;
   const pageLoadAt = performance.now();
   let lastFrameCount = -1;
   let lastFrameTime = 0;
@@ -1351,14 +1292,15 @@
     if (!live) offlineSince = performance.now();
   }
 
-  // Headline starts as "livestream connecting" and flips to "livestream
+  // Status starts as "livestream connecting..." and flips to "livestream
   // offline" once we either see a frame or wait out the grace window. After
   // that first determination we never revert to "connecting".
   function maybeFlipToOffline(now, seenFrame) {
     if (stateDetermined) return;
     if (seenFrame || now - pageLoadAt > CONNECTING_GRACE_MS) {
       stateDetermined = true;
-      headline.textContent = 'livestream offline';
+      statusLabel.textContent = 'livestream offline';
+      statusEl.classList.add('no-dots');
     }
   }
 

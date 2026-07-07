@@ -74,6 +74,40 @@ app.post('/api/data', async c => {
   return c.body(null, 204, NO_CACHE);
 });
 
+const GUESTBOOK_MAX_NAME = 60;
+const GUESTBOOK_MAX_MESSAGE = 280;
+const GUESTBOOK_MAX_ENTRIES = 500;
+
+app.post('/api/guestbook', async c => {
+  let body;
+  try { body = await c.req.json(); }
+  catch { return c.json({ error: 'invalid body' }, 400, NO_CACHE); }
+  const name = typeof body?.name === 'string' ? body.name.trim() : '';
+  const message = typeof body?.message === 'string' ? body.message.trim() : '';
+  if (!name || !message) return c.json({ error: 'name and message required' }, 400, NO_CACHE);
+  if (name.length > GUESTBOOK_MAX_NAME || message.length > GUESTBOOK_MAX_MESSAGE) {
+    return c.json({ error: 'too long' }, 400, NO_CACHE);
+  }
+  const data = await readGist(c.env);
+  const entry = { id: crypto.randomUUID(), name, message, ts: Date.now() };
+  const guestbook = [...(Array.isArray(data.guestbook) ? data.guestbook : []), entry]
+    .slice(-GUESTBOOK_MAX_ENTRIES);
+  await writeGist(c.env, { guestbook });
+  return c.json(entry, 201, NO_CACHE);
+});
+
+app.delete('/api/guestbook/:id', async c => {
+  const s = await getSession(c);
+  if (!s) return c.json({ error: 'not authenticated' }, 401, NO_CACHE);
+  if (!isAllowed(s.login, c.env)) return c.json({ error: 'not authorized' }, 403, NO_CACHE);
+  const id = c.req.param('id');
+  const data = await readGist(c.env);
+  const before = Array.isArray(data.guestbook) ? data.guestbook : [];
+  const guestbook = before.filter(e => e.id !== id);
+  if (guestbook.length !== before.length) await writeGist(c.env, { guestbook });
+  return c.body(null, 204, NO_CACHE);
+});
+
 app.use('/auth/callback', (c, next) =>
   githubAuth({
     client_id: c.env.GITHUB_OAUTH_CLIENT_ID,
