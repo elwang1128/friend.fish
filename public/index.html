@@ -111,6 +111,14 @@
     overflow: hidden;
   }
 
+  .livestream-bg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    z-index: 0;
+  }
+  .livestream.is-live .livestream-bg { display: none; }
+
   .livestream moq-watch {
     position: absolute; inset: 0;
     width: 100%; height: 100%;
@@ -133,6 +141,22 @@
     pointer-events: none;
   }
   .livestream.is-live .livestream-status { display: none; }
+
+  .livestream-status .dots::after {
+    content: '';
+    animation: dots 1.6s steps(1, end) infinite;
+  }
+  .livestream-status.no-dots .dots { display: none; }
+  @keyframes dots {
+    0%   { content: ''; }
+    25%  { content: '.'; }
+    50%  { content: '..'; }
+    75%  { content: '...'; }
+    100% { content: ''; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .livestream-status .dots::after { animation: none; content: '...'; }
+  }
 
   /* ---------- PANELS (left) ---------- */
   .panel-area {
@@ -848,6 +872,7 @@
       <div class="tank-time" id="tank-time">TANK TIME —</div>
     </div>
     <div class="livestream" id="livestream">
+      <video class="livestream-bg" src="/assets/livestream.webm" autoplay muted loop playsinline disablepictureinpicture aria-hidden="true"></video>
       <moq-watch
         url="https://cdn.moq.dev/anon"
         name="friend.fish/tank"
@@ -856,7 +881,7 @@
         latency="real-time">
         <canvas></canvas>
       </moq-watch>
-      <div class="livestream-status" id="livestream-status">livestream connecting...</div>
+      <div class="livestream-status" id="livestream-status"><span id="livestream-status-label">livestream connecting</span><span class="dots"></span></div>
     </div>
   </div>
 </div>
@@ -1241,6 +1266,7 @@
   let el = document.querySelector('moq-watch');
   const box = document.getElementById('livestream');
   const statusEl = document.getElementById('livestream-status');
+  const statusLabel = document.getElementById('livestream-status-label');
   let canvas = el.querySelector('canvas');
 
   // Live when the decoder's frame counter has advanced recently. The catalog
@@ -1277,7 +1303,8 @@
     if (stateDetermined) return;
     if (seenFrame || now - pageLoadAt > CONNECTING_GRACE_MS) {
       stateDetermined = true;
-      statusEl.textContent = 'livestream offline';
+      statusLabel.textContent = 'livestream offline';
+      statusEl.classList.add('no-dots');
     }
   }
 
