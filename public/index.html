@@ -1301,7 +1301,11 @@
   const RECREATE_AFTER_MS = 15000;
   const CONNECTING_GRACE_MS = 12000;
   const pageLoadAt = performance.now();
-  let lastFrameCount = -1;
+  // Starts at 0, not -1: the decoder reports frameCount 0 before any real
+  // frame, and treating that first report as a "seen frame" flipped the
+  // status to offline seconds after load instead of honoring the grace
+  // window.
+  let lastFrameCount = 0;
   let lastFrameTime = 0;
   let offlineSince = performance.now();
   let isLive = false;
@@ -1379,7 +1383,7 @@
     parent.replaceChild(fresh, el);
     el = fresh;
     canvas = el.querySelector('canvas');
-    lastFrameCount = -1;
+    lastFrameCount = 0;
     offlineSince = performance.now();
   }
 
