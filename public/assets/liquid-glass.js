@@ -111,7 +111,7 @@
       '.lg-orb{' +
         'position:fixed;left:0;top:0;border-radius:50%;pointer-events:none;' +
         'z-index:' + Z_ORBS + ';will-change:transform;contain:layout style;' +
-        'background:rgba(178,200,224,0.05);' +
+        'background:rgba(255,255,255,0.15);' +
         (isChromium
           ? ''  /* per-orb backdrop-filter set inline in buildOrbs */
           : 'backdrop-filter:blur(7px) saturate(1.35);-webkit-backdrop-filter:blur(7px) saturate(1.35);') +
