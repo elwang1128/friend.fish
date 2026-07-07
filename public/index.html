@@ -5,10 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>friend.fish</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='78' text-anchor='middle' font-size='90' fill='%23000000'>✦</text></svg>">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  @font-face {
+    font-family: 'Fira Mono';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/assets/fonts/fira-mono-latin-400-normal.woff2') format('woff2');
+  }
   :root {
     --bg: #f5f5f5;
     --black: #000000;
@@ -323,68 +327,59 @@
   .resident-bio b { font-weight: 700; }
 
   /* ---------- TANK SPECS ---------- */
-  .specs-body {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    padding: 16px;
-  }
-
   .tank-figure {
     position: relative;
     width: 100%;
+    margin-bottom: 36px;
   }
 
   .tank-photo {
     width: 100%;
-    aspect-ratio: 369 / 246;
+    aspect-ratio: 4096 / 2731;
     object-fit: cover;
     display: block;
   }
 
   .tank-photo-placeholder {
     width: 100%;
-    aspect-ratio: 369 / 246;
-    border: 1px dashed var(--gray-text);
-    border-radius: 8px;
+    aspect-ratio: 4096 / 2731;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: var(--gray-line);
     font-family: var(--mono);
     font-size: 10px;
     text-transform: uppercase;
     color: var(--gray-text);
   }
-  body.is-owner .tank-figure { cursor: pointer; }
 
-  .camera-note {
-    position: relative;
-    width: 141px;
-    margin-left: auto;
-    margin-right: 16%;
-    text-align: center;
-  }
-  .camera-note::before {
-    content: '';
+  .camera-line {
     position: absolute;
-    left: 50%;
-    top: -55px;
-    height: 92px;
+    left: 78.3%;
+    top: 61.8%;
+    height: 35.6%;
     width: 1px;
     background: var(--black);
   }
-  .camera-note p {
+
+  .camera-caption {
+    position: absolute;
+    top: 100%;
+    left: 59.1%;
+    width: 38.2%;
+    text-align: center;
     font-family: var(--mono);
     font-size: 10px;
     letter-spacing: -0.03em;
     text-transform: uppercase;
-    padding-top: 42px;
+    margin-top: 2px;
   }
 
   .specs-text {
     font-family: var(--sans);
     font-size: 12px;
     line-height: 1.35;
+    padding: 24px 16px;
   }
   .specs-text p { margin-bottom: 8px; }
   .specs-text p:last-child { margin-bottom: 0; }
@@ -631,7 +626,7 @@
     letter-spacing: 0.03em;
     text-transform: uppercase;
   }
-  .gb-send:disabled { opacity: 0.4; cursor: default; }
+  .gb-send:disabled { background: #e9e9e9; cursor: default; }
 
   /* ---------- LIGHTBOX ---------- */
   .lightbox {
@@ -673,9 +668,10 @@
       width: 100%;
       min-width: 0;
       height: auto;
+      min-height: calc(100vh - 62px); /* page padding: 38px top + 24px bottom */
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
+      justify-content: space-between;
     }
 
     .livestream-section { order: 1; gap: 8px; }
@@ -778,13 +774,11 @@
       </button>
     </div>
     <div class="panel-scroll">
-      <div class="specs-body">
-        <div>
-          <div class="tank-figure" id="tank-figure" title=""></div>
-          <input type="file" class="hidden-input" id="upload-tank" accept="image/*" onchange="handleTankUpload(event)">
-          <div class="camera-note">
-            <p>THIS IS WHERE THE CAMERA FOR THE LIVESTREAM IS</p>
-          </div>
+      <div>
+        <div class="tank-figure">
+          <img class="tank-photo" id="tank-photo" src="/assets/tank.jpg" alt="the tank">
+          <div class="camera-line"></div>
+          <div class="camera-caption">THIS IS WHERE THE CAMERA FOR THE LIVESTREAM IS</div>
         </div>
         <div class="specs-text">
           <p><b>Tank:</b> 75cm long × 45cm deep × 45cm high (roughly 40 gallons).</p>
@@ -855,14 +849,14 @@
     <div class="gb-input-area">
       <form class="gb-form" id="gb-form" onsubmit="return submitGuestbook(event)">
         <div class="gb-name-field">
-          <input type="text" id="gb-name" placeholder="Name" maxlength="40" autocomplete="nickname">
+          <input type="text" id="gb-name" placeholder="Name" maxlength="60" autocomplete="nickname">
         </div>
         <hr class="gb-divider">
         <div class="gb-msg-field">
           <textarea id="gb-msg" placeholder="Type a message" maxlength="280" rows="1"></textarea>
         </div>
         <div class="gb-send-row">
-          <button type="submit" class="gb-send" id="gb-send">SEND</button>
+          <button type="submit" class="gb-send" id="gb-send" disabled>SEND</button>
         </div>
       </form>
     </div>
@@ -1122,31 +1116,13 @@
   }
 
   // ---- TANK PHOTO ----
-  function renderTankPhoto() {
-    const fig = document.getElementById('tank-figure');
-    const src = (photoStore['tank'] || [])[0];
-    if (src) {
-      fig.innerHTML = `<img class="tank-photo" src="${src}" alt="the tank">`;
-    } else {
-      fig.innerHTML = `<div class="tank-photo-placeholder">${isOwner ? '+ add a photo of the tank' : 'tank portrait coming soon ˙✦˙'}</div>`;
-    }
-    fig.onclick = isOwner ? () => document.getElementById('upload-tank').click() : null;
-    fig.title = isOwner ? 'change tank photo' : '';
-  }
-
-  function handleTankUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async ev => {
-      const compressed = await compressImage(ev.target.result, 1200, 900, 0.75);
-      photoStore['tank'] = [compressed];
-      renderTankPhoto();
-      await gistSave();
-    };
-    reader.readAsDataURL(file);
-    event.target.value = '';
-  }
+  // Static asset; show a placeholder if /assets/tank.jpg is missing.
+  document.getElementById('tank-photo').onerror = function () {
+    const ph = document.createElement('div');
+    ph.className = 'tank-photo-placeholder';
+    ph.textContent = 'tank portrait coming soon ˙✦˙';
+    this.replaceWith(ph);
+  };
 
   // ---- GUESTBOOK ----
   function fmtGbDate(ts) {
@@ -1204,7 +1180,7 @@
       console.error('guestbook send error', e);
       alert("couldn't send — try again?");
     } finally {
-      sendBtn.disabled = false;
+      updateSendEnabled();
     }
     return false;
   }
@@ -1231,6 +1207,14 @@
     }
   });
 
+  // send stays disabled until both name and message have content
+  function updateSendEnabled() {
+    const ok = document.getElementById('gb-name').value.trim() && document.getElementById('gb-msg').value.trim();
+    document.getElementById('gb-send').disabled = !ok;
+  }
+  document.getElementById('gb-name').addEventListener('input', updateSendEnabled);
+  document.getElementById('gb-msg').addEventListener('input', updateSendEnabled);
+
   // ---- AUTH ----
   async function checkSession() {
     try {
@@ -1245,7 +1229,6 @@
     document.getElementById('lock-icon-unlocked').style.display = isOwner ? 'block' : 'none';
     document.getElementById('lock-btn').title = isOwner ? 'signed in — click to lock' : 'owner login';
     RESIDENTS.forEach(renderGallery);
-    renderTankPhoto();
     renderFeed();
   }
 
@@ -1294,7 +1277,7 @@
   // a fresh connection from scratch.
   const STALL_MS = 8000;
   const RECREATE_AFTER_MS = 15000;
-  const CONNECTING_GRACE_MS = 5000;
+  const CONNECTING_GRACE_MS = 12000;
   const pageLoadAt = performance.now();
   let lastFrameCount = -1;
   let lastFrameTime = 0;

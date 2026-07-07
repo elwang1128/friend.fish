@@ -74,7 +74,7 @@ app.post('/api/data', async c => {
   return c.body(null, 204, NO_CACHE);
 });
 
-const GUESTBOOK_MAX_NAME = 40;
+const GUESTBOOK_MAX_NAME = 60;
 const GUESTBOOK_MAX_MESSAGE = 280;
 const GUESTBOOK_MAX_ENTRIES = 500;
 
