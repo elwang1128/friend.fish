@@ -135,6 +135,17 @@
   }
   .livestream.is-live { cursor: pointer; }
 
+  /* manual fullscreen for browsers without canvas requestFullscreen (iOS) */
+  .livestream.fake-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    width: auto;
+    aspect-ratio: auto;
+    background: #000;
+  }
+  .livestream.fake-fullscreen canvas { object-fit: contain; background: #000; }
+
   .livestream-status {
     position: absolute;
     left: 0;
@@ -683,17 +694,17 @@
   @media (max-width: 636px) {
     body {
       display: block;
-      overflow: auto;
-      padding: 38px 0 24px;
-      height: auto;
+      overflow: hidden;
+      padding: 38px 0 0;
+      height: 100vh;
+      height: 100dvh;
     }
-    html, body { height: auto; min-height: 100%; }
+    html { height: 100%; }
 
     .main-section {
       width: 100%;
       min-width: 0;
-      height: auto;
-      min-height: calc(100vh - 62px); /* page padding: 38px top + 24px bottom */
+      height: 100%;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -717,7 +728,7 @@
       flex-direction: column;
       gap: 0;
       align-items: stretch;
-      padding: 24px 16px;
+      padding: 24px 16px 0;
     }
     .tab {
       text-align: left;
@@ -1410,16 +1421,29 @@
     if (!live && now - offlineSince > RECREATE_AFTER_MS) recreateMoqWatch();
   }, 500);
 
+  // Click toggles fullscreen while live. iOS Safari has no fullscreen API
+  // for canvas elements, so fall back to pinning the livestream box over
+  // the whole viewport; a second tap (or Escape) exits.
   box.addEventListener('click', () => {
+    if (document.fullscreenElement) { document.exitFullscreen?.(); return; }
+    if (box.classList.contains('fake-fullscreen')) { box.classList.remove('fake-fullscreen'); return; }
     if (!isLive) return;
     const target = canvas ?? el;
-    if (document.fullscreenElement) {
-      document.exitFullscreen?.();
+    if (target.requestFullscreen) {
+      target.requestFullscreen();
+    } else if (target.webkitRequestFullscreen) {
+      target.webkitRequestFullscreen();
     } else {
-      target.requestFullscreen?.();
+      box.classList.add('fake-fullscreen');
     }
   });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') box.classList.remove('fake-fullscreen');
+  });
 </script>
+
+<script defer src="/assets/liquid-glass.js"></script>
 
 </body>
 </html>
