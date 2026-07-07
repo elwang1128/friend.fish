@@ -44,6 +44,7 @@
   .main-section {
     width: 852px;
     max-width: 100%;
+    min-width: 580px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
@@ -96,7 +97,7 @@
   .tank-time {
     font-family: var(--sans);
     font-weight: 400;
-    font-size: 16px;
+    font-size: 18px;
     letter-spacing: -0.03em;
     white-space: nowrap;
     padding-bottom: 6px;
@@ -659,37 +660,49 @@
     .panel { box-shadow: 0 4px 40px rgba(0,0,0,0.18); }
   }
 
-  @media (max-width: 900px) {
+  @media (max-width: 636px) {
     body {
       display: block;
       overflow: auto;
-      padding: 42px 16px 16px;
+      padding: 38px 0 24px;
       height: auto;
     }
     html, body { height: auto; min-height: 100%; }
 
     .main-section {
       width: 100%;
+      min-width: 0;
       height: auto;
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
     }
 
-    .headline { font-size: 48px; letter-spacing: -0.04em; }
-    .tank-time { font-size: 12px; letter-spacing: -0.03em; padding-bottom: 2px; }
+    .livestream-section { order: 1; gap: 8px; }
 
-    .livestream { aspect-ratio: 841 / 473; }
-    .livestream-status { font-size: 14px; padding: 16px 8px; }
+    /* flatten the headline row so the tank time can move below the stream */
+    .headline-row { display: contents; }
+    .headline { order: -1; font-size: 54px; padding: 0 16px; }
+    .tank-time {
+      order: 2;
+      align-self: flex-end;
+      text-align: right;
+      font-size: 18px;
+      padding: 0 16px 0 0;
+    }
 
     .tabs {
       order: 2;
       flex-direction: column;
-      gap: 52px;
-      padding: 24px 0;
-      align-items: flex-start;
+      gap: 0;
+      align-items: stretch;
+      padding: 24px 16px;
     }
-    .livestream-section { order: 1; }
+    .tab {
+      text-align: left;
+      border-top: 1px solid var(--gray-line);
+      padding: 12px 0;
+    }
   }
 </style>
 </head>
