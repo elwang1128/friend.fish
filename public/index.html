@@ -331,7 +331,7 @@
   .tank-figure {
     position: relative;
     width: 100%;
-    margin-bottom: 36px;
+    margin-bottom: 48px;
   }
 
   .tank-photo {
@@ -357,7 +357,7 @@
   .camera-line {
     position: absolute;
     left: 78.3%;
-    top: 61.8%;
+    top: calc(61.8% + 12px);
     height: 35.6%;
     width: 1px;
     background: var(--black);
@@ -373,7 +373,7 @@
     font-size: 10px;
     letter-spacing: -0.03em;
     text-transform: uppercase;
-    margin-top: 2px;
+    margin-top: 14px;
   }
 
   .specs-text {
@@ -498,7 +498,7 @@
   .feed-footer {
     padding: 16px;
     flex-shrink: 0;
-    margin-top: auto;
+    border-top: 1px solid var(--gray-line);
   }
   .feed-footer p {
     font-family: var(--mono);
@@ -835,9 +835,9 @@
         <button class="feed-add-btn" onclick="submitFeed()">ADD</button>
       </div>
       <div class="feed-list" id="feed-list"></div>
-      <div class="feed-footer">
-        <p>The amano shrimp forage on algae, biofilm, and everyone's leftovers. Our star cleanup team ★!</p>
-      </div>
+    </div>
+    <div class="feed-footer">
+      <p>The amano shrimp forage on algae, biofilm, and everyone's leftovers. Our star cleanup team ★!</p>
     </div>
   </section>
 
