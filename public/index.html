@@ -38,9 +38,79 @@
     align-items: stretch;
     padding: 28px;
     overflow: hidden;
+    cursor: none;
   }
 
-  button { font: inherit; background: none; border: none; cursor: pointer; color: inherit; }
+  button, .cursor-bubble, .tab, .panel-dismiss, .feed-add-btn, .gallery-add, .gb-send, .gallery-photo, .feed-delete, .gb-delete, .lightbox {
+    cursor: none !important;
+  }
+
+  button { font: inherit; background: none; border: none; color: inherit; }
+
+  .custom-cursor {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 24px;
+    height: 21px;
+    pointer-events: none;
+    z-index: 10000;
+    transform: translate(0, 0);
+    transform-origin: top left;
+    will-change: transform;
+  }
+
+  .custom-cursor__fish {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: url('/assets/fishcursor.svg') center/contain no-repeat;
+  }
+
+  .custom-cursor.is-hovering {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--black);
+  }
+
+  .custom-cursor.is-hovering .custom-cursor__fish {
+    display: none;
+  }
+
+  .cursor-bubble-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    overflow: hidden;
+  }
+
+  .cursor-bubble {
+    position: absolute;
+    font-family: var(--mono);
+    font-size: 8px;
+    line-height: 1;
+    color: rgba(0, 0, 0, 0.72);
+    opacity: 0;
+    pointer-events: none;
+    transform-origin: center center;
+    animation: bubble-rise 1.5s ease-out forwards;
+  }
+
+  @keyframes bubble-rise {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.7);
+    }
+    15% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translate(calc(-50% + var(--drift-x, -8px)), calc(-50% + var(--drift-y, -36px))) scale(1.2);
+    }
+  }
 
   .mono { font-family: var(--mono); }
 
@@ -71,9 +141,30 @@
     text-transform: uppercase;
     color: var(--black);
     white-space: nowrap;
-    padding: 0;
+    padding: 0 0 4px;
+    position: relative;
+    display: inline-block;
+    cursor: none;
+    min-width: 36px;
+    min-height: 24px;
   }
-  .tab:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .tab::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 100%;
+    height: 1px;
+    background: currentColor;
+    transform: translateX(-50%) scaleX(0);
+    transform-origin: center;
+    transition: transform 180ms ease;
+    pointer-events: none;
+  }
+  .tab:hover::after,
+  .tab:focus-visible::after {
+    transform: translateX(-50%) scaleX(1);
+  }
 
   .livestream-section {
     display: flex;
@@ -113,6 +204,7 @@
     display: flex;
     align-items: flex-end;
     overflow: hidden;
+    border-radius: 12px;
   }
 
   .livestream-bg {
@@ -544,7 +636,7 @@
 
   #panel-log .panel-scroll { display: flex; flex-direction: column; }
 
-  /* ---------- GUESTBOOK ---------- */
+  /* ---------- FISHBOOK ---------- */
   .guestbook-messages {
     display: flex;
     flex-direction: column;
@@ -739,6 +831,10 @@
 </style>
 </head>
 <body>
+<div id="custom-cursor" class="custom-cursor" aria-hidden="true">
+  <span class="custom-cursor__fish"></span>
+</div>
+<div id="cursor-bubble-layer" class="cursor-bubble-layer" aria-hidden="true"></div>
 
 <!-- ===== LEFT PANEL AREA ===== -->
 <div class="panel-area" id="panel-area">
@@ -873,10 +969,10 @@
     </div>
   </section>
 
-  <!-- GUESTBOOK -->
-  <section class="panel" id="panel-guestbook" aria-label="guestbook">
+  <!-- FISHBOOK -->
+  <section class="panel" id="panel-guestbook" aria-label="fishbook">
     <div class="panel-header">
-      <div class="panel-title">GUESTBOOK</div>
+      <div class="panel-title">FISHBOOK</div>
       <button class="panel-dismiss" onclick="closePanels()" aria-label="close">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
       </button>
@@ -906,7 +1002,7 @@
     <button class="tab" id="tab-team" onclick="togglePanel('team')">The tank team</button>
     <button class="tab" id="tab-specs" onclick="togglePanel('specs')">Tank specs</button>
     <button class="tab" id="tab-log" onclick="togglePanel('log')">Feeding log</button>
-    <button class="tab" id="tab-guestbook" onclick="togglePanel('guestbook')">Guestbook</button>
+    <button class="tab" id="tab-guestbook" onclick="togglePanel('guestbook')">Fishbook</button>
   </nav>
 
   <div class="livestream-section">
@@ -936,6 +1032,71 @@
 </div>
 
 <script>
+  const customCursor = document.getElementById('custom-cursor');
+  const hoverSelector = 'button, a, input, textarea, select, summary, .tab, .panel-dismiss, .feed-add-btn, .gallery-add, .gb-send, .gallery-photo, .feed-delete, .gb-delete, .lightbox, .livestream.is-live';
+
+  function moveCustomCursor(event) {
+    if (!customCursor) return;
+    customCursor.style.left = event.clientX + 'px';
+    customCursor.style.top = event.clientY + 'px';
+  }
+
+  function setHoverCursor(active) {
+    if (!customCursor) return;
+    customCursor.classList.toggle('is-hovering', active);
+  }
+
+  document.addEventListener('mousemove', moveCustomCursor);
+  document.addEventListener('mouseleave', () => {
+    if (customCursor) customCursor.style.opacity = '0';
+  });
+  document.addEventListener('mouseenter', () => {
+    if (customCursor) customCursor.style.opacity = '1';
+  });
+  document.addEventListener('mouseover', event => {
+    const target = event.target;
+    if (target instanceof Element && target.closest(hoverSelector)) {
+      setHoverCursor(true);
+    }
+  });
+  document.addEventListener('mouseout', event => {
+    const related = event.relatedTarget;
+    if (!(related instanceof Element) || !related.closest(hoverSelector)) {
+      setHoverCursor(false);
+    }
+  });
+
+  function spawnClickBubbles(event) {
+    const layer = document.getElementById('cursor-bubble-layer');
+    if (!layer) return;
+
+    const x = event.clientX;
+    const y = event.clientY;
+    const bubbles = [
+      { text: 'o', driftX: -10, driftY: -44 },
+      { text: 'o', driftX: 0, driftY: -50 },
+      { text: 'o', driftX: 10, driftY: -44 },
+    ];
+
+    bubbles.forEach((bubble, index) => {
+      const el = document.createElement('div');
+      el.className = 'cursor-bubble';
+      el.textContent = bubble.text;
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      el.style.setProperty('--drift-x', bubble.driftX + 'px');
+      el.style.setProperty('--drift-y', bubble.driftY + 'px');
+      el.style.animationDelay = (index * 70) + 'ms';
+      layer.appendChild(el);
+
+      setTimeout(() => {
+        el.remove();
+      }, 1500);
+    });
+  }
+
+  document.addEventListener('click', spawnClickBubbles);
+
   // ---- CLOCK (tank time = San Francisco) ----
   function updateClock() {
     const now = new Date();
