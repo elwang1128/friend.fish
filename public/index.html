@@ -58,6 +58,12 @@
     transform: translate(0, 0);
     transform-origin: top left;
     will-change: transform;
+    opacity: 0; /* hidden until the mouse actually moves over the page */
+  }
+
+  /* touch devices have no cursor: never show the fish there */
+  @media (hover: none), (pointer: coarse) {
+    .custom-cursor { display: none !important; }
   }
 
   .custom-cursor__fish {
@@ -1035,10 +1041,20 @@
   const customCursor = document.getElementById('custom-cursor');
   const hoverSelector = 'button, a, input, textarea, select, summary, .tab, .panel-dismiss, .feed-add-btn, .gallery-add, .gb-send, .gallery-photo, .feed-delete, .gb-delete, .lightbox, .livestream.is-live';
 
+  // only run the fish cursor on devices with a real mouse-style pointer;
+  // phones/tablets keep it off entirely (the CSS media query hides it too)
+  const customCursorEnabled = window.matchMedia &&
+    window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  let lastTouchAt = 0;
+
   function moveCustomCursor(event) {
     if (!customCursor) return;
+    // ignore the synthetic mousemove fired right after a tap on hybrid
+    // touch+mouse devices, so the fish doesn't jump to tap points
+    if (Date.now() - lastTouchAt < 500) return;
     customCursor.style.left = event.clientX + 'px';
     customCursor.style.top = event.clientY + 'px';
+    customCursor.style.opacity = '1';
   }
 
   function setHoverCursor(active) {
@@ -1046,25 +1062,28 @@
     customCursor.classList.toggle('is-hovering', active);
   }
 
-  document.addEventListener('mousemove', moveCustomCursor);
-  document.addEventListener('mouseleave', () => {
-    if (customCursor) customCursor.style.opacity = '0';
-  });
-  document.addEventListener('mouseenter', () => {
-    if (customCursor) customCursor.style.opacity = '1';
-  });
-  document.addEventListener('mouseover', event => {
-    const target = event.target;
-    if (target instanceof Element && target.closest(hoverSelector)) {
-      setHoverCursor(true);
-    }
-  });
-  document.addEventListener('mouseout', event => {
-    const related = event.relatedTarget;
-    if (!(related instanceof Element) || !related.closest(hoverSelector)) {
-      setHoverCursor(false);
-    }
-  });
+  if (customCursorEnabled) {
+    document.addEventListener('mousemove', moveCustomCursor);
+    document.addEventListener('mouseleave', () => {
+      if (customCursor) customCursor.style.opacity = '0';
+    });
+    document.addEventListener('touchstart', () => {
+      lastTouchAt = Date.now();
+      if (customCursor) customCursor.style.opacity = '0';
+    }, { passive: true });
+    document.addEventListener('mouseover', event => {
+      const target = event.target;
+      if (target instanceof Element && target.closest(hoverSelector)) {
+        setHoverCursor(true);
+      }
+    });
+    document.addEventListener('mouseout', event => {
+      const related = event.relatedTarget;
+      if (!(related instanceof Element) || !related.closest(hoverSelector)) {
+        setHoverCursor(false);
+      }
+    });
+  }
 
   function spawnClickBubbles(event) {
     const layer = document.getElementById('cursor-bubble-layer');
