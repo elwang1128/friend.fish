@@ -1385,7 +1385,10 @@
     ytPlayer = new YT.Player('friends-video-frame', {
       host: 'https://www.youtube-nocookie.com',
       videoId: FRIENDS_VIDEO_ID,
-      playerVars: { rel: 0, modestbranding: 1, playsinline: 1, origin: window.location.origin },
+      // controls:0 hides YouTube's native control bar (we drive play/pause
+      // from the overlay); iv_load_policy:3 drops annotation cards, and the
+      // hover-only title bar never shows since the overlay eats hover events
+      playerVars: { rel: 0, modestbranding: 1, playsinline: 1, controls: 0, disablekb: 1, iv_load_policy: 3, fs: 0, origin: window.location.origin },
     });
   }
 
