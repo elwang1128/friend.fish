@@ -934,17 +934,28 @@
       padding: 12px 0;
     }
 
-    /* shrink the folder into the bottom-right corner so it doesn't
-       cover the tab labels stacked at the bottom */
+    /* dock the folder into the row above the tabs, on the left side of
+       the air bubbles toggle, sized to match its 10px label */
+    .tabs { position: relative; }
     .folder {
-      left: auto;
-      right: 12px;
-      bottom: 12px;
-      width: 92px;
-      gap: 6px;
+      position: absolute;
+      left: 16px;
+      top: 24px; /* .tabs top padding — lines up with the toggle row */
+      height: 24px; /* the toggle row's min-height */
+      width: auto;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
     }
-    .folder svg { width: 56px; height: 39px; }
-    .folder-label { font-size: 9px; text-align: center; white-space: nowrap; }
+    .folder svg { width: 21px; height: 15px; }
+    .folder svg path { stroke-width: 5; } /* keeps ~1px lines at this size */
+    .folder-label {
+      width: auto;
+      font-size: 10px;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      white-space: nowrap;
+    }
 
     /* center the window in the viewport on small screens */
     .friends-window.open {
@@ -1130,6 +1141,15 @@
     <button class="tab" id="tab-specs" onclick="toggleWindow('specs')">Tank specs</button>
     <button class="tab" id="tab-log" onclick="toggleWindow('log')">Feeding log</button>
     <button class="tab" id="tab-guestbook" onclick="toggleWindow('guestbook')">Fishbook</button>
+    <!-- fixed-positioned on wide screens (bottom-left "desktop" folder);
+         on narrow screens it docks into the toggle row above the tabs -->
+    <button class="folder" id="folder-friends" onclick="toggleWindow('friends')" aria-label="open making_friends video window">
+      <svg viewBox="0 0 90 63" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M1.5 61.5V4C1.5 2.6 2.6 1.5 4 1.5H25.5C26.9 1.5 28.2 2.1 29.1 3.1L31.4 5.6C32.3 6.6 33.6 7.2 35 7.2H73.5C74.9 7.2 76 8.3 76 9.7V17" stroke="black" stroke-width="2.4"/>
+        <path d="M1.5 61.5L10.6 20C10.9 18.6 12.1 17.6 13.5 17.6H85.4C87.3 17.6 88.7 19.4 88.3 21.2L79.9 59.2C79.6 60.5 78.4 61.5 77 61.5H1.5Z" fill="#F5F5F5" stroke="black" stroke-width="2.4" stroke-linejoin="round"/>
+      </svg>
+      <span class="folder-label">MAKING_FRIENDS</span>
+    </button>
   </nav>
 
   <div class="livestream-section">
@@ -1152,15 +1172,6 @@
     </div>
   </div>
 </div>
-
-<!-- ===== MAKING_FRIENDS FOLDER ===== -->
-<button class="folder" id="folder-friends" onclick="toggleWindow('friends')" aria-label="open making_friends video window">
-  <svg viewBox="0 0 90 63" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <path d="M1.5 61.5V4C1.5 2.6 2.6 1.5 4 1.5H25.5C26.9 1.5 28.2 2.1 29.1 3.1L31.4 5.6C32.3 6.6 33.6 7.2 35 7.2H73.5C74.9 7.2 76 8.3 76 9.7V17" stroke="black" stroke-width="2.4"/>
-    <path d="M1.5 61.5L10.6 20C10.9 18.6 12.1 17.6 13.5 17.6H85.4C87.3 17.6 88.7 19.4 88.3 21.2L79.9 59.2C79.6 60.5 78.4 61.5 77 61.5H1.5Z" fill="#F5F5F5" stroke="black" stroke-width="2.4" stroke-linejoin="round"/>
-  </svg>
-  <span class="folder-label">MAKING_FRIENDS</span>
-</button>
 
 <!-- ===== MAKING_FRIENDS WINDOW ===== -->
 <section class="friends-window" id="friends-window" aria-label="making friends video">
