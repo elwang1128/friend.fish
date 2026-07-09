@@ -294,13 +294,17 @@
     min-width: 0;
     height: 100%;
     display: none;
+    position: relative;
   }
   .panel-area.open { display: block; }
 
+  /* panels stack on top of each other like windows; JS assigns z-indexes
+     so the most recently opened/raised one sits on top */
   .panel {
     display: none;
     flex-direction: column;
-    height: 100%;
+    position: absolute;
+    inset: 0;
     border: 1px solid var(--black);
     border-radius: 12px;
     overflow: hidden;
@@ -308,6 +312,20 @@
   }
   .panel.open { display: flex; }
   .panel.white { background: #ffffff; }
+
+  /* windows pop out from their center with a bouncy ease-out */
+  @keyframes window-pop {
+    0%   { opacity: 0; transform: scale(0.4); }
+    60%  { opacity: 1; transform: scale(1.04); }
+    80%  { transform: scale(0.98); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  .panel.open, .friends-window.open {
+    animation: window-pop 440ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .panel.open, .friends-window.open { animation: none; }
+  }
 
   .panel-header {
     background: #ffffff;
@@ -347,6 +365,84 @@
     scrollbar-width: none;
   }
   .panel-scroll::-webkit-scrollbar { display: none; }
+
+  /* ---------- MAKING_FRIENDS FOLDER + WINDOW ---------- */
+  .folder {
+    position: fixed;
+    left: 28px;
+    bottom: 28px;
+    width: 126px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .folder svg {
+    display: block;
+    width: 90px;
+    height: 63px;
+  }
+  .folder-label {
+    font-family: var(--mono);
+    font-size: 16px;
+    letter-spacing: -0.04em;
+    text-transform: uppercase;
+    width: 100%;
+    text-align: left;
+    word-break: break-word;
+  }
+  .folder:hover .folder-label,
+  .folder:focus-visible .folder-label { text-decoration: underline; }
+
+  .friends-window {
+    display: none;
+    flex-direction: column;
+    position: fixed;
+    left: 28px;
+    top: 224px;
+    width: 344px;
+    max-height: calc(100dvh - 252px);
+    border: 1px solid var(--black);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  .friends-window.open { display: flex; }
+
+  .friends-video {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    flex-shrink: 0;
+  }
+  .friends-video iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .friends-desc {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 16px 16px;
+  }
+  .friends-desc h2 {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -0.04em;
+    line-height: normal;
+  }
+  .friends-body {
+    font-family: var(--sans);
+    font-size: 12px;
+    line-height: 1.35;
+  }
+  .friends-body p { margin-bottom: 8px; }
+  .friends-body p:last-child { margin-bottom: 0; }
+  .friends-body b { font-weight: 700; }
 
   /* lock button in feeding log header */
   .lock-btn {
@@ -789,7 +885,7 @@
       z-index: 500;
       height: auto;
     }
-    .panel { box-shadow: 0 4px 40px rgba(0,0,0,0.18); }
+    .panel, .friends-window { box-shadow: 0 4px 40px rgba(0,0,0,0.18); }
   }
 
   @media (max-width: 636px) {
@@ -837,6 +933,39 @@
       border-top: 1px solid var(--gray-line);
       padding: 12px 0;
     }
+
+    /* per the Figma mobile frame the folder flows into the tabs list,
+       above the first divider, keeping its stacked icon + label look */
+    .folder {
+      position: static;
+      order: -1; /* first row of the tabs column, like the toggle */
+      width: auto;
+      align-self: flex-end;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .folder svg { width: 70px; height: 49px; }
+    .folder-label {
+      width: auto;
+      font-size: 10px;
+      letter-spacing: -0.04em;
+      line-height: normal;
+      white-space: nowrap;
+      text-align: center;
+    }
+    /* pull the air bubbles toggle up beside the folder so the two share
+       a row with the switch bottom-aligned to the folder label
+       (24px = the toggle row's min-height), toggle left / folder right */
+    .tabs .lg-toggle-wrap { margin-top: -24px; align-self: flex-start; }
+
+    /* center the window in the viewport on small screens */
+    .friends-window.open {
+      inset: 12px;
+      margin: auto;
+      width: min(344px, 100%);
+      height: fit-content;
+      max-height: calc(100dvh - 24px);
+    }
   }
 </style>
 </head>
@@ -853,7 +982,7 @@
   <section class="panel" id="panel-team" aria-label="the tank team">
     <div class="panel-header">
       <div class="panel-title">THE TANK TEAM</div>
-      <button class="panel-dismiss" onclick="closePanels()" aria-label="close">
+      <button class="panel-dismiss" onclick="closeWindow('team')" aria-label="close">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
       </button>
     </div>
@@ -911,7 +1040,7 @@
   <section class="panel" id="panel-specs" aria-label="tank specs">
     <div class="panel-header">
       <div class="panel-title">TANK SPECS</div>
-      <button class="panel-dismiss" onclick="closePanels()" aria-label="close">
+      <button class="panel-dismiss" onclick="closeWindow('specs')" aria-label="close">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
       </button>
     </div>
@@ -949,7 +1078,7 @@
           </svg>
         </button>
       </div>
-      <button class="panel-dismiss" onclick="closePanels()" aria-label="close">
+      <button class="panel-dismiss" onclick="closeWindow('log')" aria-label="close">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
       </button>
     </div>
@@ -983,7 +1112,7 @@
   <section class="panel" id="panel-guestbook" aria-label="fishbook">
     <div class="panel-header">
       <div class="panel-title">FISHBOOK</div>
-      <button class="panel-dismiss" onclick="closePanels()" aria-label="close">
+      <button class="panel-dismiss" onclick="closeWindow('guestbook')" aria-label="close">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
       </button>
     </div>
@@ -1009,10 +1138,19 @@
 <!-- ===== MAIN SECTION ===== -->
 <div class="main-section">
   <nav class="tabs">
-    <button class="tab" id="tab-team" onclick="togglePanel('team')">The tank team</button>
-    <button class="tab" id="tab-specs" onclick="togglePanel('specs')">Tank specs</button>
-    <button class="tab" id="tab-log" onclick="togglePanel('log')">Feeding log</button>
-    <button class="tab" id="tab-guestbook" onclick="togglePanel('guestbook')">Fishbook</button>
+    <button class="tab" id="tab-team" onclick="toggleWindow('team')">The tank team</button>
+    <button class="tab" id="tab-specs" onclick="toggleWindow('specs')">Tank specs</button>
+    <button class="tab" id="tab-log" onclick="toggleWindow('log')">Feeding log</button>
+    <button class="tab" id="tab-guestbook" onclick="toggleWindow('guestbook')">Fishbook</button>
+    <!-- fixed-positioned on wide screens (bottom-left "desktop" folder);
+         on narrow screens it docks into the toggle row above the tabs -->
+    <button class="folder" id="folder-friends" onclick="toggleWindow('friends')" aria-label="open making_friends video window">
+      <svg viewBox="0 0 90 63" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M1.5 61.5V4C1.5 2.6 2.6 1.5 4 1.5H25.5C26.9 1.5 28.2 2.1 29.1 3.1L31.4 5.6C32.3 6.6 33.6 7.2 35 7.2H73.5C74.9 7.2 76 8.3 76 9.7V17" stroke="black" stroke-width="2.4"/>
+        <path d="M1.5 61.5L10.6 20C10.9 18.6 12.1 17.6 13.5 17.6H85.4C87.3 17.6 88.7 19.4 88.3 21.2L79.9 59.2C79.6 60.5 78.4 61.5 77 61.5H1.5Z" fill="#F5F5F5" stroke="black" stroke-width="2.4" stroke-linejoin="round"/>
+      </svg>
+      <span class="folder-label">MAKING_FRIENDS</span>
+    </button>
   </nav>
 
   <div class="livestream-section">
@@ -1035,6 +1173,32 @@
     </div>
   </div>
 </div>
+
+<!-- ===== MAKING_FRIENDS WINDOW ===== -->
+<section class="friends-window" id="friends-window" aria-label="making friends video">
+  <div class="panel-header">
+    <div class="panel-title">MAKING_FRIENDS</div>
+    <button class="panel-dismiss" onclick="closeWindow('friends')" aria-label="close">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
+    </button>
+  </div>
+  <div class="panel-scroll">
+    <div class="friends-video">
+      <iframe id="friends-video-frame"
+        data-src="https://www.youtube-nocookie.com/embed/udmTsIG8LXQ"
+        title="fish friend meets other puffers for the first time"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <div class="friends-desc">
+      <h2>Fish friend meets other puffers just like him for the first time</h2>
+      <div class="friends-body">
+        <p>Watch the first day Fish friend was brought to his retirement home <b>(WARNING: emotional).</b></p>
+        <p>With his own fish gang, he&rsquo;s ended up as the alpha and taught the bbs how to hunt for snails like him. He also keeps watch of the shoal while the other puffers tucks themselves into the vallisneria at night to sleep.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- LIGHTBOX -->
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
@@ -1147,33 +1311,94 @@
       .replace(/"/g, '&quot;');
   }
 
-  // ---- PANELS ----
-  let activePanel = null;
+  // ---- WINDOWS (tab panels + making_friends) ----
+  // Windows stack instead of replacing each other: every open window keeps
+  // a z-index from a shared counter, so the newest one sits on top and
+  // anything already open stays visible underneath.
+  const PANEL_NAMES = ['team', 'specs', 'log', 'guestbook'];
+  const WINDOW_NAMES = [...PANEL_NAMES, 'friends'];
+  const openWindows = new Map(); // name -> z-index
+  let zCounter = 500;
 
-  function togglePanel(name) {
-    if (activePanel === name) { closePanels(); return; }
-    activePanel = name;
-    document.getElementById('panel-area').classList.add('open');
-    ['team','specs','log','guestbook'].forEach(p => {
-      document.getElementById('panel-' + p).classList.toggle('open', p === name);
-      document.getElementById('tab-' + p).classList.toggle('active', p === name);
+  function windowEl(name) {
+    return document.getElementById(name === 'friends' ? 'friends-window' : 'panel-' + name);
+  }
+
+  // The tab panels live inside .panel-area, which needs its own z-index to
+  // compete with the free-floating making_friends window; keep it at the
+  // level of its highest open panel.
+  function refreshPanelArea() {
+    const area = document.getElementById('panel-area');
+    const zs = PANEL_NAMES.filter(n => openWindows.has(n)).map(n => openWindows.get(n));
+    area.classList.toggle('open', zs.length > 0);
+    area.style.zIndex = zs.length ? Math.max(...zs) : '';
+  }
+
+  function topWindowName() {
+    let top = null;
+    openWindows.forEach((z, name) => {
+      if (top === null || z > openWindows.get(top)) top = name;
     });
+    return top;
+  }
+
+  function setFriendsVideo(playing) {
+    const frame = document.getElementById('friends-video-frame');
+    // load the embed only while the window is open, so closing it also
+    // stops any playing audio
+    frame.src = playing ? frame.dataset.src : 'about:blank';
+  }
+
+  function openWindow(name) {
+    openWindows.set(name, ++zCounter);
+    const el = windowEl(name);
+    el.style.zIndex = zCounter;
+    el.classList.remove('open');
+    void el.offsetWidth; // restart the pop animation when re-opening
+    el.classList.add('open');
+    const tab = document.getElementById('tab-' + name);
+    if (tab) tab.classList.add('active');
+    refreshPanelArea();
+    if (name === 'friends') setFriendsVideo(true);
     if (name === 'guestbook') scrollGuestbookToEnd();
   }
 
-  function closePanels() {
-    activePanel = null;
-    document.getElementById('panel-area').classList.remove('open');
-    ['team','specs','log','guestbook'].forEach(p => {
-      document.getElementById('panel-' + p).classList.remove('open');
-      document.getElementById('tab-' + p).classList.remove('active');
-    });
+  function closeWindow(name) {
+    openWindows.delete(name);
+    windowEl(name).classList.remove('open');
+    const tab = document.getElementById('tab-' + name);
+    if (tab) tab.classList.remove('active');
+    if (name === 'friends') setFriendsVideo(false);
+    refreshPanelArea();
   }
+
+  function raiseWindow(name) {
+    if (!openWindows.has(name)) return;
+    openWindows.set(name, ++zCounter);
+    windowEl(name).style.zIndex = zCounter;
+    refreshPanelArea();
+  }
+
+  function toggleWindow(name) {
+    if (!openWindows.has(name)) openWindow(name);
+    else if (topWindowName() === name) closeWindow(name);
+    else raiseWindow(name);
+  }
+
+  // clicking anywhere on a buried window brings it to the front
+  WINDOW_NAMES.forEach(name => {
+    windowEl(name).addEventListener('pointerdown', () => {
+      if (openWindows.has(name) && topWindowName() !== name) raiseWindow(name);
+    });
+  });
 
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       if (document.getElementById('lightbox').classList.contains('open')) closeLightbox();
-      else closePanels();
+      else {
+        const top = topWindowName();
+        if (top) closeWindow(top);
+      }
     }
   });
 
@@ -1478,7 +1703,7 @@
 
   // wide screens land with the tank team already open — the panel sits
   // inline there; on narrower widths it would cover the page as an overlay
-  if (window.matchMedia('(min-width: 1251px)').matches) togglePanel('team');
+  if (window.matchMedia('(min-width: 1251px)').matches) openWindow('team');
 </script>
 
 <script type="module">
