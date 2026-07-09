@@ -934,28 +934,29 @@
       padding: 12px 0;
     }
 
-    /* dock the folder into the row above the tabs, on the left side of
-       the air bubbles toggle, sized to match its 10px label */
-    .tabs { position: relative; }
+    /* per the Figma mobile frame the folder flows into the tabs list,
+       above the first divider, keeping its stacked icon + label look */
     .folder {
-      position: absolute;
-      left: 16px;
-      top: 24px; /* .tabs top padding — lines up with the toggle row */
-      height: 24px; /* the toggle row's min-height */
+      position: static;
+      order: -1; /* first row of the tabs column, like the toggle */
       width: auto;
-      flex-direction: row;
-      align-items: center;
-      gap: 8px;
+      align-self: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
     }
-    .folder svg { width: 21px; height: 15px; }
-    .folder svg path { stroke-width: 5; } /* keeps ~1px lines at this size */
+    .folder svg { width: 70px; height: 49px; }
     .folder-label {
       width: auto;
       font-size: 10px;
-      letter-spacing: -0.03em;
-      line-height: 1;
+      letter-spacing: -0.04em;
+      line-height: normal;
       white-space: nowrap;
+      text-align: center;
     }
+    /* pull the air bubbles toggle up beside the folder so the two share
+       a row with the switch bottom-aligned to the folder label, matching
+       Figma's items-end layout (24px = the toggle row's min-height) */
+    .tabs .lg-toggle-wrap { margin-top: -24px; }
 
     /* center the window in the viewport on small screens */
     .friends-window.open {
