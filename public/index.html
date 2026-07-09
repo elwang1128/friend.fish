@@ -430,7 +430,7 @@
     inset: 0;
     z-index: 2;
   }
-  /* opaque poster over the iframe. YouTube's heaviest chrome (title,
+  /* plain solid cover over the iframe. YouTube's heaviest chrome (title,
      share/copy link, channel avatar, end-screen cards) shows in the
      unstarted and ended states, so we cover just those two — the paused
      state is left uncovered so the frozen frame stays visible.
@@ -445,12 +445,6 @@
     transition: opacity 160ms ease;
   }
   .friends-video__cover.hidden { opacity: 0; }
-  .friends-video__cover img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
   /* subtle centered play/pause/replay hint. Sits above the cover and cursor
      overlay but is click-through, so the overlay still handles the click. */
   .friends-video__indicator {
@@ -1252,10 +1246,8 @@
     <div class="friends-video">
       <!-- the YouTube IFrame API replaces this div with the player iframe -->
       <div id="friends-video-frame"></div>
-      <!-- poster that hides YouTube's chrome in the unstarted / ended states -->
-      <div class="friends-video__cover" id="friends-video-cover" aria-hidden="true">
-        <img src="https://i.ytimg.com/vi/udmTsIG8LXQ/hqdefault.jpg" alt="" onerror="this.remove()">
-      </div>
+      <!-- solid cover that hides YouTube's end-screen cards in the ended state -->
+      <div class="friends-video__cover hidden" id="friends-video-cover" aria-hidden="true"></div>
       <!-- subtle play/pause/replay hint, driven by the player state -->
       <div class="friends-video__indicator" id="friends-video-indicator" data-state="play" aria-hidden="true">
         <svg class="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
@@ -1446,9 +1438,9 @@
     container.insertBefore(div, container.firstChild);
   }
 
-  // the poster covers the iframe in the unstarted / ended states (hiding
-  // YouTube's title, share/copy link, avatar and end cards); paused and
-  // playing stay uncovered so the frozen frame / video show through
+  // the cover hides the iframe only in the ended state (hiding YouTube's
+  // end-screen cards); the beginning, paused and playing stay uncovered so
+  // the native start screen / frozen frame / video show through
   function setVideoCover(visible) {
     const el = document.getElementById('friends-video-cover');
     if (el) el.classList.toggle('hidden', !visible);
@@ -1472,9 +1464,10 @@
     clearTimeout(indicatorHideTimer);
   }
 
-  // drive the cover + hint from the player state: cover only unstarted/ended;
-  // a persistent play glyph while paused/cued, a persistent replay glyph when
-  // finished, and a brief pause flash when playback starts
+  // drive the cover + hint from the player state: the beginning (unstarted)
+  // shows YouTube's own start screen uncovered; only the ended state is
+  // covered (to hide the end-screen cards). A persistent play glyph while
+  // paused, a replay glyph when finished, and a brief pause flash on play.
   function onFriendsStateChange(e) {
     switch (e.data) {
       case YT.PlayerState.PLAYING:
@@ -1485,7 +1478,8 @@
         setVideoCover(true); showVideoIndicator('replay', false); break;
       case YT.PlayerState.CUED:
       case YT.PlayerState.UNSTARTED:
-        setVideoCover(true); showVideoIndicator('play', false); break;
+        // let YouTube's native start button show without a competing glyph
+        setVideoCover(false); hideVideoIndicator(); break;
     }
   }
 
@@ -1500,7 +1494,7 @@
       // hover-only title bar never shows since the overlay eats hover events
       playerVars: { rel: 0, modestbranding: 1, playsinline: 1, controls: 0, disablekb: 1, iv_load_policy: 3, fs: 0, origin: window.location.origin },
       events: {
-        onReady: () => showVideoIndicator('play', false),
+        onReady: () => { setVideoCover(false); hideVideoIndicator(); },
         onStateChange: onFriendsStateChange,
       },
     });
@@ -1521,7 +1515,7 @@
     } else if (ytPlayer) {
       ytPlayer.destroy();
       ytPlayer = null;
-      setVideoCover(true); // reset the poster for the next open
+      setVideoCover(false); // start the next open uncovered
       hideVideoIndicator();
       ensureVideoPlaceholder();
     }
