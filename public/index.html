@@ -940,7 +940,7 @@
       position: static;
       order: -1; /* first row of the tabs column, like the toggle */
       width: auto;
-      align-self: flex-start;
+      align-self: flex-end;
       gap: 10px;
       margin-bottom: 12px;
     }
@@ -954,9 +954,9 @@
       text-align: center;
     }
     /* pull the air bubbles toggle up beside the folder so the two share
-       a row with the switch bottom-aligned to the folder label, matching
-       Figma's items-end layout (24px = the toggle row's min-height) */
-    .tabs .lg-toggle-wrap { margin-top: -24px; }
+       a row with the switch bottom-aligned to the folder label
+       (24px = the toggle row's min-height), toggle left / folder right */
+    .tabs .lg-toggle-wrap { margin-top: -24px; align-self: flex-start; }
 
     /* center the window in the viewport on small screens */
     .friends-window.open {
