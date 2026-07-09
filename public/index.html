@@ -430,11 +430,11 @@
     inset: 0;
     z-index: 2;
   }
-  /* opaque poster over the iframe. YouTube's own chrome (title, share/copy
-     link, channel avatar, end-screen cards) only shows while the video is
-     paused/unstarted/ended, so we cover those states entirely and reveal the
-     iframe only while it's actually playing (when YouTube shows nothing but
-     the video). Click-through, so the cursor overlay still handles the click. */
+  /* opaque poster over the iframe. YouTube's heaviest chrome (title,
+     share/copy link, channel avatar, end-screen cards) shows in the
+     unstarted and ended states, so we cover just those two — the paused
+     state is left uncovered so the frozen frame stays visible.
+     Click-through, so the cursor overlay still handles the click. */
   .friends-video__cover {
     position: absolute;
     inset: 0;
@@ -450,6 +450,42 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+  /* subtle centered play/pause/replay hint. Sits above the cover and cursor
+     overlay but is click-through, so the overlay still handles the click. */
+  .friends-video__indicator {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0.92);
+    z-index: 3;
+    pointer-events: none;
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.4);
+    color: #fff;
+    opacity: 0;
+    transition: opacity 200ms ease, transform 200ms ease;
+  }
+  .friends-video__indicator.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .friends-video__indicator svg {
+    width: 24px;
+    height: 24px;
+    display: none;
+  }
+  .friends-video__indicator[data-state="play"] .i-play,
+  .friends-video__indicator[data-state="pause"] .i-pause,
+  .friends-video__indicator[data-state="replay"] .i-replay { display: block; }
+  @media (prefers-reduced-motion: reduce) {
+    .friends-video__indicator { transition: opacity 200ms ease; }
+    .friends-video__indicator,
+    .friends-video__indicator.show { transform: translate(-50%, -50%); }
   }
 
   .friends-desc {
@@ -1216,9 +1252,15 @@
     <div class="friends-video">
       <!-- the YouTube IFrame API replaces this div with the player iframe -->
       <div id="friends-video-frame"></div>
-      <!-- poster that hides YouTube's chrome while the video isn't playing -->
+      <!-- poster that hides YouTube's chrome in the unstarted / ended states -->
       <div class="friends-video__cover" id="friends-video-cover" aria-hidden="true">
         <img src="https://i.ytimg.com/vi/udmTsIG8LXQ/hqdefault.jpg" alt="" onerror="this.remove()">
+      </div>
+      <!-- subtle play/pause/replay hint, driven by the player state -->
+      <div class="friends-video__indicator" id="friends-video-indicator" data-state="play" aria-hidden="true">
+        <svg class="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <svg class="i-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+        <svg class="i-replay" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
       </div>
       <!-- cursor-tracking / click-to-play layer, see .friends-video__cursor -->
       <div class="friends-video__cursor" id="friends-video-cursor" aria-hidden="true"></div>
@@ -1404,16 +1446,47 @@
     container.insertBefore(div, container.firstChild);
   }
 
-  // the poster covers the iframe whenever the video isn't actively playing,
-  // hiding YouTube's chrome (title, share/copy link, avatar, end cards)
+  // the poster covers the iframe in the unstarted / ended states (hiding
+  // YouTube's title, share/copy link, avatar and end cards); paused and
+  // playing stay uncovered so the frozen frame / video show through
   function setVideoCover(visible) {
     const el = document.getElementById('friends-video-cover');
     if (el) el.classList.toggle('hidden', !visible);
   }
 
-  // reveal the iframe only while playing; cover every other state
+  // subtle centered play/pause/replay hint over the video
+  let indicatorHideTimer = null;
+  function showVideoIndicator(state, autoHide) {
+    const el = document.getElementById('friends-video-indicator');
+    if (!el) return;
+    el.dataset.state = state; // 'play' | 'pause' | 'replay'
+    el.classList.add('show');
+    clearTimeout(indicatorHideTimer);
+    if (autoHide) {
+      indicatorHideTimer = setTimeout(() => el.classList.remove('show'), 550);
+    }
+  }
+  function hideVideoIndicator() {
+    const el = document.getElementById('friends-video-indicator');
+    if (el) el.classList.remove('show');
+    clearTimeout(indicatorHideTimer);
+  }
+
+  // drive the cover + hint from the player state: cover only unstarted/ended;
+  // a persistent play glyph while paused/cued, a persistent replay glyph when
+  // finished, and a brief pause flash when playback starts
   function onFriendsStateChange(e) {
-    setVideoCover(e.data !== YT.PlayerState.PLAYING);
+    switch (e.data) {
+      case YT.PlayerState.PLAYING:
+        setVideoCover(false); showVideoIndicator('pause', true); break;
+      case YT.PlayerState.PAUSED:
+        setVideoCover(false); showVideoIndicator('play', false); break;
+      case YT.PlayerState.ENDED:
+        setVideoCover(true); showVideoIndicator('replay', false); break;
+      case YT.PlayerState.CUED:
+      case YT.PlayerState.UNSTARTED:
+        setVideoCover(true); showVideoIndicator('play', false); break;
+    }
   }
 
   function createFriendsPlayer() {
@@ -1427,6 +1500,7 @@
       // hover-only title bar never shows since the overlay eats hover events
       playerVars: { rel: 0, modestbranding: 1, playsinline: 1, controls: 0, disablekb: 1, iv_load_policy: 3, fs: 0, origin: window.location.origin },
       events: {
+        onReady: () => showVideoIndicator('play', false),
         onStateChange: onFriendsStateChange,
       },
     });
@@ -1448,6 +1522,7 @@
       ytPlayer.destroy();
       ytPlayer = null;
       setVideoCover(true); // reset the poster for the next open
+      hideVideoIndicator();
       ensureVideoPlaceholder();
     }
   }
