@@ -487,6 +487,15 @@
     .friends-video__indicator,
     .friends-video__indicator.show { transform: translate(-50%, -50%); }
   }
+  /* touch devices have no custom cursor, so the overlay serves no purpose
+     there — and it breaks playback: iOS/Android only allow the video to
+     start from a tap inside the iframe itself. Drop the overlay, poster and
+     glyph on touch and let YouTube's native player take the tap directly. */
+  @media (hover: none), (pointer: coarse) {
+    .friends-video__cursor,
+    .friends-video__cover,
+    .friends-video__indicator { display: none !important; }
+  }
 
   .friends-desc {
     display: flex;
@@ -1492,13 +1501,18 @@
   function createFriendsPlayer() {
     if (ytPlayer || !ytApiReady || !window.YT || !YT.Player) return;
     ensureVideoPlaceholder();
+    // no custom cursor means no overlay over the video (see the touch media
+    // query), so the player needs its own controls — and phones refuse
+    // play requests that don't originate from a tap inside the iframe
+    const nativeControls = !customCursorEnabled;
     ytPlayer = new YT.Player('friends-video-frame', {
       host: 'https://www.youtube-nocookie.com',
       videoId: FRIENDS_VIDEO_ID,
-      // controls:0 hides YouTube's native control bar (we drive play/pause
-      // from the overlay); iv_load_policy:3 drops annotation cards, and the
-      // hover-only title bar never shows since the overlay eats hover events
-      playerVars: { rel: 0, modestbranding: 1, playsinline: 1, controls: 0, disablekb: 1, iv_load_policy: 3, fs: 0, origin: window.location.origin },
+      // on desktop, controls:0 hides YouTube's control bar (we drive
+      // play/pause from the overlay); iv_load_policy:3 drops annotation
+      // cards, and the hover-only title bar never shows since the overlay
+      // eats hover events
+      playerVars: { rel: 0, modestbranding: 1, playsinline: 1, controls: nativeControls ? 1 : 0, disablekb: 1, iv_load_policy: 3, fs: nativeControls ? 1 : 0, origin: window.location.origin },
       events: {
         onReady: () => showVideoIndicator('play', false),
         onStateChange: onFriendsStateChange,
