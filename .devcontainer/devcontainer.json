@@ -1,0 +1,13 @@
+{
+  "name": "friend.fish",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "forwardPorts": [8787],
+  "portsAttributes": {
+    "8787": {
+      "label": "friend.fish (wrangler dev)",
+      "onAutoForward": "openPreview"
+    }
+  },
+  "postCreateCommand": "npm install",
+  "postAttachCommand": "npm run dev"
+}
