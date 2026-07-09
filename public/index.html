@@ -313,15 +313,15 @@
   .panel.open { display: flex; }
   .panel.white { background: #ffffff; }
 
-  /* windows pop out from their center with a bouncy ease-out */
+  /* windows pop out from their center, easing slightly past full size
+     and settling back — a single overshoot, no bounce */
   @keyframes window-pop {
     0%   { opacity: 0; transform: scale(0.4); }
-    60%  { opacity: 1; transform: scale(1.04); }
-    80%  { transform: scale(0.98); }
+    60%  { opacity: 1; transform: scale(1.015); }
     100% { opacity: 1; transform: scale(1); }
   }
   .panel.open, .friends-window.open {
-    animation: window-pop 440ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: window-pop 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   @media (prefers-reduced-motion: reduce) {
     .panel.open, .friends-window.open { animation: none; }
@@ -369,7 +369,7 @@
   /* ---------- MAKING_FRIENDS FOLDER + WINDOW ---------- */
   .folder {
     position: fixed;
-    left: 28px;
+    left: 32px;
     bottom: 28px;
     width: 126px;
     display: flex;
@@ -391,9 +391,6 @@
     text-align: left;
     word-break: break-word;
   }
-  .folder:hover .folder-label,
-  .folder:focus-visible .folder-label { text-decoration: underline; }
-
   .friends-window {
     display: none;
     flex-direction: column;
