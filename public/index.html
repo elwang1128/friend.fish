@@ -430,7 +430,7 @@
     inset: 0;
     z-index: 2;
   }
-  /* opaque poster over the iframe. YouTube's heaviest chrome (title,
+  /* plain solid cover over the iframe. YouTube's heaviest chrome (title,
      share/copy link, channel avatar, end-screen cards) shows in the
      unstarted and ended states, so we cover just those two — the paused
      state is left uncovered so the frozen frame stays visible.
@@ -445,12 +445,6 @@
     transition: opacity 160ms ease;
   }
   .friends-video__cover.hidden { opacity: 0; }
-  .friends-video__cover img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
   /* subtle centered play/pause/replay hint. Sits above the cover and cursor
      overlay but is click-through, so the overlay still handles the click. */
   .friends-video__indicator {
@@ -1252,10 +1246,8 @@
     <div class="friends-video">
       <!-- the YouTube IFrame API replaces this div with the player iframe -->
       <div id="friends-video-frame"></div>
-      <!-- poster that hides YouTube's chrome in the unstarted / ended states -->
-      <div class="friends-video__cover" id="friends-video-cover" aria-hidden="true">
-        <img src="https://i.ytimg.com/vi/udmTsIG8LXQ/hqdefault.jpg" alt="" onerror="this.remove()">
-      </div>
+      <!-- solid cover that hides YouTube's chrome in the unstarted / ended states -->
+      <div class="friends-video__cover" id="friends-video-cover" aria-hidden="true"></div>
       <!-- subtle play/pause/replay hint, driven by the player state -->
       <div class="friends-video__indicator" id="friends-video-indicator" data-state="play" aria-hidden="true">
         <svg class="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
@@ -1446,7 +1438,7 @@
     container.insertBefore(div, container.firstChild);
   }
 
-  // the poster covers the iframe in the unstarted / ended states (hiding
+  // the cover hides the iframe in the unstarted / ended states (hiding
   // YouTube's title, share/copy link, avatar and end cards); paused and
   // playing stay uncovered so the frozen frame / video show through
   function setVideoCover(visible) {
@@ -1521,7 +1513,7 @@
     } else if (ytPlayer) {
       ytPlayer.destroy();
       ytPlayer = null;
-      setVideoCover(true); // reset the poster for the next open
+      setVideoCover(true); // reset the cover for the next open
       hideVideoIndicator();
       ensureVideoPlaceholder();
     }
