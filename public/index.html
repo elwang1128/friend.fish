@@ -405,6 +405,12 @@
     background: var(--bg);
   }
   .friends-window.open { display: flex; }
+  /* the window is content-sized (height: fit-content / max-height), and
+     WebKit collapses the generic .panel-scroll (flex-basis 0 + min-height 0)
+     to zero inside a content-sized container — on iPhone only the header bar
+     rendered. Size this scroll area by its content instead; flex-shrink and
+     overflow still make it scroll once the window hits its max-height. */
+  .friends-window .panel-scroll { flex: 0 1 auto; }
 
   .friends-video {
     position: relative;
