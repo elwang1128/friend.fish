@@ -1916,6 +1916,10 @@
     await gistGet();
     applyOwnerState();
     renderGuestbook();
+    // the data arrives after the page (and possibly the fishbook panel) is
+    // already up: land the feed on the newest messages at the bottom. If the
+    // panel is still closed this is a no-op, and opening it scrolls instead.
+    scrollGuestbookToEnd();
   }
   initData();
 </script>
