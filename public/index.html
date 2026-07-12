@@ -1925,7 +1925,7 @@
 </script>
 
 <script type="module">
-  import "https://cdn.jsdelivr.net/npm/@moq/watch@0.2/element.js/+esm";
+  import "https://cdn.jsdelivr.net/npm/@moq/watch@0.3/element.js/+esm";
 
   let el = document.querySelector('moq-watch');
   const box = document.getElementById('livestream');
@@ -1937,8 +1937,10 @@
   // signal stays non-null even after the publisher disconnects (relay caches
   // it), so it's not a reliable offline signal — frame flow is. The 8 s
   // window absorbs network/encoder stutter without flickering the overlay.
-  // moq-watch keeps decoding in the background; the status text just shows
-  // when we're not confident it's live.
+  // moq-watch pauses decoding while the tab is hidden or the element is
+  // off-screen (its default `visible` behavior), so hidden time reads as
+  // offline here; the status text just shows when we're not confident
+  // it's live.
   // The `reload` attribute makes Chrome subscribe on the relay's ANNOUNCE.
   // Firefox doesn't seem to deliver ANNOUNCE reliably, so as a fallback we
   // also clone+replace the element after a longer offline window to force

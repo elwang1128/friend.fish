@@ -5,6 +5,7 @@
 .env*
 !.env.example
 !.envrc
+result
 
 node_modules/
 .direnv/
