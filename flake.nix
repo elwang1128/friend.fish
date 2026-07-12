@@ -33,7 +33,7 @@
               -rtsp_transport tcp -i "$RTSPS_SOURCE" \
               -c:v copy -an \
               -f mp4 -movflags +frag_every_frame+empty_moov+default_base_moof+omit_tfhd_offset - \
-              | moq-cli publish --url "$RELAY_URL" --broadcast "$BROADCAST" fmp4
+              | moq --client-connect "$RELAY_URL" --broadcast "$BROADCAST" import fmp4
           '';
         };
 
