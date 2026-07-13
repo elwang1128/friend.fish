@@ -255,7 +255,10 @@
     padding: 20px;
     pointer-events: none;
   }
-  .livestream.is-live .livestream-status { display: none; }
+  /* while live, keep the status line up until the first sleeping-or-not
+     verdict lands (is-determined), so a night visitor never stares at a
+     bare black frame with no text */
+  .livestream.is-live.is-determined .livestream-status { display: none; }
 
   .livestream-sleeping {
     position: absolute;
@@ -1963,16 +1966,29 @@
     if (live === isLive) return;
     isLive = live;
     box.classList.toggle('is-live', live);
-    if (!live) { offlineSince = performance.now(); setSleeping(false); }
+    if (live) {
+      startVerdictBurst();
+    } else {
+      offlineSince = performance.now();
+      stopVerdictBurst();
+      setSleeping(false);
+    }
   }
 
   // ---- SLEEPING FISH (dark stream) DETECTION ----
-  // Sample the stream canvas every couple seconds and average its luma.
-  // If the picture stays near-black across several samples (lights out),
-  // show the sleeping note instead of leaving a black void. A near-zero
-  // average alpha means the canvas buffer wasn't readable at draw time
-  // (e.g. a cleared WebGL backbuffer) — skip those samples rather than
-  // mistaking them for darkness.
+  // Sample the stream canvas and average its luma. If the picture stays
+  // near-black across several samples (lights out), show the sleeping note
+  // instead of leaving a black void. A near-zero average alpha means the
+  // canvas buffer wasn't readable at draw time (e.g. a cleared WebGL
+  // backbuffer) — skip those samples rather than mistaking them for
+  // darkness.
+  //
+  // Detection is asymmetric: the slow 2 s cadence with a long streak guards
+  // mid-stream light changes against flicker, but right after the stream
+  // goes live there's no prior state to protect — and until the verdict is
+  // in, a night visitor sees only a black rectangle. So each live
+  // transition runs a short fast burst to settle sleeping-or-not within
+  // about a second; the slow cadence takes over from there.
   const DARK_LUMA = 12;          // 0-255; below this counts as pitch black
   const DARK_SAMPLES_NEEDED = 3; // ~6s of sustained darkness before flipping
   const sampleCanvas = document.createElement('canvas');
@@ -1986,8 +2002,8 @@
     if (!sleeping) darkStreak = 0;
   }
 
-  function sampleDarkness() {
-    if (!isLive || !canvas) { setSleeping(false); return; }
+  // one canvas read: 'dark' | 'bright' | 'unreadable' | 'error'
+  function readLuma() {
     try {
       sampleCtx.clearRect(0, 0, 32, 18);
       sampleCtx.drawImage(canvas, 0, 0, 32, 18);
@@ -1998,26 +2014,94 @@
         alpha += d[i + 3];
       }
       const n = d.length / 4;
-      if (alpha / n < 200) return; // unreadable frame; keep current state
-      if (luma / n < DARK_LUMA) darkStreak++;
-      else { darkStreak = 0; setSleeping(false); return; }
-      if (darkStreak >= DARK_SAMPLES_NEEDED) setSleeping(true);
+      if (alpha / n < 200) return 'unreadable';
+      return luma / n < DARK_LUMA ? 'dark' : 'bright';
     } catch (e) {
-      // canvas not drawable/tainted — never claim the fish are asleep
+      // canvas not drawable/tainted
+      return 'error';
+    }
+  }
+
+  function sampleDarkness() {
+    if (!isLive || !canvas) { setSleeping(false); return; }
+    if (verdictPending) return; // the burst owns sampling right now
+    const r = readLuma();
+    if (r === 'error') { setSleeping(false); return; } // never claim asleep
+    if (r === 'unreadable') return; // keep current state
+    if (r === 'dark') {
+      darkStreak++;
+      if (darkStreak >= DARK_SAMPLES_NEEDED) setSleeping(true);
+    } else {
+      darkStreak = 0;
       setSleeping(false);
     }
   }
   setInterval(sampleDarkness, 2000);
 
+  // fast initial verdict after each offline→live transition
+  const BURST_INTERVAL_MS = 350;
+  const BURST_DARK_SAMPLES = 2;  // ~0.7s of darkness settles the verdict
+  const BURST_TIMEOUT_MS = 8000; // stop waiting for readable samples
+  let verdictPending = false;
+  let burstTimer = null;
+  let burstDarkStreak = 0;
+  let burstStartedAt = 0;
+
+  function startVerdictBurst() {
+    stopVerdictBurst();
+    verdictPending = true;
+    burstDarkStreak = 0;
+    burstStartedAt = performance.now();
+    burstTick();
+    if (verdictPending) burstTimer = setInterval(burstTick, BURST_INTERVAL_MS);
+  }
+
+  function stopVerdictBurst() {
+    verdictPending = false;
+    clearInterval(burstTimer);
+    burstTimer = null;
+  }
+
+  function resolveVerdict(sleeping) {
+    stopVerdictBurst();
+    if (sleeping) setSleeping(true);
+    // verdict is in: let the status line hide (see .is-live.is-determined)
+    // and settle its label on the steady-state offline text, which is what
+    // shows if the stream drops later
+    box.classList.add('is-determined');
+    flipStatusToOffline();
+  }
+
+  function burstTick() {
+    if (!isLive || !canvas) { stopVerdictBurst(); return; }
+    const r = readLuma();
+    if (r === 'dark') {
+      burstDarkStreak++;
+      if (burstDarkStreak >= BURST_DARK_SAMPLES) { resolveVerdict(true); return; }
+    } else if (r === 'bright' || r === 'error') {
+      resolveVerdict(false);
+      return;
+    }
+    // unreadable frames keep the burst waiting, but not forever
+    if (performance.now() - burstStartedAt > BURST_TIMEOUT_MS) resolveVerdict(false);
+  }
+
   // Status starts as "livestream connecting..." and flips to "livestream
   // offline" once we either see a frame or wait out the grace window. After
   // that first determination we never revert to "connecting".
+  function flipStatusToOffline() {
+    statusLabel.textContent = 'livestream offline';
+    statusEl.classList.add('no-dots');
+  }
+
   function maybeFlipToOffline(now, seenFrame) {
     if (stateDetermined) return;
     if (seenFrame || now - pageLoadAt > CONNECTING_GRACE_MS) {
       stateDetermined = true;
-      statusLabel.textContent = 'livestream offline';
-      statusEl.classList.add('no-dots');
+      // with a frame seen, the verdict burst is still holding the
+      // "connecting" status on screen; resolveVerdict swaps the label
+      // once it settles
+      if (!seenFrame) flipStatusToOffline();
     }
   }
 
