@@ -1249,14 +1249,14 @@
            real-time the buffer collapses to ~1.25x RTT — smaller than one frame
            interval — so the player skips the previous group's tail and stalls on
            the oversized keyframe at every group boundary, a visible glitch every
-           ~5s. 250ms absorbs the boundary burst; the extra quarter-second behind
+           ~5s. 1000ms absorbs the boundary burst; the extra quarter-second behind
            live is invisible for a fish tank. -->
       <moq-watch
         url="https://cdn.moq.dev/anon"
         name="friend.fish/tank"
         muted
         reload
-        latency="250">
+        latency="1000">
         <canvas></canvas>
       </moq-watch>
       <div class="livestream-status" id="livestream-status"><span id="livestream-status-label">livestream connecting</span><span class="dots"></span></div>
