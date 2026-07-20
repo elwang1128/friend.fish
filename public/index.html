@@ -1244,19 +1244,22 @@
     </div>
     <div class="livestream" id="livestream">
       <video class="livestream-bg" src="/assets/livestream.webm" autoplay muted loop playsinline disablepictureinpicture aria-hidden="true"></video>
-      <!-- latency is a fixed jitter buffer in ms, not "real-time": the camera
-           publishes ~5s GoPs (-c:v copy keeps its keyframe interval), and with
-           real-time the buffer collapses to ~1.25x RTT — smaller than one frame
-           interval — so the player skips the previous group's tail and stalls on
-           the oversized keyframe at every group boundary, a visible glitch every
-           ~5s. 1000ms absorbs the boundary burst; the extra quarter-second behind
-           live is invisible for a fish tank. -->
+      <!-- latency is a fixed jitter buffer in ms, not "real-time" (which
+           collapses to ~1.25x RTT). The camera publishes ~5s GoPs (-c:v copy
+           keeps its keyframe interval), and each GoP opens with an oversized
+           IDR keyframe that jams the uplink: verbose sync[video] logs show
+           ~16-frame clumps arriving up to ~1.5s behind baseline once per GoP.
+           Smaller buffers (250/1000 tried) still stuttered, so 3000ms buys ~2x
+           margin over the measured burst. Running a few seconds behind live is
+           invisible for a fish tank; shrinking the burst at the source (lower
+           camera bitrate / shorter GoP) is the real fix that would let this
+           come back down. -->
       <moq-watch
         url="https://cdn.moq.dev/anon"
         name="friend.fish/tank"
         muted
         reload
-        latency="1000">
+        latency="3000">
         <canvas></canvas>
       </moq-watch>
       <div class="livestream-status" id="livestream-status"><span id="livestream-status-label">livestream connecting</span><span class="dots"></span></div>
