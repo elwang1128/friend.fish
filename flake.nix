@@ -25,7 +25,7 @@
           text = ''
             : "''${RTSPS_SOURCE:?Set RTSPS_SOURCE to the camera rtsps:// URL}"
 
-            BROADCAST="''${MOQ_BROADCAST:-friend.fish/tank}"
+            BROADCAST="''${MOQ_BROADCAST:-friend.fish/tank.hang}"
             RELAY_URL="''${MOQ_RELAY_URL:-https://cdn.moq.dev/anon}"
 
             ffmpeg \
