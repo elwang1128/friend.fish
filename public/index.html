@@ -2118,17 +2118,6 @@
     statusEl.classList.add('no-dots');
   }
 
-  function maybeFlipToOffline(now, seenFrame) {
-    if (stateDetermined) return;
-    if (seenFrame || now - pageLoadAt > CONNECTING_GRACE_MS) {
-      stateDetermined = true;
-      // with a frame seen, the verdict burst is still holding the
-      // "connecting" status on screen; resolveVerdict swaps the label
-      // once it settles
-      if (!seenFrame) flipStatusToOffline();
-    }
-  }
-
   function recreateMoqWatch() {
     const parent = el.parentNode;
     const fresh = el.cloneNode(true);
@@ -2144,17 +2133,15 @@
   }
 
   setInterval(() => {
-    const stats = el.backend?.video?.stats?.peek?.();
-    const count = stats?.frameCount ?? 0;
     const now = performance.now();
-    const seenFrame = count > lastFrameCount;
-    if (seenFrame) {
-      lastFrameCount = count;
+    const connected = el.isConnected;
+    if (connected) {
       lastFrameTime = now;
+    } else {
+      flipStatusToOffline();
     }
-    const live = lastFrameCount > 0 && (now - lastFrameTime) < STALL_MS;
+    const live = (now - lastFrameTime) < STALL_MS;
     setLive(live);
-    maybeFlipToOffline(now, seenFrame);
     if (!live && now - offlineSince > RECREATE_AFTER_MS) recreateMoqWatch();
   }, 500);
 
