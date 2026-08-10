@@ -1972,6 +1972,11 @@
   // Firefox doesn't seem to deliver ANNOUNCE reliably, so as a fallback we
   // also clone+replace the element after a longer offline window to force
   // a fresh connection from scratch.
+  // Frame flow is also what makes the sleeping-fish check meaningful: the
+  // renderer paints the canvas opaque black whenever it has no frame to
+  // show, so anything that reports live before the first decoded frame
+  // hands the darkness sampler a black rectangle and it says the fish are
+  // asleep. `is-live` must mean "a frame arrived", not "the player exists".
   const STALL_MS = 8000;
   const RECREATE_AFTER_MS = 15000;
   const CONNECTING_GRACE_MS = 12000;
@@ -2118,6 +2123,17 @@
     statusEl.classList.add('no-dots');
   }
 
+  function maybeFlipToOffline(now, seenFrame) {
+    if (stateDetermined) return;
+    if (seenFrame || now - pageLoadAt > CONNECTING_GRACE_MS) {
+      stateDetermined = true;
+      // with a frame seen, the verdict burst is still holding the
+      // "connecting" status on screen; resolveVerdict swaps the label
+      // once it settles
+      if (!seenFrame) flipStatusToOffline();
+    }
+  }
+
   function recreateMoqWatch() {
     const parent = el.parentNode;
     const fresh = el.cloneNode(true);
@@ -2132,16 +2148,25 @@
     offlineSince = performance.now();
   }
 
+  // @moq/watch 0.4 moved the decoder: it hangs off the element as `el.video`
+  // (there is no `el.backend` anymore) and its cumulative stats sit on the
+  // `out` signal map. Optional chaining keeps a future rename from throwing
+  // every 500 ms — it just reads as "no frames yet", i.e. offline.
+  function readFrameCount() {
+    return el.video?.out?.stats?.peek?.()?.frameCount ?? 0;
+  }
+
   setInterval(() => {
     const now = performance.now();
-    const connected = el.isConnected;
-    if (connected) {
+    const count = readFrameCount();
+    const seenFrame = count > lastFrameCount;
+    if (seenFrame) {
+      lastFrameCount = count;
       lastFrameTime = now;
-    } else {
-      flipStatusToOffline();
     }
-    const live = (now - lastFrameTime) < STALL_MS;
+    const live = lastFrameCount > 0 && (now - lastFrameTime) < STALL_MS;
     setLive(live);
+    maybeFlipToOffline(now, seenFrame);
     if (!live && now - offlineSince > RECREATE_AFTER_MS) recreateMoqWatch();
   }, 500);
 
