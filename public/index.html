@@ -1952,7 +1952,11 @@
 </script>
 
 <script type="module">
-  import "https://cdn.jsdelivr.net/npm/@moq/watch@0.4/element.js/+esm";
+  // Served through our own /vendor proxy rather than straight from the CDN:
+  // corporate networks block public package CDNs by hostname, and losing this
+  // module means no player at all. The worker still resolves the floating
+  // `@0.4` upstream, so updates arrive without a redeploy. See src/worker.js.
+  import "/vendor/npm/@moq/watch@0.4/element.js/+esm";
 
   let el = document.querySelector('moq-watch');
   const box = document.getElementById('livestream');

@@ -8,6 +8,23 @@ const COOKIE_NAME = '__Host-session';
 const SESSION_TTL = 30 * 24 * 60 * 60; // 30 days
 const NO_CACHE = { 'Cache-Control': 'no-store', 'Vary': 'Cookie' };
 
+// ---- PLAYER CDN PROXY ----
+// The livestream player is an npm module served from a public package CDN.
+// Corporate networks block those by hostname (Microsoft's does), and the
+// block is fatal: <moq-watch> never upgrades, so no decoder exists and the
+// relay is never even dialed. Fetching it here instead means the browser
+// only ever talks to friend.fish, while the floating `@0.4` specifier is
+// still resolved per request upstream — so player updates keep landing on
+// their own, which is the whole reason not to vendor the bundle.
+const VENDOR_UPSTREAM = 'https://cdn.jsdelivr.net';
+// Scoped to the player's own dependency tree. Without this, the route would
+// cheerfully serve any package on npm from our domain — a considerably worse
+// thing to be hosting than the block we're routing around.
+const VENDOR_ALLOWED = /^\/npm\/(@moq|@kixelated|@libav\.js)\/[^/]+\//;
+const VENDOR_TTL = 3600;
+// Rewriting happens on text; libav ships wasm that must pass through as-is.
+const VENDOR_TEXT = /javascript|ecmascript|json|text\//;
+
 function isAllowed(login, env) {
   if (typeof login !== 'string' || !login) return false;
   const needle = login.toLowerCase();
@@ -143,6 +160,43 @@ app.get('/auth/callback', async c => {
 app.post('/auth/logout', c => {
   deleteCookie(c, COOKIE_NAME, { path: '/', secure: true });
   return c.body(null, 204);
+});
+
+app.get('/vendor/*', async c => {
+  const path = c.req.path.slice('/vendor'.length);
+  if (path.includes('..') || !VENDOR_ALLOWED.test(path)) return c.text('not found', 404);
+
+  const cache = caches.default;
+  const hit = await cache.match(c.req.raw);
+  if (hit) return hit;
+
+  let upstream;
+  try {
+    upstream = await fetch(VENDOR_UPSTREAM + path, {
+      cf: { cacheTtl: VENDOR_TTL, cacheEverything: true },
+    });
+  } catch {
+    return c.text('upstream unreachable', 502, NO_CACHE);
+  }
+  if (!upstream.ok) return c.text('upstream error', 502, NO_CACHE);
+
+  // jsDelivr's +esm output inlines its dependencies, so there is usually
+  // nothing to rewrite. The exception is the libav/Opus polyfill, which
+  // builds absolute CDN URLs at runtime — those have to come back through
+  // here too, or they'd hit the blocked hostname after all.
+  const type = upstream.headers.get('content-type') ?? 'application/octet-stream';
+  const body = VENDOR_TEXT.test(type)
+    ? (await upstream.text()).replaceAll(`${VENDOR_UPSTREAM}/`, '/vendor/')
+    : await upstream.arrayBuffer();
+
+  const res = new Response(body, {
+    headers: {
+      'Content-Type': type,
+      'Cache-Control': `public, max-age=${VENDOR_TTL}, stale-while-revalidate=86400`,
+    },
+  });
+  c.executionCtx.waitUntil(cache.put(c.req.raw, res.clone()));
+  return res;
 });
 
 app.all('*', c => c.env.ASSETS.fetch(c.req.raw));
