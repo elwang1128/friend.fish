@@ -1616,14 +1616,6 @@
     else raiseWindow(name);
   }
 
-  // The panel shares the page with the livestream only above the overlay
-  // breakpoint; on smaller layouts an open panel would cover the stream.
-  function openTeamOnDesktop() {
-    if (window.matchMedia('(min-width: 1251px)').matches) openWindow('team');
-  }
-
-  openTeamOnDesktop();
-
   // clicking anywhere on a buried window brings it to the front
   WINDOW_NAMES.forEach(name => {
     windowEl(name).addEventListener('pointerdown', () => {
