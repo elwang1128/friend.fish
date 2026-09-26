@@ -1246,22 +1246,12 @@
     </div>
     <div class="livestream" id="livestream">
       <video class="livestream-bg" src="/assets/livestream.webm" autoplay muted loop playsinline disablepictureinpicture aria-hidden="true"></video>
-      <!-- latency is a fixed jitter buffer in ms, not "real-time" (which
-           collapses to ~1.25x RTT). The camera publishes ~5s GoPs (-c:v copy
-           keeps its keyframe interval), and each GoP opens with an oversized
-           IDR keyframe that jams the uplink: verbose sync[video] logs show
-           ~16-frame clumps arriving up to ~1.5s behind baseline once per GoP.
-           Smaller buffers (250/1000 tried) still stuttered, so 3000ms buys ~2x
-           margin over the measured burst. Running a few seconds behind live is
-           invisible for a fish tank; shrinking the burst at the source (lower
-           camera bitrate / shorter GoP) is the real fix that would let this
-           come back down. -->
       <moq-watch
         url="https://cdn.moq.pro/pk267nzwvvwtz"
         name="friend.fish/tank.hang"
         muted
-        reload
-        latency="3000">
+        announced
+        delay="3000ms">
         <canvas></canvas>
       </moq-watch>
       <div class="livestream-status" id="livestream-status"><span id="livestream-status-label">livestream connecting</span><span class="dots"></span></div>
@@ -1960,7 +1950,7 @@
 </script>
 
 <script type="module">
-  import "https://cdn.jsdelivr.net/npm/@moq/watch@0.4/element.js/+esm";
+  import "https://cdn.jsdelivr.net/npm/@moq/watch@0.6.1/element.js/+esm";
 
   let el = document.querySelector('moq-watch');
   const box = document.getElementById('livestream');
@@ -1976,10 +1966,6 @@
   // off-screen (its default `visible` behavior), so hidden time reads as
   // offline here; the status text just shows when we're not confident
   // it's live.
-  // The `reload` attribute makes Chrome subscribe on the relay's ANNOUNCE.
-  // Firefox doesn't seem to deliver ANNOUNCE reliably, so as a fallback we
-  // also clone+replace the element after a longer offline window to force
-  // a fresh connection from scratch.
   // Frame flow is also what makes the sleeping-fish check meaningful: the
   // renderer paints the canvas opaque black whenever it has no frame to
   // show, so anything that reports live before the first decoded frame
@@ -2145,10 +2131,7 @@
   function recreateMoqWatch() {
     const parent = el.parentNode;
     const fresh = el.cloneNode(true);
-    // The original element relies on the ANNOUNCE-driven path (`reload=true`)
-    // which Firefox doesn't deliver reliably. On retry, drop reload so the
-    // new element subscribes eagerly — works in any browser.
-    fresh.removeAttribute('reload');
+    fresh.removeAttribute('announced');
     parent.replaceChild(fresh, el);
     el = fresh;
     canvas = el.querySelector('canvas');
@@ -2156,10 +2139,6 @@
     offlineSince = performance.now();
   }
 
-  // @moq/watch 0.4 moved the decoder: it hangs off the element as `el.video`
-  // (there is no `el.backend` anymore) and its cumulative stats sit on the
-  // `out` signal map. Optional chaining keeps a future rename from throwing
-  // every 500 ms — it just reads as "no frames yet", i.e. offline.
   function readFrameCount() {
     return el.video?.out?.stats?.peek?.()?.frameCount ?? 0;
   }
