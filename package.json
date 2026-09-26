@@ -8,10 +8,10 @@
     "deploy": "wrangler deploy"
   },
   "dependencies": {
-    "hono": "^4.6.0",
-    "@hono/oauth-providers": "^0.6.0"
+    "@hono/oauth-providers": "^0.9.0",
+    "hono": "^4.6.0"
   },
   "devDependencies": {
-    "wrangler": "^3.86.0"
+    "wrangler": "^4.141.0"
   }
 }
