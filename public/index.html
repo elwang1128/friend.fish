@@ -2131,7 +2131,7 @@
   function recreateMoqWatch() {
     const parent = el.parentNode;
     const fresh = el.cloneNode(true);
-    fresh.removeAttribute('announced');
+    fresh.setAttribute('announced', 'false');
     parent.replaceChild(fresh, el);
     el = fresh;
     canvas = el.querySelector('canvas');

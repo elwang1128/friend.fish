@@ -14,7 +14,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        moq-cli = moq.packages.${system}.moq-cli;
+        moq-cli = moq.packages.${system}.moq;
 
         # Bridges the camera's RTSPS feed into the friend.fish MoQ broadcast.
         # Required env: RTSPS_SOURCE (rtsps:// URL).
@@ -33,7 +33,7 @@
               -rtsp_transport tcp -i "$RTSPS_SOURCE" \
               -c:v copy -an \
               -f mp4 -movflags +frag_every_frame+empty_moov+default_base_moof+omit_tfhd_offset - \
-              | moq --client-connect "$RELAY_URL" --broadcast "$BROADCAST" import fmp4
+              | moq --connect "$RELAY_URL" import --broadcast "$BROADCAST" fmp4
           '';
         };
 
