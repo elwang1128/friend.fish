@@ -30,7 +30,7 @@
 
             ffmpeg \
               -fflags nobuffer -flags low_delay \
-              -rtsp_transport tcp -i "$RTSPS_SOURCE" \
+              -rtsp_transport tcp -tls_verify 0 -i "$RTSPS_SOURCE" \
               -c:v copy -an \
               -f mp4 -movflags +frag_every_frame+empty_moov+default_base_moof+omit_tfhd_offset - \
               | moq --connect "$RELAY_URL" import --broadcast "$BROADCAST" fmp4
