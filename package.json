@@ -9,9 +9,9 @@
   },
   "dependencies": {
     "@hono/oauth-providers": "^0.9.0",
-    "hono": "^4.6.0"
+    "hono": "^4.13.12"
   },
   "devDependencies": {
-    "wrangler": "^4.141.0"
+    "wrangler": "^4.145.0"
   }
 }
