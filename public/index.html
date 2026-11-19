@@ -17,11 +17,6 @@
       t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
     document.documentElement.dataset.theme = t;
-    // the load-in choreography is pure CSS keyed on this class, so it
-    // starts with the first paint; JS only removes it once it has played
-    if (!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
-      document.documentElement.classList.add('intro');
-    }
   })();
 </script>
 <style>
@@ -1139,33 +1134,10 @@
   .headline { white-space: nowrap; }
   .headline .ch {
     display: inline-block;
-    /* mask only below the baseline so letters can rise out of it and
-       still lift freely above it on hover */
-    clip-path: inset(-60% -12% 0 -12%);
     transition: transform 700ms var(--ease-out);
     will-change: transform;
   }
   .headline .ch-in { display: inline-block; }
-
-  /* ---- intro choreography (html.intro, removed after it plays) ---- */
-  @keyframes rise-in   { from { transform: translateY(105%); } to { transform: none; } }
-  @keyframes fade-up   { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-  @keyframes fade-in   { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes unveil    { from { clip-path: inset(100% 0 0 0 round 12px); } to { clip-path: inset(0 0 0 0 round 12px); } }
-  @keyframes settle    { from { transform: scale(1.18); } to { transform: scale(1); } }
-
-  html.intro .headline .ch-in {
-    animation: rise-in 1100ms var(--ease-out) both;
-    animation-delay: calc(120ms + var(--i) * 55ms);
-  }
-  html.intro .tabs > * {
-    animation: fade-up 900ms var(--ease-out) both;
-    animation-delay: calc(650ms + var(--n, 0) * 80ms);
-  }
-  html.intro .livestream { animation: unveil 1300ms var(--ease-io) 200ms both; }
-  html.intro .livestream-bg { animation: settle 2200ms var(--ease-out) 200ms both; }
-  html.intro .tank-meta { animation: fade-up 900ms var(--ease-out) 900ms both; }
-  html.intro .panel-area .panel.open { animation-delay: 750ms; }
 
   /* ---- nav: numbered, text-roll ---- */
   .tab {
@@ -1256,7 +1228,6 @@
   .panel.open .feed-row:nth-child(4) { animation-delay: 370ms; }
   .panel.open .specs-text p:nth-child(n+5),
   .panel.open .feed-row:nth-child(n+5) { animation-delay: 440ms; }
-  html.intro .panel.open .resident-card:nth-child(n) { animation-delay: calc(900ms + var(--k, 0) * 70ms); }
 
   @media (prefers-reduced-motion: reduce) {
     .tt-colon { animation: none; }
@@ -1335,8 +1306,6 @@
       transition: transform 400ms var(--ease-out);
     }
     .tab:active .tab-arrow { transform: translateX(4px); }
-    html.intro .livestream { animation-name: unveil-flat; }
-    @keyframes unveil-flat { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0); } }
 
     /* per the Figma mobile frame the folder flows into the tabs list,
        above the first divider, keeping its stacked icon + label look */
@@ -1445,7 +1414,7 @@
     </div>
     <div class="panel-scroll">
 
-      <div class="resident-card" style="--k:0">
+      <div class="resident-card">
         <div class="resident-name">fish friend</div>
         <div class="resident-species">Colomesus asellus — South American Puffer</div>
         <div class="gallery-scroller" id="gallery-puffer1"></div>
@@ -1456,7 +1425,7 @@
         </div>
       </div>
 
-      <div class="resident-card" style="--k:1">
+      <div class="resident-card">
         <div class="resident-name">amazon puffer gang</div>
         <div class="resident-species">Colomesus asellus — South American Puffer</div>
         <div class="gallery-scroller" id="gallery-puffer2"></div>
@@ -1466,7 +1435,7 @@
         </div>
       </div>
 
-      <div class="resident-card" style="--k:2">
+      <div class="resident-card">
         <div class="resident-name">the otos</div>
         <div class="resident-species">Otocinclus sp. — Dwarf Suckermouth Catfish</div>
         <div class="gallery-scroller" id="gallery-otos"></div>
@@ -1478,7 +1447,7 @@
         </div>
       </div>
 
-      <div class="resident-card" style="--k:3">
+      <div class="resident-card">
         <div class="resident-name">the amanos</div>
         <div class="resident-species">Caridina multidentata — Amano Shrimp</div>
         <div class="gallery-scroller" id="gallery-amanos"></div>
@@ -1597,13 +1566,13 @@
 <!-- ===== MAIN SECTION ===== -->
 <div class="main-section">
   <nav class="tabs">
-    <button class="tab magnetic" id="tab-team" onclick="toggleWindow('team')" style="--n:0"><span class="roll"><span data-text="The tank team">The tank team</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
-    <button class="tab magnetic" id="tab-specs" onclick="toggleWindow('specs')" style="--n:1"><span class="roll"><span data-text="Tank specs">Tank specs</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
-    <button class="tab magnetic" id="tab-log" onclick="toggleWindow('log')" style="--n:2"><span class="roll"><span data-text="Feeding log">Feeding log</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
-    <button class="tab magnetic" id="tab-guestbook" onclick="toggleWindow('guestbook')" style="--n:3"><span class="roll"><span data-text="Fishbook">Fishbook</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
+    <button class="tab magnetic" id="tab-team" onclick="toggleWindow('team')"><span class="roll"><span data-text="The tank team">The tank team</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
+    <button class="tab magnetic" id="tab-specs" onclick="toggleWindow('specs')"><span class="roll"><span data-text="Tank specs">Tank specs</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
+    <button class="tab magnetic" id="tab-log" onclick="toggleWindow('log')"><span class="roll"><span data-text="Feeding log">Feeding log</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
+    <button class="tab magnetic" id="tab-guestbook" onclick="toggleWindow('guestbook')"><span class="roll"><span data-text="Fishbook">Fishbook</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
     <!-- fixed-positioned on wide screens (bottom-left "desktop" folder);
          on narrow screens it docks into the toggle row above the tabs -->
-    <button class="folder magnetic" style="--n:4" id="folder-friends" onclick="toggleWindow('friends')" aria-label="open making_friends video window">
+    <button class="folder magnetic" id="folder-friends" onclick="toggleWindow('friends')" aria-label="open making_friends video window">
       <svg viewBox="0 0 90 63" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <path d="M1.5 61.5V4C1.5 2.6 2.6 1.5 4 1.5H25.5C26.9 1.5 28.2 2.1 29.1 3.1L31.4 5.6C32.3 6.6 33.6 7.2 35 7.2H73.5C74.9 7.2 76 8.3 76 9.7V17" stroke="currentColor" stroke-width="2.4"/>
         <path d="M1.5 61.5L10.6 20C10.9 18.6 12.1 17.6 13.5 17.6H85.4C87.3 17.6 88.7 19.4 88.3 21.2L79.9 59.2C79.6 60.5 78.4 61.5 77 61.5H1.5Z" class="folder-fill" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
@@ -1616,8 +1585,8 @@
     <div class="headline-row">
       <h1 class="headline" id="headline" aria-label="friend.fish">friend.fish</h1>
       <script>
-        // split the wordmark into masked letters right away (before first
-        // paint) so the intro can rise them in one by one
+        // split the wordmark into letters before first paint so each one
+        // can lift independently in the hover wave
         (function () {
           var h = document.getElementById('headline');
           var text = h.textContent;
@@ -1628,7 +1597,7 @@
             outer.setAttribute('aria-hidden', 'true');
             var inner = document.createElement('span');
             inner.className = 'ch-in';
-            inner.style.setProperty('--i', i);
+            
             inner.textContent = text[i];
             outer.appendChild(inner);
             h.appendChild(outer);
@@ -1862,11 +1831,6 @@
   }
   updateClock();
   setInterval(updateClock, 15000);
-
-  // ---- INTRO ----
-  // the choreography is CSS on html.intro; drop the class after it has
-  // finished so re-opened panels and the hover wave run without delays
-  setTimeout(() => document.documentElement.classList.remove('intro'), 2600);
 
   // ---- THEME (tank lights on / off) ----
   const THEME_KEY = 'ff-theme';
