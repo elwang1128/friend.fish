@@ -367,6 +367,8 @@
     z-index: 1000;
     width: auto;
     aspect-ratio: auto;
+    max-height: none; /* beat the narrow-view stream height cap */
+    border-radius: 0;
     background: #000;
   }
   .livestream.fake-fullscreen canvas { object-fit: contain; background: #000; }
@@ -2691,18 +2693,32 @@
   // Click toggles fullscreen while live. iOS Safari has no fullscreen API
   // for canvas elements, so fall back to pinning the livestream box over
   // the whole viewport; a second tap (or Escape) exits.
+  // iPhone Safari (and some in-app browsers) expose the request method
+  // but only allow fullscreen on <video>: the call is ignored or rejected.
+  // Trust the *Enabled flag, and fall back to the pinned box whenever the
+  // real request fails or nothing went fullscreen shortly after.
+  const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+  const fsEnabled = () => !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+  const fakeFullscreen = () => box.classList.add('fake-fullscreen');
+
   box.addEventListener('click', () => {
-    if (document.fullscreenElement) { document.exitFullscreen?.(); return; }
+    if (fsElement()) {
+      (document.exitFullscreen || document.webkitExitFullscreen)?.call(document);
+      return;
+    }
     if (box.classList.contains('fake-fullscreen')) { box.classList.remove('fake-fullscreen'); return; }
     if (!isLive) return;
     const target = canvas ?? el;
-    if (target.requestFullscreen) {
-      target.requestFullscreen();
-    } else if (target.webkitRequestFullscreen) {
-      target.webkitRequestFullscreen();
-    } else {
-      box.classList.add('fake-fullscreen');
+    const request = target.requestFullscreen || target.webkitRequestFullscreen;
+    if (!fsEnabled() || !request) { fakeFullscreen(); return; }
+    try {
+      const p = request.call(target);
+      if (p && typeof p.catch === 'function') p.catch(fakeFullscreen);
+    } catch (e) {
+      fakeFullscreen();
+      return;
     }
+    setTimeout(() => { if (!fsElement()) fakeFullscreen(); }, 400);
   });
 
   document.addEventListener('keydown', e => {
