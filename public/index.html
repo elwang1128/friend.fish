@@ -205,8 +205,10 @@
   /* ---------- MAIN SECTION (right column) ---------- */
   .main-section {
     width: 852px;
-    max-width: 100%;
-    min-width: 580px;
+    /* keep clear of the fixed MAKING_FRIENDS folder in the bottom-left
+       (32px inset + 126px wide + 28px gap), so mid-width windows never
+       slide the stream over it; the mobile layout resets this */
+    max-width: calc(100vw - 214px);
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
@@ -273,13 +275,16 @@
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
+    flex-wrap: wrap;
+    column-gap: 24px;
     width: 100%;
   }
+  .headline-row .tank-meta { margin-left: auto; }
 
   .headline {
     font-family: var(--sans);
     font-weight: 700;
-    font-size: 90px;
+    font-size: clamp(64px, 9vw, 90px);
     letter-spacing: -0.04em;
     line-height: 0.99;
   }
@@ -1342,6 +1347,7 @@
 
     .main-section {
       width: 100%;
+      max-width: none;
       min-width: 0;
       height: 100%;
       display: flex;
