@@ -4,7 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>friend.fish</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='78' text-anchor='middle' font-size='90' fill='%23000000'>✦</text></svg>">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f5f5f5" id="meta-theme-color">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><style>text{fill:%23000}@media (prefers-color-scheme:dark){text{fill:%23fff}}</style><text x='50' y='78' text-anchor='middle' font-size='90'>✦</text></svg>">
+<script>
+  // set the theme before first paint so dark-mode visitors never get a
+  // white flash: saved choice wins, otherwise follow the OS
+  (function () {
+    var t;
+    try { t = localStorage.getItem('ff-theme'); } catch (e) {}
+    if (t !== 'light' && t !== 'dark') {
+      t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    document.documentElement.dataset.theme = t;
+    // the load-in choreography is pure CSS keyed on this class, so it
+    // starts with the first paint; JS only removes it once it has played
+    if (!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+      document.documentElement.classList.add('intro');
+    }
+  })();
+</script>
 <style>
   @font-face {
     font-family: 'Fira Mono';
@@ -14,15 +33,76 @@
     src: url('/assets/fonts/fira-mono-latin-400-normal.woff2') format('woff2');
   }
   :root {
+    color-scheme: light;
     --bg: #f5f5f5;
-    --black: #000000;
+    --surface: #ffffff;   /* panel headers, bubbles, inputs */
+    --ink: #000000;       /* text, borders, primary buttons */
+    --on-ink: #ffffff;    /* text sitting on an ink fill */
     --gray-pill: #dddddd;
     --gray-text: #737373;
     --gray-date: #b5b5b5;
     --gray-line: #e5e5e5;
+    --disabled: #e9e9e9;
+    --disabled-ink: #ffffff;
+    --switch-off: #d6d6d6;
+    --switch-knob-off: #ffffff;
+    --bubble: rgba(0, 0, 0, 0.72);
+    --window-shadow: 0 4px 40px rgba(0, 0, 0, 0.18);
+    --stream-dim: none;
+    --stream-ink: #000000;
     --mono: 'Fira Mono', 'Courier New', monospace;
     --sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   }
+
+  /* lights off: a deep, slightly cool tank-at-night palette. Declared for
+     an explicit choice and, as a no-JS fallback, for the OS preference. */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0d0f11;
+    --surface: #16191c;
+    --ink: #ebedef;
+    --on-ink: #0d0f11;
+    --gray-pill: #23272b;
+    --gray-text: #8a9096;
+    --gray-date: #5b6167;
+    --gray-line: #22262a;
+    --disabled: #23272b;
+    --disabled-ink: #5b6167;
+    --switch-off: #33383d;
+    --switch-knob-off: #8a9096;
+    --bubble: rgba(235, 237, 239, 0.75);
+    --window-shadow: 0 8px 48px rgba(0, 0, 0, 0.6);
+    --stream-dim: brightness(0.5) saturate(0.85);
+    --stream-ink: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+      color-scheme: dark;
+      --bg: #0d0f11;
+      --surface: #16191c;
+      --ink: #ebedef;
+      --on-ink: #0d0f11;
+      --gray-pill: #23272b;
+      --gray-text: #8a9096;
+      --gray-date: #5b6167;
+      --gray-line: #22262a;
+      --disabled: #23272b;
+      --disabled-ink: #5b6167;
+      --switch-off: #33383d;
+      --switch-knob-off: #8a9096;
+      --bubble: rgba(235, 237, 239, 0.75);
+      --window-shadow: 0 8px 48px rgba(0, 0, 0, 0.6);
+      --stream-dim: brightness(0.5) saturate(0.85);
+      --stream-ink: #ffffff;
+    }
+  }
+
+  /* theme switch: the new theme spreads out as a circle from the toggle
+     (driven from JS via the View Transitions API) */
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+
+  ::selection { background: var(--ink); color: var(--on-ink); }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -30,7 +110,7 @@
 
   body {
     background: var(--bg);
-    color: var(--black);
+    color: var(--ink);
     font-family: var(--sans);
     display: flex;
     gap: 28px;
@@ -73,11 +153,13 @@
     background: url('/assets/fishcursor.svg') center/contain no-repeat;
   }
 
+  :root[data-theme="dark"] .custom-cursor__fish { filter: invert(1); }
+
   .custom-cursor.is-hovering {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: var(--black);
+    background: var(--ink);
   }
 
   .custom-cursor.is-hovering .custom-cursor__fish {
@@ -97,7 +179,7 @@
     font-family: var(--mono);
     font-size: 8px;
     line-height: 1;
-    color: rgba(0, 0, 0, 0.72);
+    color: var(--bubble);
     opacity: 0;
     pointer-events: none;
     transform-origin: center center;
@@ -145,7 +227,7 @@
     font-size: 16px;
     letter-spacing: -0.04em;
     text-transform: uppercase;
-    color: var(--black);
+    color: var(--ink);
     white-space: nowrap;
     padding: 0 0 4px;
     position: relative;
@@ -168,8 +250,16 @@
     pointer-events: none;
   }
   .tab:hover::after,
-  .tab:focus-visible::after {
+  .tab:focus-visible::after,
+  .tab.active::after {
     transform: translateX(-50%) scaleX(1);
+  }
+  .tab:focus-visible { outline: none; }
+
+  button:focus-visible:not(.tab) {
+    outline: 1.5px solid var(--ink);
+    outline-offset: 3px;
+    border-radius: 6px;
   }
 
   .livestream-section {
@@ -194,13 +284,49 @@
     line-height: 0.99;
   }
 
+  .tank-meta {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-bottom: 6px;
+  }
+
   .tank-time {
     font-family: var(--sans);
     font-weight: 400;
     font-size: 18px;
     letter-spacing: -0.03em;
     white-space: nowrap;
-    padding-bottom: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* tank lights: sun when the lights are on, crescent moon when off.
+     The sun's core grows and a masking disc slides over it to carve the
+     crescent; the rays spin away. */
+  .theme-toggle {
+    width: 32px;
+    height: 32px;
+    margin: -6px -6px -6px 0; /* bigger tap target, same footprint */
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--ink);
+    flex-shrink: 0;
+  }
+  .theme-toggle svg { display: block; width: 20px; height: 20px; overflow: visible; }
+  .theme-toggle .tt-core,
+  .theme-toggle .tt-rays,
+  .theme-toggle .tt-cut {
+    transform-box: view-box;
+    transform-origin: 12px 12px;
+    transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1), opacity 320ms ease;
+  }
+  .theme-toggle .tt-cut { transform: translate(10px, -10px); }
+  :root[data-theme="dark"] .theme-toggle .tt-core { transform: scale(1.75); }
+  :root[data-theme="dark"] .theme-toggle .tt-cut { transform: translate(0, 0); }
+  :root[data-theme="dark"] .theme-toggle .tt-rays { transform: rotate(90deg) scale(0.4); opacity: 0; }
+  @media (prefers-reduced-motion: reduce) {
+    .theme-toggle .tt-core, .theme-toggle .tt-rays, .theme-toggle .tt-cut { transition: none; }
   }
 
   .livestream {
@@ -218,6 +344,7 @@
     width: 100%; height: 100%;
     object-fit: cover;
     z-index: 0;
+    filter: var(--stream-dim);
   }
   .livestream.is-live .livestream-bg { display: none; }
 
@@ -254,6 +381,7 @@
     text-transform: uppercase;
     padding: 20px;
     pointer-events: none;
+    color: var(--stream-ink);
   }
   /* while live, keep the status line up until the first sleeping-or-not
      verdict lands (is-determined), so a night visitor never stares at a
@@ -274,6 +402,59 @@
     display: none;
   }
   .livestream.is-live.is-sleeping .livestream-sleeping { display: block; }
+
+  /* LIVE pill, top-left of the stream once frames are actually flowing */
+  .live-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 2;
+    display: none;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 10px 5px 9px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.42);
+    -webkit-backdrop-filter: blur(8px) saturate(1.2);
+    backdrop-filter: blur(8px) saturate(1.2);
+    color: #ffffff;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1;
+    pointer-events: none;
+    animation: badge-in 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .livestream.is-live.is-determined .live-badge { display: inline-flex; }
+  .live-dot {
+    position: relative;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ff3b30;
+  }
+  .live-dot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: #ff3b30;
+    animation: live-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+  .livestream.is-sleeping .live-dot,
+  .livestream.is-sleeping .live-dot::after { background: #8a9096; }
+  @keyframes live-ping {
+    0%   { transform: scale(1); opacity: 0.75; }
+    80%, 100% { transform: scale(2.6); opacity: 0; }
+  }
+  @keyframes badge-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .live-dot::after, .live-badge { animation: none; }
+  }
 
   .livestream-status .dots::after {
     content: '';
@@ -308,13 +489,13 @@
     flex-direction: column;
     position: absolute;
     inset: 0;
-    border: 1px solid var(--black);
+    border: 1px solid var(--ink);
     border-radius: 12px;
     overflow: hidden;
     background: var(--bg);
   }
   .panel.open { display: flex; }
-  .panel.white { background: #ffffff; }
+  .panel.white { background: var(--surface); }
 
   /* windows pop out from their center, easing slightly past full size
      and settling back — a single overshoot, no bounce */
@@ -331,8 +512,8 @@
   }
 
   .panel-header {
-    background: #ffffff;
-    border-bottom: 1px solid var(--black);
+    background: var(--surface);
+    border-bottom: 1px solid var(--ink);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -384,7 +565,10 @@
     display: block;
     width: 90px;
     height: 63px;
+    transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
   }
+  .folder-fill { fill: var(--bg); }
+  .folder:hover svg { transform: translateY(-3px) rotate(-2deg); }
   .folder-label {
     font-family: var(--mono);
     font-size: 16px;
@@ -402,7 +586,7 @@
     top: 224px;
     width: 344px;
     max-height: calc(100dvh - 252px);
-    border: 1px solid var(--black);
+    border: 1px solid var(--ink);
     border-radius: 12px;
     overflow: hidden;
     background: var(--bg);
@@ -590,14 +774,23 @@
     width: auto;
     box-shadow: 0 1px 4px rgba(0,0,0,0.12);
   }
+  .gallery-photo img {
+    transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 320ms ease;
+  }
+  .gallery-photo:hover img {
+    transform: rotate(0deg) scale(1.04) !important;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+  }
+  /* no photos yet: don't hold a 240px blank strip open */
+  .gallery-scroller:has(.gallery-empty) { height: auto; padding-top: 12px; padding-bottom: 12px; }
   .gallery-photo:nth-child(3n) img { max-height: 200px; }
   .gallery-photo:nth-child(3n+2) img { max-height: 150px; }
 
   .gallery-photo .photo-delete {
     position: absolute;
     top: 6px; right: 6px;
-    background: #ffffff;
-    border: 1px solid var(--black);
+    background: var(--surface);
+    border: 1px solid var(--ink);
     border-radius: 999px;
     font-family: var(--mono);
     font-size: 9px;
@@ -628,7 +821,7 @@
     display: none;
   }
   body.is-owner .gallery-add { display: block; }
-  .gallery-add:hover { border-color: var(--black); color: var(--black); }
+  .gallery-add:hover { border-color: var(--ink); color: var(--ink); }
 
   .resident-bio {
     font-family: var(--sans);
@@ -673,7 +866,7 @@
     top: calc(61.8% + 24px);
     height: 35.6%;
     width: 1px;
-    background: var(--black);
+    background: var(--ink);
   }
 
   .camera-caption {
@@ -728,13 +921,13 @@
     font-size: 10px;
     letter-spacing: -0.03em;
     text-transform: uppercase;
-    color: #1d1d1d;
+    color: var(--ink);
   }
 
   .feed-who {
     font-family: var(--sans);
     font-size: 12px;
-    color: var(--black);
+    color: var(--ink);
     overflow: hidden;
     text-overflow: ellipsis;
   }
@@ -761,7 +954,7 @@
     padding: 2px 4px;
   }
   body.is-owner .feed-delete { display: block; }
-  .feed-delete:hover { color: var(--black); }
+  .feed-delete:hover { color: var(--ink); }
 
   .feed-empty {
     padding: 16px;
@@ -789,16 +982,16 @@
     border: 1px solid var(--gray-line);
     border-radius: 999px;
     padding: 4px 8px;
-    background: #fff;
-    color: var(--black);
+    background: var(--surface);
+    color: var(--ink);
     outline: none;
     flex: 1;
     min-width: 0;
   }
 
   .feed-add-btn {
-    background: var(--black);
-    color: #fff;
+    background: var(--ink);
+    color: var(--on-ink);
     border-radius: 999px;
     padding: 4px 10px;
     font-family: var(--mono);
@@ -857,7 +1050,7 @@
   }
 
   .gb-bubble {
-    background: #ffffff;
+    background: var(--surface);
     border-radius: 12px;
     padding: 12px;
     font-family: var(--sans);
@@ -888,7 +1081,7 @@
     padding: 0 2px;
   }
   body.is-owner .gb-delete { display: inline; }
-  .gb-delete:hover { color: var(--black); }
+  .gb-delete:hover { color: var(--ink); }
 
   .gb-empty {
     font-family: var(--mono);
@@ -906,7 +1099,7 @@
   .gb-form {
     display: flex;
     flex-direction: column;
-    background: #ffffff;
+    background: var(--surface);
     border-radius: 12px;
     overflow: hidden;
   }
@@ -917,7 +1110,7 @@
     border: none;
     outline: none;
     background: transparent;
-    color: var(--black);
+    color: var(--ink);
     width: 100%;
     resize: none;
   }
@@ -934,8 +1127,8 @@
   }
 
   .gb-send {
-    background: var(--black);
-    color: #ffffff;
+    background: var(--ink);
+    color: var(--on-ink);
     border-radius: 999px;
     padding: 4px 8px;
     font-family: var(--mono);
@@ -943,7 +1136,7 @@
     letter-spacing: 0.03em;
     text-transform: uppercase;
   }
-  .gb-send:disabled { background: #e9e9e9; cursor: default; }
+  .gb-send:disabled { background: var(--disabled); color: var(--disabled-ink); cursor: default; }
 
   /* ---------- LIGHTBOX ---------- */
   .lightbox {
@@ -956,10 +1149,175 @@
     padding: 32px;
     cursor: zoom-out;
   }
-  .lightbox.open { display: flex; }
+  .lightbox.open { display: flex; animation: lightbox-in 240ms ease both; }
+  .lightbox.open img { animation: window-pop 380ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+  @keyframes lightbox-in { from { opacity: 0; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .lightbox.open, .lightbox.open img { animation: none; }
+  }
   .lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
   .hidden-input { display: none; }
+
+
+  /* =====================================================================
+     ELEVATION LAYER — motion, editorial details, texture
+     ===================================================================== */
+  :root {
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-io: cubic-bezier(0.65, 0, 0.35, 1);
+    --grain-opacity: 0.035;
+  }
+  :root[data-theme="dark"] { --grain-opacity: 0.05; }
+
+  /* film grain: one static noise tile over everything, click-through */
+  .grain {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    pointer-events: none;
+    opacity: var(--grain-opacity);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1.6 -0.35'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ---- headline: per-letter masks ---- */
+  .headline { white-space: nowrap; }
+  .headline .ch {
+    display: inline-block;
+    /* mask only below the baseline so letters can rise out of it and
+       still lift freely above it on hover */
+    clip-path: inset(-60% -12% 0 -12%);
+    transition: transform 700ms var(--ease-out);
+    will-change: transform;
+  }
+  .headline .ch-in { display: inline-block; }
+
+  /* ---- intro choreography (html.intro, removed after it plays) ---- */
+  @keyframes rise-in   { from { transform: translateY(105%); } to { transform: none; } }
+  @keyframes fade-up   { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes fade-in   { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes unveil    { from { clip-path: inset(100% 0 0 0 round 12px); } to { clip-path: inset(0 0 0 0 round 12px); } }
+  @keyframes settle    { from { transform: scale(1.18); } to { transform: scale(1); } }
+
+  html.intro .headline .ch-in {
+    animation: rise-in 1100ms var(--ease-out) both;
+    animation-delay: calc(120ms + var(--i) * 55ms);
+  }
+  html.intro .tabs > * {
+    animation: fade-up 900ms var(--ease-out) both;
+    animation-delay: calc(650ms + var(--n, 0) * 80ms);
+  }
+  html.intro .livestream { animation: unveil 1300ms var(--ease-io) 200ms both; }
+  html.intro .livestream-bg { animation: settle 2200ms var(--ease-out) 200ms both; }
+  html.intro .tank-meta { animation: fade-up 900ms var(--ease-out) 900ms both; }
+  html.intro .panel-area .panel.open { animation-delay: 750ms; }
+
+  /* ---- nav: numbered, text-roll ---- */
+  .tab {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 6px;
+    will-change: transform;
+  }
+  .tab-num {
+    font-size: 9px;
+    letter-spacing: 0;
+    color: var(--gray-text);
+    line-height: 1;
+    padding-top: 1px;
+    transition: color 300ms ease;
+  }
+  .tab:hover .tab-num, .tab.active .tab-num { color: var(--ink); }
+  .roll {
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+    height: 1.2em;
+    line-height: 1.2em;
+  }
+  .roll > span {
+    display: block;
+    transition: transform 520ms var(--ease-out);
+  }
+  .roll > span::after {
+    content: attr(data-text);
+    position: absolute;
+    left: 0;
+    top: 100%;
+  }
+  .tab:hover .roll > span,
+  .tab:focus-visible .roll > span { transform: translateY(-100%); }
+  .tab-arrow { display: none; }
+
+  /* magnetic elements ease back when released */
+  .magnetic { transition: transform 500ms var(--ease-out); }
+  .magnetic.is-pulling { transition: transform 120ms linear; }
+
+  /* ---- cursor label pill ---- */
+  .custom-cursor__label {
+    display: none;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--on-ink);
+  }
+  .custom-cursor.is-label {
+    width: auto;
+    height: auto;
+    padding: 7px 11px 6px;
+    border-radius: 999px;
+    background: var(--ink);
+    transform: translate(-50%, -50%);
+    animation: label-in 260ms var(--ease-out) both;
+  }
+  .custom-cursor.is-label .custom-cursor__fish { display: none; }
+  .custom-cursor.is-label .custom-cursor__label { display: block; }
+  @keyframes label-in {
+    from { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
+    to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  }
+
+  /* ---- stream depth on hover (placeholder loop only) ---- */
+  .livestream-bg { transition: transform 1600ms var(--ease-out); }
+  .livestream:hover .livestream-bg { transform: scale(1.035); }
+
+  /* ---- clock colon breathes ---- */
+  .tt-colon { animation: colon 2s steps(1, end) infinite; }
+  @keyframes colon { 50% { opacity: 0.25; } }
+
+  /* ---- panel content arrives in a cascade ---- */
+  @keyframes rise-soft { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+  .panel.open .resident-card,
+  .panel.open .tank-figure,
+  .panel.open .specs-text p,
+  .panel.open .feed-row,
+  .panel.open .gb-row,
+  .friends-window.open .friends-desc > * {
+    animation: rise-soft 700ms var(--ease-out) both;
+    animation-delay: 160ms;
+  }
+  .panel.open .resident-card:nth-child(2),
+  .panel.open .specs-text p:nth-child(2),
+  .panel.open .feed-row:nth-child(2),
+  .friends-window.open .friends-desc > :nth-child(2) { animation-delay: 230ms; }
+  .panel.open .resident-card:nth-child(3),
+  .panel.open .specs-text p:nth-child(3),
+  .panel.open .feed-row:nth-child(3) { animation-delay: 300ms; }
+  .panel.open .resident-card:nth-child(4),
+  .panel.open .specs-text p:nth-child(4),
+  .panel.open .feed-row:nth-child(4) { animation-delay: 370ms; }
+  .panel.open .specs-text p:nth-child(n+5),
+  .panel.open .feed-row:nth-child(n+5) { animation-delay: 440ms; }
+  html.intro .panel.open .resident-card:nth-child(n) { animation-delay: calc(900ms + var(--k, 0) * 70ms); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tt-colon { animation: none; }
+    .roll > span, .headline .ch, .livestream-bg, .magnetic { transition: none; }
+    .panel.open .resident-card, .panel.open .tank-figure, .panel.open .specs-text p,
+    .panel.open .feed-row, .panel.open .gb-row, .friends-window.open .friends-desc > * { animation: none; }
+  }
 
   /* ---------- RESPONSIVE ---------- */
   @media (max-width: 1250px) {
@@ -969,10 +1327,13 @@
       z-index: 500;
       height: auto;
     }
-    .panel, .friends-window { box-shadow: 0 4px 40px rgba(0,0,0,0.18); }
+    .panel, .friends-window { box-shadow: var(--window-shadow); }
   }
 
-  @media (max-width: 636px) {
+  /* narrow view: anything under ~1080px can't fit the 852px stream
+     column beside the bottom-left folder, so switch to the stacked layout
+     instead of squeezing the desktop one */
+  @media (max-width: 1080px) {
     body {
       display: block;
       overflow: hidden;
@@ -992,18 +1353,19 @@
     }
 
     .livestream-section { order: 1; gap: 8px; }
-    .livestream { border-radius: 0; }
+    /* tablets and short laptop windows: keep the full-bleed stream from
+       pushing the nav off the bottom */
+    .livestream { border-radius: 0; max-height: max(180px, calc(100dvh - 440px)); }
 
     /* flatten the headline row so the tank time can move below the stream */
     .headline-row { display: contents; }
     .headline { order: -1; font-size: 54px; padding: 0 16px; }
-    .tank-time {
+    .tank-meta {
       order: 2;
       align-self: flex-end;
-      text-align: right;
-      font-size: 18px;
       padding: 0 16px 0 0;
     }
+    .tank-time { font-size: 18px; }
 
     .tabs {
       order: 2;
@@ -1016,7 +1378,20 @@
       text-align: left;
       border-top: 1px solid var(--gray-line);
       padding: 12px 0;
+      align-items: center;
+      gap: 12px;
     }
+    .tab::after { display: none; }
+    .tab-num { padding-top: 0; min-width: 14px; }
+    .tab-arrow {
+      display: block;
+      margin-left: auto;
+      font-size: 14px;
+      transition: transform 400ms var(--ease-out);
+    }
+    .tab:active .tab-arrow { transform: translateX(4px); }
+    html.intro .livestream { animation-name: unveil-flat; }
+    @keyframes unveil-flat { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0); } }
 
     /* per the Figma mobile frame the folder flows into the tabs list,
        above the first divider, keeping its stacked icon + label look */
@@ -1056,7 +1431,9 @@
 <body>
 <div id="custom-cursor" class="custom-cursor" aria-hidden="true">
   <span class="custom-cursor__fish"></span>
+  <span class="custom-cursor__label" id="custom-cursor-label"></span>
 </div>
+<div class="grain" aria-hidden="true"></div>
 <div id="cursor-bubble-layer" class="cursor-bubble-layer" aria-hidden="true"></div>
 
 <!-- ===== LEFT PANEL AREA ===== -->
@@ -1067,12 +1444,12 @@
     <div class="panel-header">
       <div class="panel-title">THE TANK TEAM</div>
       <button class="panel-dismiss" onclick="closeWindow('team')" aria-label="close">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="currentColor" stroke-width="1.2"/></svg>
       </button>
     </div>
     <div class="panel-scroll">
 
-      <div class="resident-card">
+      <div class="resident-card" style="--k:0">
         <div class="resident-name">fish friend</div>
         <div class="resident-species">Colomesus asellus — South American Puffer</div>
         <div class="gallery-scroller" id="gallery-puffer1"></div>
@@ -1083,7 +1460,7 @@
         </div>
       </div>
 
-      <div class="resident-card">
+      <div class="resident-card" style="--k:1">
         <div class="resident-name">amazon puffer gang</div>
         <div class="resident-species">Colomesus asellus — South American Puffer</div>
         <div class="gallery-scroller" id="gallery-puffer2"></div>
@@ -1093,7 +1470,7 @@
         </div>
       </div>
 
-      <div class="resident-card">
+      <div class="resident-card" style="--k:2">
         <div class="resident-name">the otos</div>
         <div class="resident-species">Otocinclus sp. — Dwarf Suckermouth Catfish</div>
         <div class="gallery-scroller" id="gallery-otos"></div>
@@ -1105,7 +1482,7 @@
         </div>
       </div>
 
-      <div class="resident-card">
+      <div class="resident-card" style="--k:3">
         <div class="resident-name">the amanos</div>
         <div class="resident-species">Caridina multidentata — Amano Shrimp</div>
         <div class="gallery-scroller" id="gallery-amanos"></div>
@@ -1125,7 +1502,7 @@
     <div class="panel-header">
       <div class="panel-title">TANK SPECS</div>
       <button class="panel-dismiss" onclick="closeWindow('specs')" aria-label="close">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="currentColor" stroke-width="1.2"/></svg>
       </button>
     </div>
     <div class="panel-scroll">
@@ -1153,17 +1530,17 @@
         FEEDING LOG
         <button class="lock-btn" id="lock-btn" onclick="handleLockClick()" title="owner login">
           <svg id="lock-icon-locked" width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <rect x="1.5" y="5" width="9" height="6" rx="1" stroke="black"/>
-            <path d="M3.5 5V3.5C3.5 2.12 4.62 1 6 1C7.38 1 8.5 2.12 8.5 3.5V5" stroke="black"/>
+            <rect x="1.5" y="5" width="9" height="6" rx="1" stroke="currentColor"/>
+            <path d="M3.5 5V3.5C3.5 2.12 4.62 1 6 1C7.38 1 8.5 2.12 8.5 3.5V5" stroke="currentColor"/>
           </svg>
           <svg id="lock-icon-unlocked" width="14" height="12" viewBox="0 0 14 12" fill="none" style="display:none">
-            <rect x="1.5" y="5" width="9" height="6" rx="1" stroke="black"/>
-            <path d="M8.5 5V3.5C8.5 2.12 9.62 1 11 1C12.38 1 13.5 2.12 13.5 3.5V4" stroke="black"/>
+            <rect x="1.5" y="5" width="9" height="6" rx="1" stroke="currentColor"/>
+            <path d="M8.5 5V3.5C8.5 2.12 9.62 1 11 1C12.38 1 13.5 2.12 13.5 3.5V4" stroke="currentColor"/>
           </svg>
         </button>
       </div>
       <button class="panel-dismiss" onclick="closeWindow('log')" aria-label="close">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="currentColor" stroke-width="1.2"/></svg>
       </button>
     </div>
     <div class="panel-scroll">
@@ -1199,7 +1576,7 @@
     <div class="panel-header">
       <div class="panel-title">FISHBOOK</div>
       <button class="panel-dismiss" onclick="closeWindow('guestbook')" aria-label="close">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="currentColor" stroke-width="1.2"/></svg>
       </button>
     </div>
     <div class="guestbook-messages" id="guestbook-messages"></div>
@@ -1224,16 +1601,16 @@
 <!-- ===== MAIN SECTION ===== -->
 <div class="main-section">
   <nav class="tabs">
-    <button class="tab" id="tab-team" onclick="toggleWindow('team')">The tank team</button>
-    <button class="tab" id="tab-specs" onclick="toggleWindow('specs')">Tank specs</button>
-    <button class="tab" id="tab-log" onclick="toggleWindow('log')">Feeding log</button>
-    <button class="tab" id="tab-guestbook" onclick="toggleWindow('guestbook')">Fishbook</button>
+    <button class="tab magnetic" id="tab-team" onclick="toggleWindow('team')" style="--n:0"><span class="tab-num" aria-hidden="true">01</span><span class="roll"><span data-text="The tank team">The tank team</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
+    <button class="tab magnetic" id="tab-specs" onclick="toggleWindow('specs')" style="--n:1"><span class="tab-num" aria-hidden="true">02</span><span class="roll"><span data-text="Tank specs">Tank specs</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
+    <button class="tab magnetic" id="tab-log" onclick="toggleWindow('log')" style="--n:2"><span class="tab-num" aria-hidden="true">03</span><span class="roll"><span data-text="Feeding log">Feeding log</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
+    <button class="tab magnetic" id="tab-guestbook" onclick="toggleWindow('guestbook')" style="--n:3"><span class="tab-num" aria-hidden="true">04</span><span class="roll"><span data-text="Fishbook">Fishbook</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
     <!-- fixed-positioned on wide screens (bottom-left "desktop" folder);
          on narrow screens it docks into the toggle row above the tabs -->
-    <button class="folder" id="folder-friends" onclick="toggleWindow('friends')" aria-label="open making_friends video window">
+    <button class="folder magnetic" style="--n:4" id="folder-friends" onclick="toggleWindow('friends')" aria-label="open making_friends video window">
       <svg viewBox="0 0 90 63" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M1.5 61.5V4C1.5 2.6 2.6 1.5 4 1.5H25.5C26.9 1.5 28.2 2.1 29.1 3.1L31.4 5.6C32.3 6.6 33.6 7.2 35 7.2H73.5C74.9 7.2 76 8.3 76 9.7V17" stroke="black" stroke-width="2.4"/>
-        <path d="M1.5 61.5L10.6 20C10.9 18.6 12.1 17.6 13.5 17.6H85.4C87.3 17.6 88.7 19.4 88.3 21.2L79.9 59.2C79.6 60.5 78.4 61.5 77 61.5H1.5Z" fill="#F5F5F5" stroke="black" stroke-width="2.4" stroke-linejoin="round"/>
+        <path d="M1.5 61.5V4C1.5 2.6 2.6 1.5 4 1.5H25.5C26.9 1.5 28.2 2.1 29.1 3.1L31.4 5.6C32.3 6.6 33.6 7.2 35 7.2H73.5C74.9 7.2 76 8.3 76 9.7V17" stroke="currentColor" stroke-width="2.4"/>
+        <path d="M1.5 61.5L10.6 20C10.9 18.6 12.1 17.6 13.5 17.6H85.4C87.3 17.6 88.7 19.4 88.3 21.2L79.9 59.2C79.6 60.5 78.4 61.5 77 61.5H1.5Z" class="folder-fill" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
       </svg>
       <span class="folder-label">MAKING_FRIENDS</span>
     </button>
@@ -1241,10 +1618,44 @@
 
   <div class="livestream-section">
     <div class="headline-row">
-      <h1 class="headline">friend.fish</h1>
-      <div class="tank-time" id="tank-time">TANK TIME —</div>
+      <h1 class="headline" id="headline" aria-label="friend.fish">friend.fish</h1>
+      <script>
+        // split the wordmark into masked letters right away (before first
+        // paint) so the intro can rise them in one by one
+        (function () {
+          var h = document.getElementById('headline');
+          var text = h.textContent;
+          h.textContent = '';
+          for (var i = 0; i < text.length; i++) {
+            var outer = document.createElement('span');
+            outer.className = 'ch' + (text[i] === '.' ? ' dot' : '');
+            outer.setAttribute('aria-hidden', 'true');
+            var inner = document.createElement('span');
+            inner.className = 'ch-in';
+            inner.style.setProperty('--i', i);
+            inner.textContent = text[i];
+            outer.appendChild(inner);
+            h.appendChild(outer);
+          }
+        })();
+      </script>
+      <div class="tank-meta">
+        <div class="tank-time" id="tank-time">TANK TIME —</div>
+        <button class="theme-toggle magnetic" id="theme-toggle" type="button" onclick="toggleTheme(event)" aria-label="turn tank lights off" title="lights off">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <mask id="tt-mask">
+              <rect x="-4" y="-4" width="32" height="32" fill="white"/>
+              <circle class="tt-cut" cx="17" cy="7" r="6.2" fill="black"/>
+            </mask>
+            <circle class="tt-core" cx="12" cy="12" r="5" fill="currentColor" mask="url(#tt-mask)"/>
+            <g class="tt-rays" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+              <path d="M12 1.5v2.2M12 20.3v2.2M1.5 12h2.2M20.3 12h2.2M4.6 4.6l1.55 1.55M17.85 17.85l1.55 1.55M4.6 19.4l1.55-1.55M17.85 6.15l1.55-1.55"/>
+            </g>
+          </svg>
+        </button>
+      </div>
     </div>
-    <div class="livestream" id="livestream">
+    <div class="livestream" id="livestream" data-cursor="fullscreen">
       <video class="livestream-bg" src="/assets/livestream.webm" autoplay muted loop playsinline disablepictureinpicture aria-hidden="true"></video>
       <moq-watch
         url="https://cdn.moq.pro/pk267nzwvvwtz"
@@ -1255,6 +1666,7 @@
         <canvas></canvas>
       </moq-watch>
       <div class="livestream-status" id="livestream-status"><span id="livestream-status-label">livestream connecting</span><span class="dots"></span></div>
+      <div class="live-badge" aria-hidden="true"><span class="live-dot"></span>live</div>
       <div class="livestream-sleeping">THE FISH ARE SLEEPING RIGHT NOW 😴</div>
     </div>
   </div>
@@ -1265,7 +1677,7 @@
   <div class="panel-header">
     <div class="panel-title">MAKING_FRIENDS</div>
     <button class="panel-dismiss" onclick="closeWindow('friends')" aria-label="close">
-      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="currentColor" stroke-width="1.2"/></svg>
     </button>
   </div>
   <div class="panel-scroll">
@@ -1283,7 +1695,7 @@
         <svg class="i-replay" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
       </div>
       <!-- cursor-tracking / click-to-play layer, see .friends-video__cursor -->
-      <div class="friends-video__cursor" id="friends-video-cursor" aria-hidden="true"></div>
+      <div class="friends-video__cursor" id="friends-video-cursor" data-cursor="play / pause" aria-hidden="true"></div>
     </div>
     <div class="friends-desc">
       <h2>Fish friend meets other puffers just like him for the first time</h2>
@@ -1296,7 +1708,7 @@
 </section>
 
 <!-- LIGHTBOX -->
-<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+<div class="lightbox" id="lightbox" data-cursor="close" onclick="closeLightbox()">
   <img id="lightbox-img" src="" alt="photo">
 </div>
 
@@ -1334,18 +1746,86 @@
       lastTouchAt = Date.now();
       if (customCursor) customCursor.style.opacity = '0';
     }, { passive: true });
+    // three looks: the fish, a small dot over controls, and a labelled
+    // pill over media (data-cursor="…"). Recomputed from whatever the
+    // pointer just entered.
+    const cursorLabel = document.getElementById('custom-cursor-label');
+    function cursorLabelFor(target) {
+      const host = target.closest('[data-cursor]');
+      if (!host) return '';
+      // the stream only goes fullscreen while it's actually live
+      if (host.id === 'livestream' && !host.classList.contains('is-live')) return '';
+      return host.dataset.cursor;
+    }
     document.addEventListener('mouseover', event => {
       const target = event.target;
-      if (target instanceof Element && target.closest(hoverSelector)) {
-        setHoverCursor(true);
+      if (!(target instanceof Element)) return;
+      const label = cursorLabelFor(target);
+      if (label) {
+        if (cursorLabel.textContent !== label || !customCursor.classList.contains('is-label')) {
+          cursorLabel.textContent = label;
+          customCursor.classList.remove('is-label');
+          void customCursor.offsetWidth; // replay the pop-in
+          customCursor.classList.add('is-label');
+        }
+        setHoverCursor(false);
+      } else {
+        customCursor.classList.remove('is-label');
+        setHoverCursor(!!target.closest(hoverSelector));
       }
     });
     document.addEventListener('mouseout', event => {
-      const related = event.relatedTarget;
-      if (!(related instanceof Element) || !related.closest(hoverSelector)) {
+      if (!(event.relatedTarget instanceof Element)) {
+        customCursor.classList.remove('is-label');
         setHoverCursor(false);
       }
     });
+
+    // magnetic controls lean toward the pointer, then spring back
+    document.querySelectorAll('.magnetic').forEach(el => {
+      const strength = el.classList.contains('tab') ? 0.22 : 0.35;
+      el.addEventListener('mousemove', e => {
+        const r = el.getBoundingClientRect();
+        const dx = e.clientX - (r.left + r.width / 2);
+        const dy = e.clientY - (r.top + r.height / 2);
+        el.classList.add('is-pulling');
+        el.style.transform = `translate(${dx * strength}px, ${dy * strength}px)`;
+      });
+      el.addEventListener('mouseleave', () => {
+        el.classList.remove('is-pulling');
+        el.style.transform = '';
+      });
+    });
+
+    // the wordmark swims: letters near the pointer lift in a soft wave
+    const headline = document.getElementById('headline');
+    const letters = Array.from(headline.querySelectorAll('.ch'));
+    let waveFrame = null;
+    let wavePoint = null;
+    function applyWave() {
+      waveFrame = null;
+      const hr = headline.getBoundingClientRect();
+      const near = wavePoint && wavePoint.y > hr.top - 90 && wavePoint.y < hr.bottom + 60 &&
+        wavePoint.x > hr.left - 120 && wavePoint.x < hr.right + 120;
+      letters.forEach(ch => {
+        if (!near) { ch.style.transform = ''; return; }
+        const r = ch.getBoundingClientRect();
+        const d = Math.abs(wavePoint.x - (r.left + r.width / 2));
+        const lift = Math.max(0, 1 - d / 140);
+        const eased = lift * lift * (3 - 2 * lift); // smoothstep
+        ch.style.transform = eased > 0.01 ? `translateY(${(-eased * 16).toFixed(2)}px)` : '';
+      });
+    }
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.addEventListener('mousemove', e => {
+        wavePoint = { x: e.clientX, y: e.clientY };
+        if (!waveFrame) waveFrame = requestAnimationFrame(applyWave);
+      });
+      document.addEventListener('mouseleave', () => {
+        wavePoint = null;
+        if (!waveFrame) waveFrame = requestAnimationFrame(applyWave);
+      });
+    }
   }
 
   function spawnClickBubbles(event) {
@@ -1383,10 +1863,61 @@
   function updateClock() {
     const now = new Date();
     const t = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' });
-    document.getElementById('tank-time').textContent = 'TANK TIME ' + t;
+    document.getElementById('tank-time').innerHTML = 'TANK TIME ' + t.replace(':', '<span class="tt-colon">:</span>');
   }
   updateClock();
   setInterval(updateClock, 15000);
+
+  // ---- INTRO ----
+  // the choreography is CSS on html.intro; drop the class after it has
+  // finished so re-opened panels and the hover wave run without delays
+  setTimeout(() => document.documentElement.classList.remove('intro'), 2600);
+
+  // ---- THEME (tank lights on / off) ----
+  const THEME_KEY = 'ff-theme';
+  const THEME_COLORS = { light: '#f5f5f5', dark: '#0d0f11' };
+
+  function currentTheme() {
+    return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    document.getElementById('meta-theme-color').setAttribute('content', THEME_COLORS[theme]);
+    const btn = document.getElementById('theme-toggle');
+    const off = theme === 'dark';
+    btn.setAttribute('aria-label', off ? 'turn tank lights on' : 'turn tank lights off');
+    btn.title = off ? 'lights on' : 'lights off';
+  }
+  applyTheme(currentTheme());
+
+  function toggleTheme(event) {
+    const next = currentTheme() === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!document.startViewTransition || reduce) { applyTheme(next); return; }
+    // ripple the new theme out from the toggle
+    const r = event.currentTarget.getBoundingClientRect();
+    const x = r.left + r.width / 2;
+    const y = r.top + r.height / 2;
+    const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+    const t = document.startViewTransition(() => applyTheme(next));
+    t.ready.then(() => {
+      document.documentElement.animate(
+        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+        { duration: 650, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', pseudoElement: '::view-transition-new(root)' }
+      );
+    }).catch(() => {});
+  }
+
+  // with no saved choice, keep following the OS as it flips
+  if (window.matchMedia) {
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      let saved = null;
+      try { saved = localStorage.getItem(THEME_KEY); } catch (err) {}
+      if (saved !== 'light' && saved !== 'dark') applyTheme(e.matches ? 'dark' : 'light');
+    });
+  }
 
   // ---- STATE ----
   let feedEntries = [];
@@ -1733,7 +2264,7 @@
     const photos = photoStore[id] || [];
     const thumbs = photos.map((src, i) => {
       const rot = ROTATIONS[i % ROTATIONS.length];
-      return `<div class="gallery-photo" onclick="viewPhoto('${id}',${i})">
+      return `<div class="gallery-photo" data-cursor="view" onclick="viewPhoto('${id}',${i})">
         <img src="${src}" alt="photo ${i + 1}" loading="lazy" style="transform:rotate(${rot}deg)">
         <button class="photo-delete" onclick="deletePhoto(event,'${id}',${i})">✕</button>
       </div>`;
