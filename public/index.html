@@ -405,59 +405,6 @@
   }
   .livestream.is-live.is-sleeping .livestream-sleeping { display: block; }
 
-  /* LIVE pill, top-left of the stream once frames are actually flowing */
-  .live-badge {
-    position: absolute;
-    top: 16px;
-    left: 16px;
-    z-index: 2;
-    display: none;
-    align-items: center;
-    gap: 7px;
-    padding: 5px 10px 5px 9px;
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.42);
-    -webkit-backdrop-filter: blur(8px) saturate(1.2);
-    backdrop-filter: blur(8px) saturate(1.2);
-    color: #ffffff;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    line-height: 1;
-    pointer-events: none;
-    animation: badge-in 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-  .livestream.is-live.is-determined .live-badge { display: inline-flex; }
-  .live-dot {
-    position: relative;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #ff3b30;
-  }
-  .live-dot::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    background: #ff3b30;
-    animation: live-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
-  }
-  .livestream.is-sleeping .live-dot,
-  .livestream.is-sleeping .live-dot::after { background: #8a9096; }
-  @keyframes live-ping {
-    0%   { transform: scale(1); opacity: 0.75; }
-    80%, 100% { transform: scale(2.6); opacity: 0; }
-  }
-  @keyframes badge-in {
-    from { opacity: 0; transform: translateY(-4px); }
-    to   { opacity: 1; transform: none; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .live-dot::after, .live-badge { animation: none; }
-  }
-
   .livestream-status .dots::after {
     content: '';
     animation: dots 1.6s steps(1, end) infinite;
@@ -1227,15 +1174,6 @@
     gap: 6px;
     will-change: transform;
   }
-  .tab-num {
-    font-size: 9px;
-    letter-spacing: 0;
-    color: var(--gray-text);
-    line-height: 1;
-    padding-top: 1px;
-    transition: color 300ms ease;
-  }
-  .tab:hover .tab-num, .tab.active .tab-num { color: var(--ink); }
   .roll {
     display: inline-block;
     position: relative;
@@ -1390,7 +1328,6 @@
       gap: 12px;
     }
     .tab::after { display: none; }
-    .tab-num { padding-top: 0; min-width: 14px; }
     .tab-arrow {
       display: block;
       margin-left: auto;
@@ -1660,10 +1597,10 @@
 <!-- ===== MAIN SECTION ===== -->
 <div class="main-section">
   <nav class="tabs">
-    <button class="tab magnetic" id="tab-team" onclick="toggleWindow('team')" style="--n:0"><span class="tab-num" aria-hidden="true">01</span><span class="roll"><span data-text="The tank team">The tank team</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
-    <button class="tab magnetic" id="tab-specs" onclick="toggleWindow('specs')" style="--n:1"><span class="tab-num" aria-hidden="true">02</span><span class="roll"><span data-text="Tank specs">Tank specs</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
-    <button class="tab magnetic" id="tab-log" onclick="toggleWindow('log')" style="--n:2"><span class="tab-num" aria-hidden="true">03</span><span class="roll"><span data-text="Feeding log">Feeding log</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
-    <button class="tab magnetic" id="tab-guestbook" onclick="toggleWindow('guestbook')" style="--n:3"><span class="tab-num" aria-hidden="true">04</span><span class="roll"><span data-text="Fishbook">Fishbook</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
+    <button class="tab magnetic" id="tab-team" onclick="toggleWindow('team')" style="--n:0"><span class="roll"><span data-text="The tank team">The tank team</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
+    <button class="tab magnetic" id="tab-specs" onclick="toggleWindow('specs')" style="--n:1"><span class="roll"><span data-text="Tank specs">Tank specs</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
+    <button class="tab magnetic" id="tab-log" onclick="toggleWindow('log')" style="--n:2"><span class="roll"><span data-text="Feeding log">Feeding log</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
+    <button class="tab magnetic" id="tab-guestbook" onclick="toggleWindow('guestbook')" style="--n:3"><span class="roll"><span data-text="Fishbook">Fishbook</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
     <!-- fixed-positioned on wide screens (bottom-left "desktop" folder);
          on narrow screens it docks into the toggle row above the tabs -->
     <button class="folder magnetic" style="--n:4" id="folder-friends" onclick="toggleWindow('friends')" aria-label="open making_friends video window">
@@ -1725,7 +1662,6 @@
         <canvas></canvas>
       </moq-watch>
       <div class="livestream-status" id="livestream-status"><span id="livestream-status-label">livestream connecting</span><span class="dots"></span></div>
-      <div class="live-badge" aria-hidden="true"><span class="live-dot"></span>live</div>
       <div class="livestream-sleeping">THE FISH ARE SLEEPING RIGHT NOW 😴</div>
     </div>
   </div>
