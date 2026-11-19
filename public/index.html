@@ -584,10 +584,15 @@
     display: none;
     flex-direction: column;
     position: fixed;
-    left: 28px;
-    top: 224px;
-    width: 344px;
-    max-height: calc(100dvh - 252px);
+    /* vertically centred along the left edge; sized so the 16:9 video is
+       as big as the viewport allows while the header and description
+       (~260px) still fit underneath */
+    inset: 28px auto 28px 28px;
+    margin: auto 0;
+    height: fit-content;
+    width: min(760px, 48vw, calc((100dvh - 260px) * 16 / 9));
+    min-width: min(344px, calc(100vw - 56px));
+    max-height: calc(100dvh - 56px);
     border: 1px solid var(--ink);
     border-radius: 12px;
     overflow: hidden;
@@ -706,6 +711,7 @@
     line-height: normal;
   }
   .friends-body {
+    max-width: 520px; /* keep lines readable in the wider window */
     font-family: var(--sans);
     font-size: 12px;
     line-height: 1.35;
@@ -1423,7 +1429,10 @@
     .friends-window.open {
       inset: 12px;
       margin: auto;
-      width: min(344px, 100%);
+      /* full width on phones; on short screens (landscape) shrink so the
+         whole video still fits above the fold */
+      width: min(640px, calc(100vw - 24px), calc((100dvh - 90px) * 16 / 9));
+      min-width: 0;
       height: fit-content;
       max-height: calc(100dvh - 24px);
     }
