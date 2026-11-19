@@ -1209,8 +1209,7 @@
   }
   html.intro .livestream { animation: unveil 1300ms var(--ease-io) 200ms both; }
   html.intro .livestream-bg { animation: settle 2200ms var(--ease-out) 200ms both; }
-  html.intro .tank-meta,
-  html.intro .ticker { animation: fade-up 900ms var(--ease-out) 900ms both; }
+  html.intro .tank-meta { animation: fade-up 900ms var(--ease-out) 900ms both; }
   html.intro .panel-area .panel.open { animation-delay: 750ms; }
 
   /* ---- nav: numbered, text-roll ---- */
@@ -1284,41 +1283,6 @@
   .livestream-bg { transition: transform 1600ms var(--ease-out); }
   .livestream:hover .livestream-bg { transform: scale(1.035); }
 
-  /* ---- ticker ---- */
-  .ticker {
-    position: relative;
-    overflow: hidden;
-    border-top: 1px solid var(--gray-line);
-    border-bottom: 1px solid var(--gray-line);
-    padding: 7px 0 6px;
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-            mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-  }
-  .ticker-track {
-    display: flex;
-    width: max-content;
-    animation: ticker 48s linear infinite;
-  }
-  .ticker:hover .ticker-track { animation-play-state: paused; }
-  .ticker-group {
-    display: flex;
-    flex-shrink: 0;
-    gap: 28px;
-    padding-right: 28px;
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: -0.02em;
-    text-transform: uppercase;
-    color: var(--gray-text);
-    white-space: nowrap;
-  }
-  .ticker-group b { font-weight: 400; color: var(--ink); }
-  @keyframes ticker { to { transform: translateX(-50%); } }
-  /* only on desktop viewports tall enough to spare the row */
-  @media (min-width: 637px) and (max-height: 820px) {
-    .ticker { display: none; }
-  }
-
   /* ---- clock colon breathes ---- */
   .tt-colon { animation: colon 2s steps(1, end) infinite; }
   @keyframes colon { 50% { opacity: 0.25; } }
@@ -1349,7 +1313,7 @@
   html.intro .panel.open .resident-card:nth-child(n) { animation-delay: calc(900ms + var(--k, 0) * 70ms); }
 
   @media (prefers-reduced-motion: reduce) {
-    .ticker-track, .tt-colon { animation: none; }
+    .tt-colon { animation: none; }
     .roll > span, .headline .ch, .livestream-bg, .magnetic { transition: none; }
     .panel.open .resident-card, .panel.open .tank-figure, .panel.open .specs-text p,
     .panel.open .feed-row, .panel.open .gb-row, .friends-window.open .friends-desc > * { animation: none; }
@@ -1421,7 +1385,6 @@
       transition: transform 400ms var(--ease-out);
     }
     .tab:active .tab-arrow { transform: translateX(4px); }
-    .ticker { order: 3; margin: 4px 16px 0; }
     html.intro .livestream { animation-name: unveil-flat; }
     @keyframes unveil-flat { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0); } }
 
@@ -1700,12 +1663,6 @@
       <div class="livestream-status" id="livestream-status"><span id="livestream-status-label">livestream connecting</span><span class="dots"></span></div>
       <div class="live-badge" aria-hidden="true"><span class="live-dot"></span>live</div>
       <div class="livestream-sleeping">THE FISH ARE SLEEPING RIGHT NOW 😴</div>
-    </div>
-    <div class="ticker" aria-hidden="true">
-      <div class="ticker-track">
-        <div class="ticker-group"><span><b>fish friend</b> — alpha, snail hunter</span><span>✦</span><span><b>lil smol</b> · <b>lil brave</b> · <b>lil shy</b> · <b>lil dumpy</b></span><span>✦</span><span><b>6</b> otos grazing</span><span>✦</span><span><b>~11</b> amanos (probably)</span><span>✦</span><span>75 × 45 × 45 cm · ~40 gal</span><span>✦</span><span>streaming from san francisco</span><span>✦</span><span>say hi in the fishbook</span><span>✦</span></div>
-        <div class="ticker-group"><span><b>fish friend</b> — alpha, snail hunter</span><span>✦</span><span><b>lil smol</b> · <b>lil brave</b> · <b>lil shy</b> · <b>lil dumpy</b></span><span>✦</span><span><b>6</b> otos grazing</span><span>✦</span><span><b>~11</b> amanos (probably)</span><span>✦</span><span>75 × 45 × 45 cm · ~40 gal</span><span>✦</span><span>streaming from san francisco</span><span>✦</span><span>say hi in the fishbook</span><span>✦</span></div>
-      </div>
     </div>
   </div>
 </div>
