@@ -1139,32 +1139,13 @@
   }
   .headline .ch-in { display: inline-block; }
 
-  /* ---- nav: numbered, text-roll ---- */
+  /* ---- nav ---- */
   .tab {
     display: inline-flex;
     align-items: flex-start;
     gap: 6px;
     will-change: transform;
   }
-  .roll {
-    display: inline-block;
-    position: relative;
-    overflow: hidden;
-    height: 1.2em;
-    line-height: 1.2em;
-  }
-  .roll > span {
-    display: block;
-    transition: transform 520ms var(--ease-out);
-  }
-  .roll > span::after {
-    content: attr(data-text);
-    position: absolute;
-    left: 0;
-    top: 100%;
-  }
-  .tab:hover .roll > span,
-  .tab:focus-visible .roll > span { transform: translateY(-100%); }
   .tab-arrow { display: none; }
 
   /* magnetic elements ease back when released */
@@ -1231,7 +1212,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .tt-colon { animation: none; }
-    .roll > span, .headline .ch, .livestream-bg, .magnetic { transition: none; }
+    .headline .ch, .livestream-bg, .magnetic { transition: none; }
     .panel.open .resident-card, .panel.open .tank-figure, .panel.open .specs-text p,
     .panel.open .feed-row, .panel.open .gb-row, .friends-window.open .friends-desc > * { animation: none; }
   }
@@ -1566,10 +1547,10 @@
 <!-- ===== MAIN SECTION ===== -->
 <div class="main-section">
   <nav class="tabs">
-    <button class="tab magnetic" id="tab-team" onclick="toggleWindow('team')"><span class="roll"><span data-text="The tank team">The tank team</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
-    <button class="tab magnetic" id="tab-specs" onclick="toggleWindow('specs')"><span class="roll"><span data-text="Tank specs">Tank specs</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
-    <button class="tab magnetic" id="tab-log" onclick="toggleWindow('log')"><span class="roll"><span data-text="Feeding log">Feeding log</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
-    <button class="tab magnetic" id="tab-guestbook" onclick="toggleWindow('guestbook')"><span class="roll"><span data-text="Fishbook">Fishbook</span></span><span class="tab-arrow" aria-hidden="true">→</span></button>
+    <button class="tab magnetic" id="tab-team" onclick="toggleWindow('team')">The tank team<span class="tab-arrow" aria-hidden="true">→</span></button>
+    <button class="tab magnetic" id="tab-specs" onclick="toggleWindow('specs')">Tank specs<span class="tab-arrow" aria-hidden="true">→</span></button>
+    <button class="tab magnetic" id="tab-log" onclick="toggleWindow('log')">Feeding log<span class="tab-arrow" aria-hidden="true">→</span></button>
+    <button class="tab magnetic" id="tab-guestbook" onclick="toggleWindow('guestbook')">Fishbook<span class="tab-arrow" aria-hidden="true">→</span></button>
     <!-- fixed-positioned on wide screens (bottom-left "desktop" folder);
          on narrow screens it docks into the toggle row above the tabs -->
     <button class="folder magnetic" id="folder-friends" onclick="toggleWindow('friends')" aria-label="open making_friends video window">
