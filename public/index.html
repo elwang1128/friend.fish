@@ -4,7 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>friend.fish</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='78' text-anchor='middle' font-size='90' fill='%23000000'>✦</text></svg>">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f5f5f5" id="meta-theme-color">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><style>text{fill:%23000}@media (prefers-color-scheme:dark){text{fill:%23fff}}</style><text x='50' y='78' text-anchor='middle' font-size='90'>✦</text></svg>">
+<script>
+  // set the theme before first paint so dark-mode visitors never get a
+  // white flash: saved choice wins, otherwise follow the OS
+  (function () {
+    var t;
+    try { t = localStorage.getItem('ff-theme'); } catch (e) {}
+    if (t !== 'light' && t !== 'dark') {
+      t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    document.documentElement.dataset.theme = t;
+  })();
+</script>
 <style>
   @font-face {
     font-family: 'Fira Mono';
@@ -14,15 +28,76 @@
     src: url('/assets/fonts/fira-mono-latin-400-normal.woff2') format('woff2');
   }
   :root {
+    color-scheme: light;
     --bg: #f5f5f5;
-    --black: #000000;
+    --surface: #ffffff;   /* panel headers, bubbles, inputs */
+    --ink: #000000;       /* text, borders, primary buttons */
+    --on-ink: #ffffff;    /* text sitting on an ink fill */
     --gray-pill: #dddddd;
     --gray-text: #737373;
     --gray-date: #b5b5b5;
     --gray-line: #e5e5e5;
+    --disabled: #e9e9e9;
+    --disabled-ink: #ffffff;
+    --switch-off: #d6d6d6;
+    --switch-knob-off: #ffffff;
+    --bubble: rgba(0, 0, 0, 0.72);
+    --window-shadow: 0 4px 40px rgba(0, 0, 0, 0.18);
+    --stream-dim: none;
+    --stream-ink: #000000;
     --mono: 'Fira Mono', 'Courier New', monospace;
     --sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   }
+
+  /* lights off: a deep, slightly cool tank-at-night palette. Declared for
+     an explicit choice and, as a no-JS fallback, for the OS preference. */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0d0f11;
+    --surface: #16191c;
+    --ink: #ebedef;
+    --on-ink: #0d0f11;
+    --gray-pill: #23272b;
+    --gray-text: #8a9096;
+    --gray-date: #5b6167;
+    --gray-line: #22262a;
+    --disabled: #23272b;
+    --disabled-ink: #5b6167;
+    --switch-off: #33383d;
+    --switch-knob-off: #8a9096;
+    --bubble: rgba(235, 237, 239, 0.75);
+    --window-shadow: 0 8px 48px rgba(0, 0, 0, 0.6);
+    --stream-dim: brightness(0.5) saturate(0.85);
+    --stream-ink: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+      color-scheme: dark;
+      --bg: #0d0f11;
+      --surface: #16191c;
+      --ink: #ebedef;
+      --on-ink: #0d0f11;
+      --gray-pill: #23272b;
+      --gray-text: #8a9096;
+      --gray-date: #5b6167;
+      --gray-line: #22262a;
+      --disabled: #23272b;
+      --disabled-ink: #5b6167;
+      --switch-off: #33383d;
+      --switch-knob-off: #8a9096;
+      --bubble: rgba(235, 237, 239, 0.75);
+      --window-shadow: 0 8px 48px rgba(0, 0, 0, 0.6);
+      --stream-dim: brightness(0.5) saturate(0.85);
+      --stream-ink: #ffffff;
+    }
+  }
+
+  /* theme switch: the new theme spreads out as a circle from the toggle
+     (driven from JS via the View Transitions API) */
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+
+  ::selection { background: var(--ink); color: var(--on-ink); }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -30,7 +105,7 @@
 
   body {
     background: var(--bg);
-    color: var(--black);
+    color: var(--ink);
     font-family: var(--sans);
     display: flex;
     gap: 28px;
@@ -73,11 +148,13 @@
     background: url('/assets/fishcursor.svg') center/contain no-repeat;
   }
 
+  :root[data-theme="dark"] .custom-cursor__fish { filter: invert(1); }
+
   .custom-cursor.is-hovering {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: var(--black);
+    background: var(--ink);
   }
 
   .custom-cursor.is-hovering .custom-cursor__fish {
@@ -97,7 +174,7 @@
     font-family: var(--mono);
     font-size: 8px;
     line-height: 1;
-    color: rgba(0, 0, 0, 0.72);
+    color: var(--bubble);
     opacity: 0;
     pointer-events: none;
     transform-origin: center center;
@@ -145,7 +222,7 @@
     font-size: 16px;
     letter-spacing: -0.04em;
     text-transform: uppercase;
-    color: var(--black);
+    color: var(--ink);
     white-space: nowrap;
     padding: 0 0 4px;
     position: relative;
@@ -168,8 +245,16 @@
     pointer-events: none;
   }
   .tab:hover::after,
-  .tab:focus-visible::after {
+  .tab:focus-visible::after,
+  .tab.active::after {
     transform: translateX(-50%) scaleX(1);
+  }
+  .tab:focus-visible { outline: none; }
+
+  button:focus-visible:not(.tab) {
+    outline: 1.5px solid var(--ink);
+    outline-offset: 3px;
+    border-radius: 6px;
   }
 
   .livestream-section {
@@ -194,13 +279,49 @@
     line-height: 0.99;
   }
 
+  .tank-meta {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-bottom: 6px;
+  }
+
   .tank-time {
     font-family: var(--sans);
     font-weight: 400;
     font-size: 18px;
     letter-spacing: -0.03em;
     white-space: nowrap;
-    padding-bottom: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* tank lights: sun when the lights are on, crescent moon when off.
+     The sun's core grows and a masking disc slides over it to carve the
+     crescent; the rays spin away. */
+  .theme-toggle {
+    width: 32px;
+    height: 32px;
+    margin: -6px -6px -6px 0; /* bigger tap target, same footprint */
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--ink);
+    flex-shrink: 0;
+  }
+  .theme-toggle svg { display: block; width: 20px; height: 20px; overflow: visible; }
+  .theme-toggle .tt-core,
+  .theme-toggle .tt-rays,
+  .theme-toggle .tt-cut {
+    transform-box: view-box;
+    transform-origin: 12px 12px;
+    transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1), opacity 320ms ease;
+  }
+  .theme-toggle .tt-cut { transform: translate(10px, -10px); }
+  :root[data-theme="dark"] .theme-toggle .tt-core { transform: scale(1.75); }
+  :root[data-theme="dark"] .theme-toggle .tt-cut { transform: translate(0, 0); }
+  :root[data-theme="dark"] .theme-toggle .tt-rays { transform: rotate(90deg) scale(0.4); opacity: 0; }
+  @media (prefers-reduced-motion: reduce) {
+    .theme-toggle .tt-core, .theme-toggle .tt-rays, .theme-toggle .tt-cut { transition: none; }
   }
 
   .livestream {
@@ -218,6 +339,7 @@
     width: 100%; height: 100%;
     object-fit: cover;
     z-index: 0;
+    filter: var(--stream-dim);
   }
   .livestream.is-live .livestream-bg { display: none; }
 
@@ -254,6 +376,7 @@
     text-transform: uppercase;
     padding: 20px;
     pointer-events: none;
+    color: var(--stream-ink);
   }
   /* while live, keep the status line up until the first sleeping-or-not
      verdict lands (is-determined), so a night visitor never stares at a
@@ -274,6 +397,59 @@
     display: none;
   }
   .livestream.is-live.is-sleeping .livestream-sleeping { display: block; }
+
+  /* LIVE pill, top-left of the stream once frames are actually flowing */
+  .live-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 2;
+    display: none;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 10px 5px 9px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.42);
+    -webkit-backdrop-filter: blur(8px) saturate(1.2);
+    backdrop-filter: blur(8px) saturate(1.2);
+    color: #ffffff;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1;
+    pointer-events: none;
+    animation: badge-in 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .livestream.is-live.is-determined .live-badge { display: inline-flex; }
+  .live-dot {
+    position: relative;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ff3b30;
+  }
+  .live-dot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: #ff3b30;
+    animation: live-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+  .livestream.is-sleeping .live-dot,
+  .livestream.is-sleeping .live-dot::after { background: #8a9096; }
+  @keyframes live-ping {
+    0%   { transform: scale(1); opacity: 0.75; }
+    80%, 100% { transform: scale(2.6); opacity: 0; }
+  }
+  @keyframes badge-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .live-dot::after, .live-badge { animation: none; }
+  }
 
   .livestream-status .dots::after {
     content: '';
@@ -308,13 +484,13 @@
     flex-direction: column;
     position: absolute;
     inset: 0;
-    border: 1px solid var(--black);
+    border: 1px solid var(--ink);
     border-radius: 12px;
     overflow: hidden;
     background: var(--bg);
   }
   .panel.open { display: flex; }
-  .panel.white { background: #ffffff; }
+  .panel.white { background: var(--surface); }
 
   /* windows pop out from their center, easing slightly past full size
      and settling back — a single overshoot, no bounce */
@@ -331,8 +507,8 @@
   }
 
   .panel-header {
-    background: #ffffff;
-    border-bottom: 1px solid var(--black);
+    background: var(--surface);
+    border-bottom: 1px solid var(--ink);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -384,7 +560,10 @@
     display: block;
     width: 90px;
     height: 63px;
+    transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
   }
+  .folder-fill { fill: var(--bg); }
+  .folder:hover svg { transform: translateY(-3px) rotate(-2deg); }
   .folder-label {
     font-family: var(--mono);
     font-size: 16px;
@@ -402,7 +581,7 @@
     top: 224px;
     width: 344px;
     max-height: calc(100dvh - 252px);
-    border: 1px solid var(--black);
+    border: 1px solid var(--ink);
     border-radius: 12px;
     overflow: hidden;
     background: var(--bg);
@@ -590,14 +769,23 @@
     width: auto;
     box-shadow: 0 1px 4px rgba(0,0,0,0.12);
   }
+  .gallery-photo img {
+    transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 320ms ease;
+  }
+  .gallery-photo:hover img {
+    transform: rotate(0deg) scale(1.04) !important;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+  }
+  /* no photos yet: don't hold a 240px blank strip open */
+  .gallery-scroller:has(.gallery-empty) { height: auto; padding-top: 12px; padding-bottom: 12px; }
   .gallery-photo:nth-child(3n) img { max-height: 200px; }
   .gallery-photo:nth-child(3n+2) img { max-height: 150px; }
 
   .gallery-photo .photo-delete {
     position: absolute;
     top: 6px; right: 6px;
-    background: #ffffff;
-    border: 1px solid var(--black);
+    background: var(--surface);
+    border: 1px solid var(--ink);
     border-radius: 999px;
     font-family: var(--mono);
     font-size: 9px;
@@ -628,7 +816,7 @@
     display: none;
   }
   body.is-owner .gallery-add { display: block; }
-  .gallery-add:hover { border-color: var(--black); color: var(--black); }
+  .gallery-add:hover { border-color: var(--ink); color: var(--ink); }
 
   .resident-bio {
     font-family: var(--sans);
@@ -673,7 +861,7 @@
     top: calc(61.8% + 24px);
     height: 35.6%;
     width: 1px;
-    background: var(--black);
+    background: var(--ink);
   }
 
   .camera-caption {
@@ -728,13 +916,13 @@
     font-size: 10px;
     letter-spacing: -0.03em;
     text-transform: uppercase;
-    color: #1d1d1d;
+    color: var(--ink);
   }
 
   .feed-who {
     font-family: var(--sans);
     font-size: 12px;
-    color: var(--black);
+    color: var(--ink);
     overflow: hidden;
     text-overflow: ellipsis;
   }
@@ -761,7 +949,7 @@
     padding: 2px 4px;
   }
   body.is-owner .feed-delete { display: block; }
-  .feed-delete:hover { color: var(--black); }
+  .feed-delete:hover { color: var(--ink); }
 
   .feed-empty {
     padding: 16px;
@@ -789,16 +977,16 @@
     border: 1px solid var(--gray-line);
     border-radius: 999px;
     padding: 4px 8px;
-    background: #fff;
-    color: var(--black);
+    background: var(--surface);
+    color: var(--ink);
     outline: none;
     flex: 1;
     min-width: 0;
   }
 
   .feed-add-btn {
-    background: var(--black);
-    color: #fff;
+    background: var(--ink);
+    color: var(--on-ink);
     border-radius: 999px;
     padding: 4px 10px;
     font-family: var(--mono);
@@ -857,7 +1045,7 @@
   }
 
   .gb-bubble {
-    background: #ffffff;
+    background: var(--surface);
     border-radius: 12px;
     padding: 12px;
     font-family: var(--sans);
@@ -888,7 +1076,7 @@
     padding: 0 2px;
   }
   body.is-owner .gb-delete { display: inline; }
-  .gb-delete:hover { color: var(--black); }
+  .gb-delete:hover { color: var(--ink); }
 
   .gb-empty {
     font-family: var(--mono);
@@ -906,7 +1094,7 @@
   .gb-form {
     display: flex;
     flex-direction: column;
-    background: #ffffff;
+    background: var(--surface);
     border-radius: 12px;
     overflow: hidden;
   }
@@ -917,7 +1105,7 @@
     border: none;
     outline: none;
     background: transparent;
-    color: var(--black);
+    color: var(--ink);
     width: 100%;
     resize: none;
   }
@@ -934,8 +1122,8 @@
   }
 
   .gb-send {
-    background: var(--black);
-    color: #ffffff;
+    background: var(--ink);
+    color: var(--on-ink);
     border-radius: 999px;
     padding: 4px 8px;
     font-family: var(--mono);
@@ -943,7 +1131,7 @@
     letter-spacing: 0.03em;
     text-transform: uppercase;
   }
-  .gb-send:disabled { background: #e9e9e9; cursor: default; }
+  .gb-send:disabled { background: var(--disabled); color: var(--disabled-ink); cursor: default; }
 
   /* ---------- LIGHTBOX ---------- */
   .lightbox {
@@ -956,7 +1144,12 @@
     padding: 32px;
     cursor: zoom-out;
   }
-  .lightbox.open { display: flex; }
+  .lightbox.open { display: flex; animation: lightbox-in 240ms ease both; }
+  .lightbox.open img { animation: window-pop 380ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+  @keyframes lightbox-in { from { opacity: 0; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .lightbox.open, .lightbox.open img { animation: none; }
+  }
   .lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
   .hidden-input { display: none; }
@@ -969,7 +1162,7 @@
       z-index: 500;
       height: auto;
     }
-    .panel, .friends-window { box-shadow: 0 4px 40px rgba(0,0,0,0.18); }
+    .panel, .friends-window { box-shadow: var(--window-shadow); }
   }
 
   @media (max-width: 636px) {
@@ -997,13 +1190,12 @@
     /* flatten the headline row so the tank time can move below the stream */
     .headline-row { display: contents; }
     .headline { order: -1; font-size: 54px; padding: 0 16px; }
-    .tank-time {
+    .tank-meta {
       order: 2;
       align-self: flex-end;
-      text-align: right;
-      font-size: 18px;
       padding: 0 16px 0 0;
     }
+    .tank-time { font-size: 18px; }
 
     .tabs {
       order: 2;
@@ -1067,7 +1259,7 @@
     <div class="panel-header">
       <div class="panel-title">THE TANK TEAM</div>
       <button class="panel-dismiss" onclick="closeWindow('team')" aria-label="close">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="currentColor" stroke-width="1.2"/></svg>
       </button>
     </div>
     <div class="panel-scroll">
@@ -1125,7 +1317,7 @@
     <div class="panel-header">
       <div class="panel-title">TANK SPECS</div>
       <button class="panel-dismiss" onclick="closeWindow('specs')" aria-label="close">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="currentColor" stroke-width="1.2"/></svg>
       </button>
     </div>
     <div class="panel-scroll">
@@ -1153,17 +1345,17 @@
         FEEDING LOG
         <button class="lock-btn" id="lock-btn" onclick="handleLockClick()" title="owner login">
           <svg id="lock-icon-locked" width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <rect x="1.5" y="5" width="9" height="6" rx="1" stroke="black"/>
-            <path d="M3.5 5V3.5C3.5 2.12 4.62 1 6 1C7.38 1 8.5 2.12 8.5 3.5V5" stroke="black"/>
+            <rect x="1.5" y="5" width="9" height="6" rx="1" stroke="currentColor"/>
+            <path d="M3.5 5V3.5C3.5 2.12 4.62 1 6 1C7.38 1 8.5 2.12 8.5 3.5V5" stroke="currentColor"/>
           </svg>
           <svg id="lock-icon-unlocked" width="14" height="12" viewBox="0 0 14 12" fill="none" style="display:none">
-            <rect x="1.5" y="5" width="9" height="6" rx="1" stroke="black"/>
-            <path d="M8.5 5V3.5C8.5 2.12 9.62 1 11 1C12.38 1 13.5 2.12 13.5 3.5V4" stroke="black"/>
+            <rect x="1.5" y="5" width="9" height="6" rx="1" stroke="currentColor"/>
+            <path d="M8.5 5V3.5C8.5 2.12 9.62 1 11 1C12.38 1 13.5 2.12 13.5 3.5V4" stroke="currentColor"/>
           </svg>
         </button>
       </div>
       <button class="panel-dismiss" onclick="closeWindow('log')" aria-label="close">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="currentColor" stroke-width="1.2"/></svg>
       </button>
     </div>
     <div class="panel-scroll">
@@ -1199,7 +1391,7 @@
     <div class="panel-header">
       <div class="panel-title">FISHBOOK</div>
       <button class="panel-dismiss" onclick="closeWindow('guestbook')" aria-label="close">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="currentColor" stroke-width="1.2"/></svg>
       </button>
     </div>
     <div class="guestbook-messages" id="guestbook-messages"></div>
@@ -1232,8 +1424,8 @@
          on narrow screens it docks into the toggle row above the tabs -->
     <button class="folder" id="folder-friends" onclick="toggleWindow('friends')" aria-label="open making_friends video window">
       <svg viewBox="0 0 90 63" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M1.5 61.5V4C1.5 2.6 2.6 1.5 4 1.5H25.5C26.9 1.5 28.2 2.1 29.1 3.1L31.4 5.6C32.3 6.6 33.6 7.2 35 7.2H73.5C74.9 7.2 76 8.3 76 9.7V17" stroke="black" stroke-width="2.4"/>
-        <path d="M1.5 61.5L10.6 20C10.9 18.6 12.1 17.6 13.5 17.6H85.4C87.3 17.6 88.7 19.4 88.3 21.2L79.9 59.2C79.6 60.5 78.4 61.5 77 61.5H1.5Z" fill="#F5F5F5" stroke="black" stroke-width="2.4" stroke-linejoin="round"/>
+        <path d="M1.5 61.5V4C1.5 2.6 2.6 1.5 4 1.5H25.5C26.9 1.5 28.2 2.1 29.1 3.1L31.4 5.6C32.3 6.6 33.6 7.2 35 7.2H73.5C74.9 7.2 76 8.3 76 9.7V17" stroke="currentColor" stroke-width="2.4"/>
+        <path d="M1.5 61.5L10.6 20C10.9 18.6 12.1 17.6 13.5 17.6H85.4C87.3 17.6 88.7 19.4 88.3 21.2L79.9 59.2C79.6 60.5 78.4 61.5 77 61.5H1.5Z" class="folder-fill" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
       </svg>
       <span class="folder-label">MAKING_FRIENDS</span>
     </button>
@@ -1242,7 +1434,21 @@
   <div class="livestream-section">
     <div class="headline-row">
       <h1 class="headline">friend.fish</h1>
-      <div class="tank-time" id="tank-time">TANK TIME —</div>
+      <div class="tank-meta">
+        <div class="tank-time" id="tank-time">TANK TIME —</div>
+        <button class="theme-toggle" id="theme-toggle" type="button" onclick="toggleTheme(event)" aria-label="turn tank lights off" title="lights off">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <mask id="tt-mask">
+              <rect x="-4" y="-4" width="32" height="32" fill="white"/>
+              <circle class="tt-cut" cx="17" cy="7" r="6.2" fill="black"/>
+            </mask>
+            <circle class="tt-core" cx="12" cy="12" r="5" fill="currentColor" mask="url(#tt-mask)"/>
+            <g class="tt-rays" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+              <path d="M12 1.5v2.2M12 20.3v2.2M1.5 12h2.2M20.3 12h2.2M4.6 4.6l1.55 1.55M17.85 17.85l1.55 1.55M4.6 19.4l1.55-1.55M17.85 6.15l1.55-1.55"/>
+            </g>
+          </svg>
+        </button>
+      </div>
     </div>
     <div class="livestream" id="livestream">
       <video class="livestream-bg" src="/assets/livestream.webm" autoplay muted loop playsinline disablepictureinpicture aria-hidden="true"></video>
@@ -1255,6 +1461,7 @@
         <canvas></canvas>
       </moq-watch>
       <div class="livestream-status" id="livestream-status"><span id="livestream-status-label">livestream connecting</span><span class="dots"></span></div>
+      <div class="live-badge" aria-hidden="true"><span class="live-dot"></span>live</div>
       <div class="livestream-sleeping">THE FISH ARE SLEEPING RIGHT NOW 😴</div>
     </div>
   </div>
@@ -1265,7 +1472,7 @@
   <div class="panel-header">
     <div class="panel-title">MAKING_FRIENDS</div>
     <button class="panel-dismiss" onclick="closeWindow('friends')" aria-label="close">
-      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="black" stroke-width="1.2"/></svg>
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1L12 12M12 1L1 12" stroke="currentColor" stroke-width="1.2"/></svg>
     </button>
   </div>
   <div class="panel-scroll">
@@ -1387,6 +1594,52 @@
   }
   updateClock();
   setInterval(updateClock, 15000);
+
+  // ---- THEME (tank lights on / off) ----
+  const THEME_KEY = 'ff-theme';
+  const THEME_COLORS = { light: '#f5f5f5', dark: '#0d0f11' };
+
+  function currentTheme() {
+    return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    document.getElementById('meta-theme-color').setAttribute('content', THEME_COLORS[theme]);
+    const btn = document.getElementById('theme-toggle');
+    const off = theme === 'dark';
+    btn.setAttribute('aria-label', off ? 'turn tank lights on' : 'turn tank lights off');
+    btn.title = off ? 'lights on' : 'lights off';
+  }
+  applyTheme(currentTheme());
+
+  function toggleTheme(event) {
+    const next = currentTheme() === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!document.startViewTransition || reduce) { applyTheme(next); return; }
+    // ripple the new theme out from the toggle
+    const r = event.currentTarget.getBoundingClientRect();
+    const x = r.left + r.width / 2;
+    const y = r.top + r.height / 2;
+    const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+    const t = document.startViewTransition(() => applyTheme(next));
+    t.ready.then(() => {
+      document.documentElement.animate(
+        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+        { duration: 650, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', pseudoElement: '::view-transition-new(root)' }
+      );
+    }).catch(() => {});
+  }
+
+  // with no saved choice, keep following the OS as it flips
+  if (window.matchMedia) {
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      let saved = null;
+      try { saved = localStorage.getItem(THEME_KEY); } catch (err) {}
+      if (saved !== 'light' && saved !== 'dark') applyTheme(e.matches ? 'dark' : 'light');
+    });
+  }
 
   // ---- STATE ----
   let feedEntries = [];
