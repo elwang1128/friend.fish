@@ -226,7 +226,7 @@
       '.lg-toggle-label{font-family:\'Fira Mono\',ui-monospace,monospace;font-size:10px;' +
         'letter-spacing:-0.03em;text-transform:uppercase;color:var(--ink,#000);white-space:nowrap;line-height:1;}' +
 
-      '@media (max-width:636px){' +
+      '@media (max-width:1080px){' +
         '.lg-toggle-wrap{order:-1;margin-left:0;align-self:flex-end;padding:0 0 12px;}' +
       '}';
     var style = document.createElement('style');
