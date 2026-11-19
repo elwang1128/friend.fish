@@ -1428,6 +1428,54 @@
       max-height: calc(100dvh - 24px);
     }
   }
+
+  /* phone landscape: the stacked narrow view squeezes the stream into a
+     strip and pushes the nav off-screen, so split into two columns —
+     wordmark, time and nav on the left, the stream filling the right */
+  @media (max-width: 1080px) and (max-height: 500px) and (orientation: landscape) {
+    body {
+      padding: 16px max(16px, env(safe-area-inset-right)) 16px max(16px, env(safe-area-inset-left));
+    }
+    .main-section {
+      display: grid;
+      grid-template-columns: minmax(200px, 34%) 1fr;
+      grid-template-rows: auto auto 1fr;
+      column-gap: 20px;
+      height: 100%;
+    }
+    .livestream-section { display: contents; }
+
+    .headline {
+      grid-column: 1; grid-row: 1;
+      font-size: clamp(34px, 6.2vw, 48px);
+      padding: 0;
+    }
+    .tank-meta {
+      grid-column: 1; grid-row: 2;
+      align-self: start;
+      justify-self: start;
+      padding: 6px 0 0;
+    }
+    .tank-time { font-size: 15px; }
+
+    .livestream {
+      grid-column: 2; grid-row: 1 / -1;
+      align-self: center;
+      max-height: 100%;
+      border-radius: 12px;
+    }
+
+    .tabs {
+      grid-column: 1; grid-row: 3;
+      align-self: end;
+      padding: 0;
+      min-height: 0;
+    }
+    .tab { padding: 7px 0; font-size: 14px; }
+    .folder { margin-bottom: 6px; gap: 6px; }
+    .folder svg { width: 52px; height: 36px; }
+    .tabs .lg-toggle-wrap { padding-bottom: 6px; }
+  }
 </style>
 </head>
 <body>
