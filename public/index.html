@@ -122,16 +122,17 @@
 
   button { font: inherit; background: none; border: none; color: inherit; }
 
+  /* the wrapper is a zero-size point moved with a transform only, so
+     tracking the mouse never triggers layout; its children draw the
+     three looks (fish, hover dot, label pill) relative to that point */
   .custom-cursor {
     position: fixed;
     left: 0;
     top: 0;
-    width: 24px;
-    height: 21px;
+    width: 0;
+    height: 0;
     pointer-events: none;
     z-index: 10000;
-    transform: translate(0, 0);
-    transform-origin: top left;
     will-change: transform;
     opacity: 0; /* hidden until the mouse actually moves over the page */
   }
@@ -142,24 +143,29 @@
   }
 
   .custom-cursor__fish {
+    position: absolute;
+    left: 0;
+    top: 0;
     display: block;
-    width: 100%;
-    height: 100%;
+    width: 24px;
+    height: 21px;
     background: url('/assets/fishcursor.svg') center/contain no-repeat;
   }
-
-  :root[data-theme="dark"] .custom-cursor__fish { filter: invert(1); }
-
-  .custom-cursor.is-hovering {
+  .custom-cursor__dot {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: none;
     width: 12px;
     height: 12px;
     border-radius: 50%;
     background: var(--ink);
   }
 
-  .custom-cursor.is-hovering .custom-cursor__fish {
-    display: none;
-  }
+  :root[data-theme="dark"] .custom-cursor__fish { filter: invert(1); }
+
+  .custom-cursor.is-hovering .custom-cursor__fish { display: none; }
+  .custom-cursor.is-hovering .custom-cursor__dot { display: block; }
 
   .cursor-bubble-layer {
     position: fixed;
@@ -1116,27 +1122,20 @@
   :root {
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-io: cubic-bezier(0.65, 0, 0.35, 1);
-    --grain-opacity: 0.035;
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0.056 -0.0123'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
-  :root[data-theme="dark"] { --grain-opacity: 0.05; }
+  :root[data-theme="dark"] { --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0.08 -0.0175'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
 
-  /* film grain: one static noise tile over everything, click-through */
-  .grain {
-    position: fixed;
-    inset: 0;
-    z-index: 9998;
-    pointer-events: none;
-    opacity: var(--grain-opacity);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1.6 -0.35'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
+  /* film grain, baked into the page background itself (strength is in
+     the tile's alpha). As an overlay it forced a full-screen repaint on
+     every video frame on machines without GPU compositing — Linux
+     especially — which made the cursor lag; as a background it costs
+     nothing extra. */
+  body { background-image: var(--grain); }
 
   /* ---- headline: per-letter masks ---- */
   .headline { white-space: nowrap; }
-  .headline .ch {
-    display: inline-block;
-    transition: transform 700ms var(--ease-out);
-    will-change: transform;
-  }
+  .headline .ch { display: inline-block; }
   .headline .ch-in { display: inline-block; }
 
   /* ---- nav ---- */
@@ -1144,7 +1143,6 @@
     display: inline-flex;
     align-items: flex-start;
     gap: 6px;
-    will-change: transform;
   }
   .tab-arrow { display: none; }
 
@@ -1154,33 +1152,31 @@
 
   /* ---- cursor label pill ---- */
   .custom-cursor__label {
+    position: absolute;
+    left: 0;
+    top: 0;
     display: none;
+    padding: 7px 11px 6px;
+    border-radius: 999px;
+    background: var(--ink);
     font-family: var(--mono);
     font-size: 10px;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     white-space: nowrap;
     color: var(--on-ink);
-  }
-  .custom-cursor.is-label {
-    width: auto;
-    height: auto;
-    padding: 7px 11px 6px;
-    border-radius: 999px;
-    background: var(--ink);
     transform: translate(-50%, -50%);
-    animation: label-in 260ms var(--ease-out) both;
   }
   .custom-cursor.is-label .custom-cursor__fish { display: none; }
-  .custom-cursor.is-label .custom-cursor__label { display: block; }
+  .custom-cursor.is-label .custom-cursor__label {
+    display: block;
+    animation: label-in 260ms var(--ease-out) both;
+  }
   @keyframes label-in {
     from { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
     to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
   }
 
-  /* ---- stream depth on hover (placeholder loop only) ---- */
-  .livestream-bg { transition: transform 1600ms var(--ease-out); }
-  .livestream:hover .livestream-bg { transform: scale(1.035); }
 
   /* ---- clock colon breathes ---- */
   .tt-colon { animation: colon 2s steps(1, end) infinite; }
@@ -1212,7 +1208,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .tt-colon { animation: none; }
-    .headline .ch, .livestream-bg, .magnetic { transition: none; }
+    .magnetic { transition: none; }
     .panel.open .resident-card, .panel.open .tank-figure, .panel.open .specs-text p,
     .panel.open .feed-row, .panel.open .gb-row, .friends-window.open .friends-desc > * { animation: none; }
   }
@@ -1377,9 +1373,9 @@
 <body>
 <div id="custom-cursor" class="custom-cursor" aria-hidden="true">
   <span class="custom-cursor__fish"></span>
+  <span class="custom-cursor__dot"></span>
   <span class="custom-cursor__label" id="custom-cursor-label"></span>
 </div>
-<div class="grain" aria-hidden="true"></div>
 <div id="cursor-bubble-layer" class="cursor-bubble-layer" aria-hidden="true"></div>
 
 <!-- ===== LEFT PANEL AREA ===== -->
@@ -1667,14 +1663,14 @@
     window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   let lastTouchAt = 0;
 
+  let cursorShown = false;
   function moveCustomCursor(event) {
     if (!customCursor) return;
     // ignore the synthetic mousemove fired right after a tap on hybrid
     // touch+mouse devices, so the fish doesn't jump to tap points
     if (Date.now() - lastTouchAt < 500) return;
-    customCursor.style.left = event.clientX + 'px';
-    customCursor.style.top = event.clientY + 'px';
-    customCursor.style.opacity = '1';
+    customCursor.style.transform = `translate3d(${event.clientX}px, ${event.clientY}px, 0)`;
+    if (!cursorShown) { customCursor.style.opacity = '1'; cursorShown = true; }
   }
 
   function setHoverCursor(active) {
@@ -1685,11 +1681,11 @@
   if (customCursorEnabled) {
     document.addEventListener('mousemove', moveCustomCursor);
     document.addEventListener('mouseleave', () => {
-      if (customCursor) customCursor.style.opacity = '0';
+      if (customCursor) { customCursor.style.opacity = '0'; cursorShown = false; }
     });
     document.addEventListener('touchstart', () => {
       lastTouchAt = Date.now();
-      if (customCursor) customCursor.style.opacity = '0';
+      if (customCursor) { customCursor.style.opacity = '0'; cursorShown = false; }
     }, { passive: true });
     // three looks: the fish, a small dot over controls, and a labelled
     // pill over media (data-cursor="…"). Recomputed from whatever the
@@ -1710,7 +1706,7 @@
         if (cursorLabel.textContent !== label || !customCursor.classList.contains('is-label')) {
           cursorLabel.textContent = label;
           customCursor.classList.remove('is-label');
-          void customCursor.offsetWidth; // replay the pop-in
+          void cursorLabel.offsetWidth; // replay the pop-in
           customCursor.classList.add('is-label');
         }
         setHoverCursor(false);
@@ -1727,16 +1723,27 @@
     });
 
     // magnetic controls lean toward the pointer, then spring back
+    // (the centre is measured once on enter, not on every move, so the
+    // pull never forces a style/layout flush mid-frame)
     document.querySelectorAll('.magnetic').forEach(el => {
       const strength = el.classList.contains('tab') ? 0.22 : 0.35;
-      el.addEventListener('mousemove', e => {
+      let cx = 0, cy = 0, px = 0, py = 0, frame = null;
+      const write = () => {
+        frame = null;
+        el.style.transform = `translate(${((px - cx) * strength).toFixed(1)}px, ${((py - cy) * strength).toFixed(1)}px)`;
+      };
+      el.addEventListener('mouseenter', () => {
         const r = el.getBoundingClientRect();
-        const dx = e.clientX - (r.left + r.width / 2);
-        const dy = e.clientY - (r.top + r.height / 2);
+        cx = r.left + r.width / 2;
+        cy = r.top + r.height / 2;
         el.classList.add('is-pulling');
-        el.style.transform = `translate(${dx * strength}px, ${dy * strength}px)`;
+      });
+      el.addEventListener('mousemove', e => {
+        px = e.clientX; py = e.clientY;
+        if (!frame) frame = requestAnimationFrame(write);
       });
       el.addEventListener('mouseleave', () => {
+        if (frame) { cancelAnimationFrame(frame); frame = null; }
         el.classList.remove('is-pulling');
         el.style.transform = '';
       });
@@ -1745,21 +1752,48 @@
     // the wordmark swims: letters near the pointer lift in a soft wave
     const headline = document.getElementById('headline');
     const letters = Array.from(headline.querySelectorAll('.ch'));
+    // Each letter eases toward its target lift with a small per-frame
+    // spring instead of CSS transitions: restarting 11 transitions on every
+    // mouse move was the most expensive thing on the page. The loop only
+    // runs while something is moving and stops once everything settles.
     let waveFrame = null;
     let wavePoint = null;
+    // geometry is measured once and refreshed only when layout can have
+    // changed (resize, font swap); the lift only moves letters vertically,
+    // so their x centres stay valid
+    let box = null;
+    let centres = [];
+    const current = letters.map(() => 0);
+    const written = letters.map(() => 0);
+    function measureWave() {
+      box = headline.getBoundingClientRect();
+      centres = letters.map(ch => { const r = ch.getBoundingClientRect(); return r.left + r.width / 2; });
+    }
+    window.addEventListener('resize', () => { box = null; });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { box = null; });
+    if (window.ResizeObserver) new ResizeObserver(() => { box = null; }).observe(headline);
     function applyWave() {
       waveFrame = null;
-      const hr = headline.getBoundingClientRect();
-      const near = wavePoint && wavePoint.y > hr.top - 90 && wavePoint.y < hr.bottom + 60 &&
-        wavePoint.x > hr.left - 120 && wavePoint.x < hr.right + 120;
-      letters.forEach(ch => {
-        if (!near) { ch.style.transform = ''; return; }
-        const r = ch.getBoundingClientRect();
-        const d = Math.abs(wavePoint.x - (r.left + r.width / 2));
-        const lift = Math.max(0, 1 - d / 140);
-        const eased = lift * lift * (3 - 2 * lift); // smoothstep
-        ch.style.transform = eased > 0.01 ? `translateY(${(-eased * 16).toFixed(2)}px)` : '';
-      });
+      if (!box) measureWave();
+      const near = wavePoint && wavePoint.y > box.top - 90 && wavePoint.y < box.bottom + 60 &&
+        wavePoint.x > box.left - 120 && wavePoint.x < box.right + 120;
+      let moving = false;
+      for (let i = 0; i < letters.length; i++) {
+        let target = 0;
+        if (near) {
+          const lift = Math.max(0, 1 - Math.abs(wavePoint.x - centres[i]) / 140);
+          target = -16 * lift * lift * (3 - 2 * lift); // smoothstep
+        }
+        current[i] += (target - current[i]) * 0.14;
+        if (Math.abs(target - current[i]) < 0.05) current[i] = target;
+        else moving = true;
+        const px = Math.round(current[i] * 4) / 4; // quarter-pixel steps
+        if (px !== written[i]) {
+          written[i] = px;
+          letters[i].style.transform = px ? `translateY(${px}px)` : '';
+        }
+      }
+      if (moving) waveFrame = requestAnimationFrame(applyWave);
     }
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       document.addEventListener('mousemove', e => {
